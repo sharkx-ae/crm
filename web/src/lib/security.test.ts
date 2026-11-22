@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCsp, clientIp, isSameOrigin, sessionCookieName } from './security.ts';
+import { buildCsp, classifyPath, clientIp, isSameOrigin, sessionCookieName } from './security.ts';
 
 const h = (o: Record<string, string>) => ({ get: (k: string) => o[k.toLowerCase()] ?? null });
 
@@ -65,5 +65,28 @@ describe('sessionCookieName', () => {
     expect(sessionCookieName('production')).toBe('__Host-sharkx_session');
     expect(sessionCookieName('staging')).toBe('__Host-sharkx_session');
     expect(sessionCookieName('local')).toBe('sharkx_session');
+  });
+});
+
+describe('classifyPath', () => {
+  const locales = ['en', 'ar', 'fr'];
+  it('marks the sign-in, code, reset and invite pages as auth, with their locale', () => {
+    for (const p of [
+      '/en/login',
+      '/ar/code',
+      '/fr/reset',
+      '/fr/reset/abc',
+      '/en/accept-invite/tok',
+    ]) {
+      expect(classifyPath(p, locales).kind, p).toBe('auth');
+    }
+    expect(classifyPath('/ar/login', locales).locale).toBe('ar');
+  });
+
+  it('everything else needs a session, including the home page and unprefixed paths', () => {
+    for (const p of ['/en', '/en/clients', '/en/p/123/overview', '/clients', '/', '/en/loginx']) {
+      expect(classifyPath(p, locales).kind, p).toBe('protected');
+    }
+    expect(classifyPath('/clients', locales).locale).toBeNull();
   });
 });

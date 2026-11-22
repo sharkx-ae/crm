@@ -1,14 +1,11 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { redirect } from 'next/navigation';
+import { setRequestLocale } from 'next-intl/server';
+import { landingPath, requireSession } from '../../lib/session.ts';
 
+// The home address has no screen of its own: everyone goes to where their role lands (F1c landing rule).
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations('common');
-
-  return (
-    <main className="mx-auto max-w-xl ps-6 pe-6 py-16 text-start">
-      <h1 className="text-2xl font-semibold">{t('hello')}</h1>
-      <p className="mt-2 opacity-70">{t('tagline')}</p>
-    </main>
-  );
+  const me = await requireSession();
+  redirect(landingPath(me, locale));
 }

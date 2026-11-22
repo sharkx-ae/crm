@@ -60,3 +60,23 @@ export function assertSameOrigin(
 ): void {
   if (!isSameOrigin(request, appUrl)) throw new ApiError('FORBIDDEN', 403);
 }
+
+/** Pages reachable without a session. Everything else under a locale needs the session cookie (the proxy guard). */
+const PUBLIC_SEGMENTS = new Set(['login', 'code', 'reset', 'accept-invite']);
+
+/**
+ * Splits `/en/login` into its locale and what kind of page it is. `auth` pages carry tokens in their path, so they
+ * get `Referrer-Policy: no-referrer`; `protected` ones redirect to /login when there is no session cookie.
+ */
+export function classifyPath(
+  pathname: string,
+  locales: readonly string[],
+): { locale: string | null; kind: 'auth' | 'protected' } {
+  const [first = '', second = ''] = pathname.split('/').filter(Boolean);
+  const hasLocale = locales.includes(first);
+  const segment = hasLocale ? second : first;
+  return {
+    locale: hasLocale ? first : null,
+    kind: PUBLIC_SEGMENTS.has(segment) ? 'auth' : 'protected',
+  };
+}
