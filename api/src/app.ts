@@ -5,6 +5,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import type { ApiEnv } from './lib/env.ts';
 import { httpPlugin, serverOptions } from './lib/http/plugin.ts';
 import type { SessionResolver } from './lib/http/route.ts';
+import { authRoutes, resolveSession } from './modules/auth/index.ts';
 import { healthRoutes } from './routes/health.ts';
 
 export type AppDeps = {
@@ -16,9 +17,10 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
   const app = Fastify(serverOptions(env));
   await app.register(httpPlugin, {
     env,
-    resolveSession: deps.resolveSession ?? (async () => null),
+    resolveSession: deps.resolveSession ?? resolveSession,
     onUnexpected: deps.onUnexpected,
   });
   await app.register(healthRoutes, { env });
+  await app.register(authRoutes);
   return app;
 }
