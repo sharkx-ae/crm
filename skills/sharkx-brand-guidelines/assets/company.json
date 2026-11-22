@@ -1,0 +1,152 @@
+{
+  "name": "SHARKX",
+  "displayNameHeadlines": "SHARKX",
+  "displayNameBody": "SharkX",
+  "tagline": "Marketing Built to Dominate",
+  "taglineWithPeriod": "Marketing Built to Dominate.",
+  "oneLiner": "Built by operators, not ad people. Domain fluency beats generic creative.",
+  "description": "SHARKX engineers growth systems—not generic campaigns—for regulated and high-stakes categories. Founded by operators from the industries they serve; HQ in Dubai with hubs in Casablanca and Medellín.",
+  "sourceUrl": "https://www.sharkx.ae/index.html",
+  "sourceSynced": "2026-10-01",
+  "location": {
+    "headquarters": {
+      "city": "Dubai",
+      "country": "United Arab Emirates",
+      "role": "HQ",
+      "email": "hello@sharkx.ae",
+      "phone": "+971 50 176 7100"
+    },
+    "offices": [
+      {
+        "city": "Dubai",
+        "country": "United Arab Emirates",
+        "role": "Headquarters",
+        "email": "hello@sharkx.ae",
+        "phone": "+971 50 176 7100"
+      },
+      {
+        "city": "Casablanca",
+        "country": "Morocco",
+        "role": "North Africa Hub",
+        "email": "casablanca@sharkx.ae",
+        "note": "Serving MENA markets"
+      },
+      {
+        "city": "Medellín",
+        "country": "Colombia",
+        "role": "LATAM Hub",
+        "email": "medellin@sharkx.ae",
+        "note": "Serving LATAM markets"
+      }
+    ],
+    "areaServed": ["UAE", "MENA", "LATAM", "Global"]
+  },
+  "contact": {
+    "website": "https://www.sharkx.ae",
+    "primaryEmail": "hello@sharkx.ae",
+    "primaryPhone": "+971 50 176 7100",
+    "cta": "Let's Talk",
+    "whatsappNote": "Site offers WhatsApp chat — link not stored in skill; use website CTA"
+  },
+  "urls": {
+    "marketingSite": "https://www.sharkx.ae",
+    "urlLowercaseRule": "Use lowercase sharkx only when referencing the website URL (sharkx.ae / www.sharkx.ae), not in body brand name"
+  },
+  "stats": {
+    "operatorExperienceYears": "24+",
+    "globalOffices": 3,
+    "officeCities": ["Dubai", "Casablanca", "Medellín"]
+  },
+  "method": {
+    "name": "The SharkX Method",
+    "steps": [
+      { "order": 1, "name": "Diagnose", "summary": "Funnel, brand, and gap audit; stakeholder interviews; competitor reverse-engineering." },
+      { "order": 2, "name": "Architect", "summary": "System design before campaigns; pressure-test positioning, media spend, conversion math." },
+      { "order": 3, "name": "Execute", "summary": "Campaigns live in 10 business days from kickoff; one team, no handoffs." },
+      { "order": 4, "name": "Scale", "summary": "Double down on winners; outcome metrics on real-time dashboards." }
+    ]
+  },
+  "systems": {
+    "headline": "Not Services. Systems.",
+    "offerings": [
+      { "id": "brand", "name": "Brand Systems", "summary": "Visual identity, guidelines, naming, positioning." },
+      { "id": "content", "name": "Content Ecosystems", "summary": "Video, photography, social, editorial." },
+      { "id": "acquisition", "name": "Acquisition Engines", "summary": "Paid media, organic growth, conversion funnels." },
+      { "id": "conversion", "name": "Conversion Platforms", "summary": "Websites, apps, landing pages, e-commerce." },
+      { "id": "infrastructure", "name": "Growth Infrastructure", "summary": "CRM, automation, AI-powered reporting, analytics." }
+    ]
+  },
+  "sectors": [
+    "Fintech & FX",
+    "Healthcare & Wellness",
+    "Finance & Banking",
+    "Retail & Fashion",
+    "E-Commerce",
+    "B2B & SaaS",
+    "Hospitality",
+    "Tourism & Destinations",
+    "Luxury & Lifestyle"
+  ],
+  "engagement": {
+    "name": "Your First 30 Days",
+    "weeks": [
+      { "week": 1, "name": "Discovery", "summary": "Stakeholder interviews, funnel teardown, competitor reverse-engineering." },
+      { "week": 2, "name": "Strategic Audit", "summary": "Positioning, media spend, conversion math; written brief." },
+      { "week": 3, "name": "Custom Roadmap", "summary": "90-day plan, deliverables, checkpoints, attribution model." },
+      { "week": 4, "name": "Launch", "summary": "Campaigns live; performance data within 72 hours of launch." }
+    ]
+  },
+  "differentiators": [
+    "Operators, Not Account Managers",
+    "Industry-First, Not Service-First",
+    "Tech-Powered, Human-Led",
+    "Compliance as a Competency"
+  ],
+  "voice": {
+    "tone": ["Confident", "Sharp", "Operator-led", "Outcome-focused"],
+    "manifestoLines": [
+      "We don't play safe. We play sharp.",
+      "We don't run campaigns. We engineer growth."
+    ],
+    "approvedPhrases": [
+      "Marketing Built to Dominate.",
+      "Built to dominate.",
+      "Domain fluency beats generic creative.",
+      "Numbers. Not narratives.",
+      "Engineer growth."
+    ],
+    "avoid": [
+      "Generic agency language",
+      "Buzzwords and filler",
+      "Vanity metrics without outcomes",
+      "Soft or uncertain phrasing"
+    ]
+  },
+  "caseStudyHighlights": [
+    {
+      "metric": "4.2X ROAS",
+      "clientType": "Regulated Financial Brand",
+      "detail": "12,400+ qualified registrations in 90 days across three jurisdictions."
+    },
+    {
+      "metric": "+22% direct bookings",
+      "clientType": "Boutique Resort Group",
+      "detail": "3 months across paid, organic, rebuilt booking funnel."
+    },
+    {
+      "metric": "+40% bookings",
+      "clientType": "Multi-Location Healthcare Group",
+      "detail": "Cost per booking down 68%; Google rating 3.9 → 4.8."
+    }
+  ],
+  "logoUsage": {
+    "primary": "White SHARKX on red background for brand-led high-impact applications",
+    "descriptor": "SHARKX Marketing — only when marketing services must be identified; never replaces primary on premium touchpoints",
+    "minSizeDigitalPx": 24,
+    "minSizePrintMm": 15
+  },
+  "footer": {
+    "copyright": "© 2026 SHARKX. Marketing built to dominate.",
+    "siteLine": "www.sharkx.ae"
+  }
+}

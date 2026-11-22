@@ -1,11 +1,11 @@
 # F15d · UAT and production go-live
-Owner: Both · Days 22–28 (outside the 21-day build) · Release none · Tracker: F15.8 · PRD: [F15](../PRD.md#f15), [Demo](../PRD.md#demo-success-criteria)
+Owner: Both · Days 24–30 (outside the build) · Release none · Tracker: F15.8 · PRD: [F15](../PRD.md#f15), [Demo](../PRD.md#demo-success-criteria)
 
 ## Goal
 SHARKX tests every feature on live accounts, signs off milestones, and the CRM goes live in production.
 
 ## Acceptance criteria
-- [ ] UAT exit (D22–28): each integration verified live or logged as blocked with a dated dependency entry; milestone reviews signed (3 working days each); production live; training done.
+- [ ] UAT exit (D24–30): each integration verified live or logged as blocked with a dated dependency entry; milestone reviews signed (3 working days each); production live; training done.
 
 ## Data model / API / job changes
 - None. Production promote, production secrets, production domains.

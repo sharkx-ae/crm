@@ -1,5 +1,7 @@
 # F7 · Website forms and CSV import
-Owner: A (Alex) · Days 10–10 · Release 2 · Tracker: F7.1, F7.2, F7.3 · PRD: [F7](../PRD.md#f7)
+Owner: B (John) · full stack (web + api + db + tests) · Days 12–12 · Release 2 · Tracker: F7.1, F7.2, F7.3 · PRD: [F7](../PRD.md#f7)
+
+> Ownership changed: B (John) builds this feature end to end, web and api. Where "Files touched" below splits files between A and B, read it as a list of paths only.
 
 ## Goal
 Any website form and any CSV of old leads land in the CRM through the same lead engine.

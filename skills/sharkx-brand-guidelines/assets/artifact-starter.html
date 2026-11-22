@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SHARKX — Report Title</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --red: #e70101;
+      --black: #1c0f0f;
+      --red-soft: #fde6e6;
+      --muted: #5c5656;
+      --page: #fafafa;
+      --shell: #f5f5f5;
+      --border: #e8e7e7;
+      --surface: #ffffff;
+      --down: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Sharp Sans", "Segoe UI", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--black);
+      background: var(--page);
+    }
+    .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1rem 3rem; }
+    .sx-hero {
+      background: var(--red);
+      color: #fff;
+      padding: 2rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .sx-hero h1 { color: #fff; margin: 0; font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; }
+    .sx-hero img { height: 36px; width: auto; margin-bottom: 1rem; }
+    .sx-meta {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--red); border: 1px solid var(--red-soft); background: var(--surface);
+      padding: 0.25rem 0.75rem; border-radius: 9999px; display: inline-block; margin-bottom: 0.75rem;
+    }
+    .lead { max-width: 42rem; margin-bottom: 0; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .sx-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.25rem; box-shadow: 0 1px 3px rgba(28, 15, 15, 0.08);
+    }
+    .kpi-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+    .kpi-value { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; }
+    .sx-delta-up {
+      display: inline-block; font-size: 0.8125rem; font-weight: 700;
+      background: var(--red-soft); padding: 0.1em 0.45em; border-radius: 4px;
+    }
+    .sx-delta-down { color: var(--down); font-size: 0.8125rem; font-weight: 700; }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-size: 1.25rem; font-weight: 500; margin: 0 0 1rem; }
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
+    .sx-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; background: var(--surface); border-radius: 12px; overflow: hidden; }
+    .sx-table thead th { background: var(--red); color: #fff; text-align: left; padding: 0.5rem 0.75rem; }
+    .sx-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+    .sx-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .sx-actions ol { margin: 0; padding-left: 1.25rem; }
+    .sx-actions li { margin-bottom: 0.5rem; }
+    footer {
+      margin-top: 3rem; padding-top: 0.75rem; border-top: 1px solid var(--black);
+      font-size: 0.75rem; color: var(--muted);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+    @media print {
+      body { background: #fff; }
+      .sx-card, .chart-wrap { box-shadow: none; }
+      .sx-hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header class="sx-hero">
+    <div class="wrap">
+      <img src="assets/logos/logo-primary-red-bg.png" alt="SHARKX" onerror="this.style.display='none'" />
+      <p class="eyebrow" style="color:#fff;border-color:rgba(255,255,255,.35);background:transparent;">Client · Period</p>
+      <h1>Performance report title</h1>
+      <p class="lead" style="color:rgba(255,255,255,.9);">One-line executive takeaway — outcome first.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <p class="sx-meta">
+      <strong>Period:</strong> YYYY-MM-DD – YYYY-MM-DD (timezone) ·
+      <strong>Sources:</strong> Google Ads, GA4 ·
+      <strong>Currency:</strong> AED ·
+      <strong>Generated:</strong> YYYY-MM-DD
+    </p>
+    <div class="kpi-grid">
+      <div class="sx-card">
+        <div class="kpi-label">Spend</div>
+        <div class="kpi-value">—</div>
+        <span class="sx-delta-up">+0.0%</span>
+      </div>
+      <div class="sx-card">
+        <div class="kpi-label">Conversions</div>
+        <div class="kpi-value">—</div>
+        <span class="sx-delta-up">+0.0%</span>
+      </div>
+      <div class="sx-card">
+        <div class="kpi-label">ROAS</div>
+        <div class="kpi-value">—</div>
+        <span class="sx-delta-down">-0.0%</span>
+      </div>
+    </div>
+    <section class="chart-wrap">
+      <h2>Trend</h2>
+      <canvas id="trendChart" height="120" aria-label="Performance trend chart"></canvas>
+    </section>
+    <section>
+      <h2>Breakdown</h2>
+      <table class="sx-table">
+        <thead><tr><th>Channel / Campaign</th><th class="num">Spend</th><th class="num">Conv.</th><th class="num">ROAS</th></tr></thead>
+        <tbody>
+          <tr><td>Example</td><td class="num">0</td><td class="num">0</td><td class="num">0.00</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="sx-actions">
+      <h2>Actions</h2>
+      <ol>
+        <li><strong>Action</strong> — expected outcome — owner / timing</li>
+      </ol>
+    </section>
+    <footer>SharkX · <!-- date --> · Confidential · sharkx.ae</footer>
+  </main>
+  <script>
+    const palette = ["#e70101", "#1c0f0f", "#a49f9f", "#f59999", "#776f6f"];
+    const ctx = document.getElementById("trendChart");
+    if (ctx && window.Chart) {
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["W1", "W2", "W3", "W4"],
+          datasets: [{
+            label: "Conversions",
+            data: [0, 0, 0, 0],
+            borderColor: palette[0],
+            backgroundColor: "rgba(231,1,1,0.08)",
+            fill: true,
+            tension: 0.25
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } },
+          scales: {
+            x: { grid: { color: "rgba(28,15,15,0.08)" } },
+            y: { grid: { color: "rgba(28,15,15,0.08)" }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

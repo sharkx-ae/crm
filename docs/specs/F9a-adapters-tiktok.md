@@ -1,5 +1,7 @@
 # F9a · Adapter interface and TikTok
-Owner: A (Alex) · Days 17–17 · Release 3 · Tracker: F9.1, F9.2 · PRD: [F9](../PRD.md#f9)
+Owner: B (John) · full stack (web + api + db + tests) · Days 20–20 · Release none (hardening) · Tracker: F9.1, F9.2 · PRD: [F9](../PRD.md#f9)
+
+> Ownership changed: B (John) builds this feature end to end, web and api. Where "Files touched" below splits files between A and B, read it as a list of paths only.
 
 ## Goal
 TikTok lead forms plug into the shared adapter shape, fixture-verified now and live when access arrives.

@@ -1,5 +1,5 @@
 # F4a · Lead engine and seed data
-Owner: B (John) · Days 3–4 · Release 1 · Tracker: F4.1, F4.2, F4.3, F4.7, F15.5 · PRD: [F4](../PRD.md#f4), [F15](../PRD.md#f15)
+Owner: B (John) · full stack (web + api + db + tests) · Days 5–6 · Release 1 · Tracker: F4.1, F4.2, F4.3, F4.7, F15.5 · PRD: [F4](../PRD.md#f4), [F15](../PRD.md#f15)
 
 ## Goal
 One `ingestLead()` turns any source's payload into a deduplicated, mapped, assigned lead; demo data exists for every screen.
@@ -8,7 +8,7 @@ One `ingestLead()` turns any source's payload into a deduplicated, mapped, assig
 - [ ] Every source calls `ingestLead()`; phones normalised to E.164.
 - [ ] Per-form field mapping (name, phone, email, custom → custom field / notes / ignore).
 - [ ] Dedupe per client: same phone (else email) merges into the contact's open lead timeline; no open lead → new lead on the same contact.
-- [ ] Auto-assign round-robin among project members.
+- [ ] Auto-assign round-robin among active managers (all clients). Client users are never assignable.
 - [ ] Test leads (`is_test`) are excluded from reports, exports and conversion feedback.
 - [ ] Seed/demo data from the mockup (5 clients, ~64 leads).
 
@@ -29,7 +29,7 @@ F1b.
 - Invalid phone → raw value kept, flagged, no E.164 match.
 - Same externalId twice → same lead returned (`created: false`).
 - Two submissions of one phone at the same moment → one contact (unique constraint + retry).
-- Project with no members → unassigned.
+- No active managers → unassigned.
 
 ## Out of scope
 Manual Add lead, bulk actions, Won/Junk.

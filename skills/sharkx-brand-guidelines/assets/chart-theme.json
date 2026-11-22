@@ -1,0 +1,24 @@
+{
+  "brand": "SHARKX",
+  "version": "1.0.0",
+  "usage": "Palettes for Chart.js, Recharts, matplotlib, Excel, and slide charts. Red/black-first ordering. Always label series; do not rely on color alone.",
+  "categorical": ["#e70101", "#1c0f0f", "#a49f9f", "#f59999", "#776f6f"],
+  "categoricalNote": "Red first, black second, then black/red tints. Max 5 series in client deliverables.",
+  "sequential": ["#fde6e6", "#f59999", "#e70101", "#1c0f0f"],
+  "diverging": ["#1c0f0f", "#fafafa", "#e70101"],
+  "positive": "#0a7c42",
+  "negative": "#b91c1c",
+  "neutral": "#a49f9f",
+  "defaults": {
+    "background": "#FFFFFF",
+    "plotArea": "#FFFFFF",
+    "gridColor": "rgba(28, 15, 15, 0.12)",
+    "axisColor": "#1c0f0f",
+    "fontFamily": "Sharp Sans, 'Segoe UI', system-ui, sans-serif",
+    "gradients": false,
+    "barCornerRadius": 4,
+    "lineWidth": 2.5,
+    "legendPosition": "bottom",
+    "numberFormat": "tabular-nums, right-aligned"
+  }
+}

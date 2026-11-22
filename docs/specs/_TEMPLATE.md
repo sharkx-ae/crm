@@ -1,31 +1,30 @@
-# <ID> · <Name>
-Owner: A (Alex) | B (John) | Both · Days <start>–<end> · Release <1|2|3|none> · Tracker: <F#.#, …> · PRD: [F#](../PRD.md#f#)
+# <ID> · <Feature name>
+Owner: A (Alex) | B (John) · full stack (web + api + db + tests) · Days <start>–<end> · Release <1|2|3|none> · Tracker: <F#.#, …> · PRD: [F#](../PRD.md#f#)
 
 ## Goal
-One sentence: what exists when this spec is done.
+One sentence: what a person can do when this spec is done.
 
-## Acceptance criteria
-Copied from the PRD section(s) above. Nothing added.
-- [ ] …
+## Sub-features
+| # | Sub-feature | Tracker | Est. |
+|---|---|---|---|
+| S1 | … | F#.# | 0.5 d |
 
-## Data model / API / job changes
-Tables, contract functions, routes, jobs touched. Shapes live in `docs/specs/CONTRACTS.md`; reference them, don't redefine.
+## Shared by all sub-features
+Tables touched · routes prefix · permissions (`can()` actions) · audit actions written · email templates · files (`web/…`, `api/…`).
 
-## Files touched
-Paths: `web/…`, `api/…` (contracts: `api/src/contracts/…`) (older specs use short `src/…` paths; mapping in CLAUDE.md).
-- A (Alex): …
-- B (John): …
+## S1 · <Sub-feature name>
+**Person story:** As a <role>, I can … so that …
+**Screens (web):** route, what is on it, empty / loading / error states, RTL notes.
+**Server Actions → api routes:** `POST /x` request → response (Zod schemas live in `api/src/contracts`, additive only).
+**Rules:** limits, validations, who may do it, what is recorded (audit), what is sent (email / notification).
+**Errors (AppError codes) and what the person sees.**
+**Done when:** the acceptance criteria (copied from the PRD, nothing added).
+**Tests:** unit / integration / one e2e path.
 
 ## Dependencies
-Spec IDs that must be merged first (and any that run in parallel against fixtures).
-
-## Edge cases
-- …
+Spec IDs that must be merged first, and any that run in parallel against fixtures.
 
 ## Out of scope
 PRD Extras/Cut items that look related. Do not build them.
 
-## Test plan
-- Unit / integration / e2e checks that prove each acceptance criterion.
-
-Rules: one page, no code, no feature outside the PRD.
+Rules: one dev builds a whole feature top to bottom (screen, Server Action, api route, service, schema, tests). No feature outside the PRD. Shapes shared with the other dev go through `docs/specs/CONTRACTS.md`.

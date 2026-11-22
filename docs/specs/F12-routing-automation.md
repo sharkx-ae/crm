@@ -1,12 +1,12 @@
 # F12 · Routing and automation
-Owner: B (John) · Days 16–16 · Release 3 · Tracker: F12.1, F12.2, F12.3, F12.4, F12.5 · PRD: [F12](../PRD.md#f12)
+Owner: B (John) · full stack (web + api + db + tests) · Days 17–17 · Release 3 · Tracker: F12.1, F12.2, F12.3, F12.4, F12.5 · PRD: [F12](../PRD.md#f12)
 
 ## Goal
 Leads are routed automatically, slow replies raise alerts, and simple when/then rules run per client.
 
 ## Acceptance criteria
 - [ ] Auto-assignment (round-robin) configurable per client.
-- [ ] Response-time alert: no reply in 15 min during business hours → notify the account manager (bell + email).
+- [ ] Response-time alert: no reply in N min (default 15, set per client in Automation) during business hours → notify the lead's owner (a manager; bell + email).
 - [ ] Simple rules: when (new lead from source, no reply N min, client marks status, unreviewed N h) → then (assign, notify, create task, move stage); enable/disable; run count.
 - [ ] Business hours per client drive the timers.
 

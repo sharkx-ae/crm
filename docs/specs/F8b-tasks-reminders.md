@@ -1,11 +1,11 @@
 # F8b · Tasks, reminders, overdue follow-ups
-Owner: B (John) · Days 12–12 · Release 2 · Tracker: F8.3, F8.4, F8.5 · PRD: [F8](../PRD.md#f8)
+Owner: B (John) · full stack (web + api + db + tests) · Days 15–15 · Release 2 · Tracker: F8.3, F8.4, F8.5 · PRD: [F8](../PRD.md#f8)
 
 ## Goal
 Follow-ups become tasks with due dates, reminders fire on time, and overdue work is visible.
 
 ## Acceptance criteria
-- [ ] Tasks: create from a lead, assignee, due date, done; "My tasks" list.
+- [ ] Tasks: create from a lead, assignee, due date, done; Tasks list per client.
 - [ ] Reminders at due time via bell + email; overdue tasks feed the agency view (F13).
 
 ## Data model / API / job changes
@@ -29,4 +29,4 @@ Recurring tasks, calendar sync, calling.
 
 ## Test plan
 - Reminder job fires once at due time (fake clock); reschedule and cancel cases.
-- "My tasks" shows only the viewer's tasks across their projects.
+- The Tasks list shows the selected client's tasks with owner and due date.

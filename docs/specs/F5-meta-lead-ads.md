@@ -1,5 +1,5 @@
 # F5 · Meta Lead Ads
-Owner: A (Alex) · Days 11–12 · Release 2 · Tracker: F5.1, F5.2, F5.3, F5.4 · PRD: [F5](../PRD.md#f5)
+Owner: A (Alex) · full stack (web + api + db + tests) · Days 15–16 · Release 2 · Tracker: F5.1, F5.2, F5.3, F5.4 · PRD: [F5](../PRD.md#f5)
 
 ## Goal
 A client's Facebook/Instagram lead forms deliver leads into the CRM within seconds.

@@ -1,5 +1,5 @@
 # F15a · Security, isolation and adapter fixture suites
-Owner: A (Alex) · Days 19–20 · Release none (hardening) · Tracker: F15.2, F15.3 · PRD: [F15](../PRD.md#f15)
+Owner: A (Alex) · full stack (web + api + db + tests) · Days 20–21 · Release none (hardening) · Tracker: F15.2, F15.3 · PRD: [F15](../PRD.md#f15)
 
 ## Goal
 The isolation, security and integration test suites are complete and gate every merge.
@@ -19,7 +19,7 @@ F1b, F3b, F5, F9b.
 
 ## Edge cases
 - Every route and Server Action checked for: no session, pending_2fa, wrong role, other project.
-- Portal token: revoked, wrong, brute-force rate limit.
+- Client role: every route and action tried as a client of A against client B's data and against A's staff-only data (notes, tasks, owners, events, automation, conversion settings, audit, team); responses carry no forbidden columns.
 - Webhooks: replay, bad signature, oversized payload.
 
 ## Out of scope

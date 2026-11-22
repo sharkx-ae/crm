@@ -1,5 +1,5 @@
 # F8a · Custom stages and kanban
-Owner: B (John) · Days 11–11 · Release 2 · Tracker: F8.1, F8.2 · PRD: [F8](../PRD.md#f8)
+Owner: B (John) · full stack (web + api + db + tests) · Days 14–14 · Release 2 · Tracker: F8.1, F8.2 · PRD: [F8](../PRD.md#f8)
 
 ## Goal
 Each client has its own pipeline stages and the team moves leads across a kanban board.
@@ -28,5 +28,5 @@ F2b, F4b.
 Automatic stage moves from client marks (only via an automation rule, F12), Won/Junk statuses.
 
 ## Test plan
-- Stage CRUD with reassignment; permission (agent cannot edit stages).
+- Stage CRUD with reassignment; permission (a client user cannot edit stages and never sees the board or stage labels).
 - Drag/drop and keyboard move write one timeline + audit row each.

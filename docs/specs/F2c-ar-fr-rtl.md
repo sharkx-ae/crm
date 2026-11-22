@@ -1,5 +1,5 @@
 # F2c · Arabic and French strings, RTL QA
-Owner: B (John) · Days 19–19 · Release none (hardening) · Tracker: F2.6 · PRD: [F2](../PRD.md#f2)
+Owner: B (John) · full stack (web + api + db + tests) · Days 22–22 · Release none (hardening) · Tracker: F2.6 · PRD: [F2](../PRD.md#f2)
 
 ## Goal
 Every screen and email is complete in Arabic and French, and Arabic renders correctly right-to-left.

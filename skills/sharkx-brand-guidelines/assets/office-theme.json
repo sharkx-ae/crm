@@ -1,0 +1,146 @@
+{
+  "brand": "SHARKX",
+  "version": "2.0.0",
+  "description": "Office Open XML theming — load with tokens.json. Use RGB tuples in python-docx, python-pptx, openpyxl.",
+  "fontFamily": "Sharp Sans",
+  "fontFallback": "Segoe UI",
+  "fontArabic": "GE Flow",
+  "page": {
+    "docx": {
+      "marginsInches": { "top": 1, "bottom": 1, "left": 1, "right": 1 },
+      "defaultLineSpacing": 1.15
+    },
+    "pptx": {
+      "widthInches": 13.333,
+      "heightInches": 7.5,
+      "marginInches": 0.5
+    },
+    "xlsx": {
+      "defaultColumnWidth": 14,
+      "headerRowHeight": 22,
+      "dataRowHeight": 18,
+      "freezePane": "A2"
+    }
+  },
+  "rgb": {
+    "red": [231, 1, 1],
+    "black": [28, 15, 15],
+    "white": [255, 255, 255],
+    "redTint10": [253, 230, 230],
+    "blackTint10": [232, 231, 231],
+    "muted": [92, 86, 86],
+    "border": [232, 231, 231],
+    "shell": [245, 245, 245],
+    "page": [250, 250, 250],
+    "surface": [255, 255, 255],
+    "success": [10, 124, 66],
+    "warning": [255, 105, 30],
+    "destructive": [185, 28, 28]
+  },
+  "hex": {
+    "red": "E70101",
+    "black": "1C0F0F",
+    "redTint10": "FDE6E6",
+    "border": "E8E7E7",
+    "success": "0A7C42"
+  },
+  "excel": {
+    "numberFormats": {
+      "integer": "#,##0",
+      "decimal": "#,##0.00",
+      "percent": "0.0%",
+      "percentPlus": "+0.0%;-0.0%;0.0%",
+      "currencyAED": "\"AED \"#,##0",
+      "currencyUSD": "$#,##0",
+      "date": "yyyy-mm-dd",
+      "month": "mmm yyyy"
+    },
+    "sheetOrder": ["Summary", "Data", "Charts", "Notes"],
+    "styles": {
+      "title": { "font": "Sharp Sans", "size": 14, "bold": true, "colorRgb": "black", "fillRgb": null },
+      "header": { "font": "Sharp Sans", "size": 11, "bold": true, "colorRgb": "white", "fillRgb": "red" },
+      "headerAlt": { "font": "Sharp Sans", "size": 11, "bold": true, "colorRgb": "white", "fillRgb": "black" },
+      "body": { "font": "Sharp Sans", "size": 11, "bold": false, "colorRgb": "black", "fillRgb": null },
+      "bodyMuted": { "font": "Sharp Sans", "size": 10, "bold": false, "colorRgb": "muted", "fillRgb": null },
+      "kpiValue": { "font": "Sharp Sans", "size": 22, "bold": true, "colorRgb": "black", "fillRgb": null },
+      "kpiLabel": { "font": "Sharp Sans", "size": 10, "bold": false, "colorRgb": "muted", "fillRgb": null },
+      "positive": { "font": "Sharp Sans", "size": 11, "bold": true, "colorRgb": "black", "fillRgb": "redTint10" },
+      "negative": { "font": "Sharp Sans", "size": 11, "bold": true, "colorRgb": "destructive", "fillRgb": null }
+    },
+    "columnWidths": {
+      "metric": 28,
+      "value": 14,
+      "prior": 14,
+      "delta": 12,
+      "notes": 40
+    },
+    "zebraFillArgb": "0F1C0F0F",
+    "chartDefaults": {
+      "loadFrom": "chart-theme.json",
+      "plotAreaFill": "FFFFFF",
+      "legendBottom": true
+    }
+  },
+  "docx": {
+    "styleNames": {
+      "normal": "Normal",
+      "title": "SharkX Title",
+      "heading1": "SharkX Heading 1",
+      "heading2": "SharkX Heading 2",
+      "heading3": "SharkX Heading 3",
+      "tableHeader": "SharkX Table Header",
+      "caption": "SharkX Caption"
+    },
+    "sizesPt": {
+      "title": 28,
+      "h1": 28,
+      "h2": 20,
+      "h3": 14,
+      "body": 11,
+      "small": 9,
+      "footer": 8
+    },
+    "table": {
+      "headerFillRgb": "red",
+      "headerTextRgb": "white",
+      "borderRgb": "border",
+      "zebraArgb": "redTint10"
+    },
+    "logoPath": "assets/logos/logo-red-on-white.png",
+    "logoPathCover": "assets/logos/logo-primary-red-bg.png",
+    "logoWidthInches": 1.5
+  },
+  "pptx": {
+    "layouts": ["Title", "TitleRed", "Section", "Content", "Data", "Closing"],
+    "sizesPt": {
+      "display": 40,
+      "h1": 28,
+      "h2": 20,
+      "body": 18,
+      "caption": 11
+    },
+    "backgroundRgb": "surface",
+    "titleSlideBackgroundRgb": "red",
+    "sectionBackgroundRgb": "shell",
+    "logoPath": "assets/logos/logo-red-on-white.png",
+    "logoPathOnRed": "assets/logos/logo-primary-red-bg.png",
+    "placeholderInches": {
+      "title": { "left": 0.5, "top": 0.4, "width": 12.3, "height": 1.2 },
+      "body": { "left": 0.5, "top": 1.8, "width": 12.3, "height": 5.2 },
+      "footerLogo": { "left": 0.5, "bottom": 0.35, "width": 1.2, "height": 0.4 }
+    }
+  },
+  "python": {
+    "packages": {
+      "docx": "python-docx",
+      "pptx": "python-pptx",
+      "xlsx": "openpyxl",
+      "xlsxAlt": "xlsxwriter"
+    },
+    "importSnippets": {
+      "docx": "from docx import Document\nfrom docx.shared import Pt, Inches, RGBColor",
+      "pptx": "from pptx import Presentation\nfrom pptx.util import Inches, Pt\nfrom pptx.dml.color import RGBColor",
+      "openpyxl": "from openpyxl import Workbook\nfrom openpyxl.styles import Font, PatternFill, Alignment, Border, Side"
+    }
+  }
+}

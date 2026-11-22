@@ -10,7 +10,7 @@ Features and acceptance: `docs/PRD.md`. Rules, ownership, conventions: `CLAUDE.m
 | API (`api`) | Fastify 5.12.8 on Node native TypeScript | Domain logic, DB/RLS, webhooks, OAuth callbacks, public form endpoint |
 | Worker (`api`) | pg-boss 12.38.2, same code as the api, separate process | Needs Node ≥22.12, Postgres ≥13 |
 | Shared contracts | Zod 4.6.7 schemas; source `api/src/contracts`, generated copy `web/src/contracts` | `node scripts/sync-contracts.mjs`; CI fails if the copy is stale |
-| UI | Tailwind 4.3.5 (logical properties), Radix (`radix-ui` 1.8.1), dnd-kit, hand-rolled SVG charts | Mockup tokens; Manrope + Noto Sans Arabic |
+| UI | Tailwind 4.3.5 (logical properties), Radix (`radix-ui` 1.8.1), dnd-kit, hand-rolled SVG charts | Brand tokens from `skills/sharkx-brand-guidelines/assets/tokens.json`; Sharp Sans + GE Flow (Arabic), Segoe UI fallback until the licensed font files arrive |
 | Data | Postgres 18.7, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11 | RLS policies as SQL in migrations |
 | Libraries | next-intl 4.15.1, SWR, libphonenumber-js, Papaparse | Added in the spec that first needs them |
 | Email | Resend SDK, plain TS templates (EN/AR/FR) | |
@@ -23,7 +23,7 @@ Exact versions are pinned in each `package.json` and the lockfile. No other depe
 - Railway project `sharkx-crm`, region Europe West (Amsterdam); environments `staging`, `production`.
 - Services (one repo; each service's Railway root directory is its app folder): `web` (`web/railway.json`: Next.js UI + BFF), `api` (`api/railway.json`: Fastify backend; runs migrations pre-deploy), `worker` (`api/railway.worker.json`: pg-boss, api code), Postgres. Watch paths `/web/**` and `/api/**` so a change in one app doesn't redeploy the other.
 - Traffic: browser → `web` only. `web` → `api` over Railway private networking (`API_URL`). Public `api` domain only for platform webhooks, OAuth callbacks and the website form endpoint.
-- Domains: `app.<domain>` and `leads.<domain>` → `web` (proxy on the leads host allows only `/l/*`); `api.<domain>` → `api`.
+- Domains: `app.<domain>` → `web` (staff and client users); `api.<domain>` → `api`.
 - Public HTTPS staging URLs from day 1 (Meta/Google webhooks and OAuth callbacks need them).
 - CI (GitHub Actions, runs on every push to `main`; developers also run `node scripts/verify.mjs` before pushing): jobs `api` and `web`, each: install `--frozen-lockfile` → typecheck → Biome → Vitest (api with a Postgres service) → `pnpm audit --prod` (non-blocking for now); web also checks the contracts copy. Aggregate required check: `verify`.
 - CD: Railway GitHub integration with wait-for-CI. `main` → staging automatically; production promoted manually after UAT. Healthchecks: web `/api/health` (checks api + db), api `/health` (checks db). Steps: `docs/ENVIRONMENTS.md`.
@@ -34,9 +34,8 @@ Exact versions are pinned in each `package.json` and the lockfile. No other depe
 ```
 web/                     frontend only: Next.js UI + BFF (no DB access)
   src/app/[locale]/(auth)/   login, code, reset, accept-invite
-  src/app/[locale]/(app)/    clients home, p/[projectId]/{overview,inbox,leads,contacts,pipeline,tasks,reports,integrations,settings}, agency settings, audit
-  src/app/l/[token]/         client lead link (leads host only)
-  src/app/api/               BFF route handlers: health, events (polling), export, portal
+  src/app/[locale]/(app)/    clients home, p/[projectId]/{overview,inbox,leads,contacts,pipeline,tasks,reports,integrations,settings}, agency settings, audit (nav and routes role-gated: client users get only overview, leads, inbox, reports, integrations of their own client)
+  src/app/api/               BFF route handlers: health, events (polling), export
   src/components/  src/lib/{env,i18n,api}  src/proxy.ts
   src/contracts/             GENERATED copy of api/src/contracts (never edit)
   messages/{en,ar,fr}/<module>.json
@@ -47,7 +46,7 @@ api/                     backend only: Fastify + worker
   src/routes/            HTTP routes (internal for web; public: webhooks, oauth, forms, health)
   src/modules/<domain>/  index.ts (public API) · schema.ts · service.ts · routes.ts · *.test.ts
     auth audit projects leads contacts pipeline tasks automation whatsapp
-    conversion client-link reports notifications webhooks
+    conversion reports notifications webhooks
     integrations/{meta,google,tiktok,linkedin,snapchat,website,csv,hub}
   src/contracts/         Zod schemas shared with web (source of truth, frozen day 1)
   src/db/                client, schema barrel, migrator, migrations/ (single lane)
@@ -66,22 +65,23 @@ scripts/  tracker/       tracker CLI and dashboard · contracts sync script
 
 ## 4 Data model and RLS
 Tenant = `project` (client). Every tenant table has `project_id uuid not null`.
-- **Access:** users, sessions, auth_tokens (invite|reset|email_code; hashed, expiry, attempts), project_members, audit_log (append-only), rate_limits.
+- **Access:** users (role: super_admin | manager | client), sessions, auth_tokens (invite|reset|email_code; hashed, expiry, attempts), project_members (client users only: one row per client user; super admin and managers see every project and have no rows), audit_log (append-only), rate_limits.
 - **Core:** projects (timezone, business_hours), pipeline_stages, contacts (unique project_id + phone_e164), leads (status new|mql|sql|not_qualified, reason, stage_id, owner_id, source, campaign, form_id, answers jsonb, is_test, external_id), lead_events (timeline), notes, tasks.
 - **Integrations:** integrations (status, account, last_data_at), integration_tokens (AES-GCM), lead_forms (mapping jsonb), webhook_events (payload, processed_at).
 - **WhatsApp:** wa_numbers, wa_conversations, wa_messages (direction; origin customer|app|history).
-- **Client link:** client_links (token_hash, can_mark, can_export, revoked_at), qualification_settings (definitions, reasons).
+- **Qualification:** qualification_settings (definitions, reasons).
 - **Conversion:** conversion_mappings, conversion_events (id = Meta event_id; state; attempts).
 - **Ops:** automation_rules, notifications, change_feed (bigserial, polling), error_log.
 - `project_members` and the RLS policies live in `lib/tenant` (owner A).
 
 **RLS**
-- Roles: `app_migrator` (table owner, migrations only), `app_user` (web requests), `app_system` (worker, webhooks, portal). Runtime roles own no tables and lack BYPASSRLS; tenant tables use ENABLE + FORCE ROW LEVEL SECURITY.
-- Each request/job runs in one transaction that calls `set_config('app.user_id' | 'app.role' | 'app.project_id', …, true)` (transaction-local, safe with pooled connections). Unset → policies match nothing.
-- Row visible if `project_id` ∈ the user's project_members, or role = admin, or `project_id = app.project_id` (system/portal context).
-- `audit_log`: INSERT-only grants. Password hashes and tokens are read only inside `modules/auth`.
-- Two pools (`DATABASE_URL_APP`, `DATABASE_URL_SYSTEM`); helpers `withTenant(session, fn)` and `withSystem(projectId, fn)`.
-- Isolation suite per tenant table: user of project A cannot read or write project B; unset context returns zero rows.
+- Roles (migration `0002_roles_rls.sql`): the connecting user is the owner/migrator. `app_user` (web requests) and `app_system` (worker, webhooks) are NOLOGIN roles it switches into with `SET LOCAL ROLE`. Neither owns tables or bypasses RLS; tenant tables use ENABLE + FORCE ROW LEVEL SECURITY. One `DATABASE_URL`, one pool: no separate credentials per role.
+- Helpers in `lib/tenant`: `withTenant({userId, role}, fn)` and `withSystem(projectId | null, fn)`. Each is one transaction that sets the role and `set_config('app.user_id' | 'app.role' | 'app.project_id', …, true)` (transaction-local, safe with pooled connections). Unset → policies match nothing. Only `db/` and `lib/tenant/` may touch the raw pool (`tests/rls/no-raw-pool.test.ts`).
+- Standard policy, applied by `app_secure_tenant_table('<table>', '<client_access>')`: row visible if role is `super_admin` or `manager`, or `project_id = app.project_id` (system context), or the user is a client in `project_members` for that project **and** the table's `client_access` allows it. `client_access` is `none` (clients read nothing: notes, tasks, lead_events, automation_rules, conversion_mappings, conversion_events, pipeline_stages), `read` (projects, contacts, leads, wa_numbers, wa_conversations, wa_messages, integrations, lead_forms, qualification_settings, change_feed limited to kinds lead, message, health, notification) or `write` (leads: status mark only, through the service; integrations, lead_forms, wa_numbers: connectors). Every new tenant table calls this function with an explicit `client_access` in its migration; `tests/rls/structure.test.ts` fails otherwise.
+- Column limits are not an RLS feature: services return client-safe projections for the client role (no owner_id, stage_id, notes, events), and only the marking service updates `leads.status`, `status_seq` and `reason` for clients.
+- Exceptions: `project_members` (own rows readable; only super admin, manager and system write); `projects` (key is `id`; `app_system` can list all rows for cron loops); `audit_log` (INSERT/SELECT only, reads for super admin or the system's project); `webhook_events` and `integration_tokens` are system-only; `sessions`, `auth_tokens`, `rate_limits`, `error_log` are system-only by grants; `app_user` reads `users` without `pw_hash`.
+- Project creation: the service pre-generates the id and runs `withSystem(newId)` (project, member rows, default stages in one transaction).
+- Isolation suite (`tests/rls/`): cross-client reads and writes, no-context, per role (super admin, manager, client) and system, `client_access` per table, grants, concurrent pooled transactions, failure leaves no context.
 
 **Rules**
 - Contact 1—N lead. A new submission matches the contact by phone (else email); it merges into the open lead's timeline (status ≠ not_qualified), otherwise opens a new lead.
@@ -96,7 +96,7 @@ Tenant = `project` (client). Every tenant table has `project_id uuid not null`.
 - `can(user, action, projectId?)` → boolean; actions enumerated in the contract file.
 - `GET /api/events?since=<n>` → `{cursor, changes[{kind, projectId, id}]}`; the client refetches changed resources (intervals: PRD F14).
 
-HTTP: api public routes `/webhooks/{meta,google,tiktok,linkedin,snapchat}`, `/forms/:key`, `/oauth/:platform/callback`, `/health`; api internal routes are called only by web (session token forwarded). Web BFF route handlers: `/api/health`, `/api/events`, `/api/export/[kind]`, `/api/portal/*` (leads host). Everything else in web is Server Components/Actions.
+HTTP: api public routes `/webhooks/{meta,google,tiktok,linkedin,snapchat}`, `/forms/:key`, `/oauth/:platform/callback`, `/health`; api internal routes are called only by web (session token forwarded). Web BFF route handlers: `/api/health`, `/api/events`, `/api/export/[kind]`. Everything else in web is Server Components/Actions.
 
 Jobs (pg-boss, `singletonKey` for idempotency):
 | Queue | Trigger | Retry |
@@ -117,10 +117,10 @@ Exhausted jobs → `error_log` + alert email.
 - Email + password: scrypt (N=2^15, r=8, p=1, per-user salt), ≥12 chars. Invite = single-use link (72 h) to set a password; reset link 1 h; tokens 256-bit, stored as sha256.
 - 2FA: after the password, a 6-digit emailed code (hashed, 10 min, 5 attempts); session stays `pending_2fa` until verified. TOTP is an Extra.
 - Session: opaque 256-bit token (sha256 in DB); `__Host-` cookie, HttpOnly, Secure, SameSite=Lax; rotated on login and 2FA; idle 12 h, absolute 7 d; revoked on password change.
-- Rate limits (Postgres): login 5/15 min per email+IP; code verify 5 per code; code send 3/10 min; reset 3/h; forms and portal per IP.
+- Rate limits (Postgres): login 5/15 min per email+IP; code verify 5 per code; code send 3/10 min; reset 3/h; forms per IP.
 - CSRF: Server Actions same-origin check; cookie-authenticated route handlers verify Origin; webhooks use signatures only.
 - Headers: CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors 'none'`.
-- Client link: random 256-bit token, hashed, constant-time compare, no cookies, per-IP rate limit.
+- Roles: `super_admin` (seeded), `manager` (invited by the super admin), `client` (invited by the super admin or a manager, for one client). All use the same login, session, 2FA and rate limits; a client user's session carries the one `projectId` of its client.
 
 ## 7 Integrations
 Adapter (`modules/integrations/<platform>`): `connectDescriptor` (steps/fields for B's generic wizard), `handleWebhook` or `poll` → `ingestLead`, `health`, `refresh`. Recorded payloads in `fixtures/`; every adapter is built fixture-first.
@@ -138,6 +138,7 @@ Adapter (`modules/integrations/<platform>`): `connectDescriptor` (steps/fields f
 - WhatsApp limits to design for: one history sync per onboarding within 24 h (else offboard and redo); the app must be opened about every 13–14 days or the link drops; groups not synced; companion apps unlink; Embedded Signup v4 (v2 deprecated). Unofficial WhatsApp tools are barred by the SOW.
 - Google Ads API no longer accepts new offline-conversion adopters (2026-06-15), so conversions go through the Data Manager API only.
 - Hub labels each adapter Live / Fixture-verified / Awaiting access.
+- Connectors: super admin, managers and client users (own client) can connect and reconnect (`integration.manage`); every connect is audited with its actor. Whoever connects must hold the needed role on the platform itself (Page admin, Google Ads admin, Snapchat Org Admin…); the adapter explains a missing role in plain words.
 
 ## 8 Security, config, ops
 - Env: Railway variables per environment; `.env.example` committed; `lib/env.ts` Zod-validates at boot (fail fast).
@@ -163,6 +164,8 @@ Adapter (`modules/integrations/<platform>`): `connectDescriptor` (steps/fields f
 | Fixture-first adapters | Approvals are outside our control; code complete by D18, live when access lands |
 | Europe West (Amsterdam) | Best latency for UAE + Morocco among Railway regions |
 | Cache Components off | Tenant data must never be cached across users |
+| Three roles: super admin, manager, client (no agent, no client sub-roles); roles do not nest | Simpler model; the client has its own permission set instead of a slice of staff rights |
+| Client login replaces the secure client link | One auth path and one host; clients get analytics, chats, connectors and marking in one place; SOW change order pending (§10) |
 | Statuses New/MQL/SQL/Not qualified | SOW; Won/Junk are Extras |
 | Biome only | One tool, one config |
 
@@ -175,3 +178,4 @@ Adapter (`modules/integrations/<platform>`): `connectDescriptor` (steps/fields f
 | Sentry + uptime alerts | `/api/health` + `error_log` + emailed alerts | Simpler, in-house; covers the alert inbox (Client Requirements #7) |
 | Two-factor sign-in | Emailed 6-digit code | Simplest compliant 2FA; authenticator app is an Extra |
 | DB "can move to a UAE region" | Launch in Amsterdam; Railway has no UAE region | Residency deferred; SHARKX informed |
+| SOW §4 Client lead link; client logins out of scope | Client login dashboard (analytics, leads + marking, WhatsApp chats read-only, connectors); the link is removed | Simpler and more useful; adds scope the SOW excluded, so a written change order is needed |

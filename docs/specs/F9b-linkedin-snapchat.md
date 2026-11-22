@@ -1,5 +1,7 @@
 # F9b · LinkedIn and Snapchat
-Owner: A (Alex) · Days 18–18 · Release 3 · Tracker: F9.3, F9.4 · PRD: [F9](../PRD.md#f9)
+Owner: B (John) · full stack (web + api + db + tests) · Days 21–21 · Release none (hardening) · Tracker: F9.3, F9.4 · PRD: [F9](../PRD.md#f9)
+
+> Ownership changed: B (John) builds this feature end to end, web and api. Where "Files touched" below splits files between A and B, read it as a list of paths only.
 
 ## Goal
 LinkedIn Lead Gen Forms and Snapchat lead ads deliver leads through the shared adapter, fixture-verified now.

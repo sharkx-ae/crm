@@ -5,7 +5,7 @@
 |---|---|---|---|
 | Runs on | your machine (`pnpm dev` in `api/` and `web/`, Docker Postgres on :5433) | Railway env `staging` | Railway env `production` |
 | Deploys | — | automatically from `main` after CI passes | **manually**, a commit already verified on staging |
-| URLs | web :3000, api :4000 | Railway staging domains (custom later) | `app.<domain>`, `leads.<domain>`, `api.<domain>` |
+| URLs | web :3000, api :4000 | Railway staging domains (custom later) | `app.<domain>`, `api.<domain>` |
 | Database | `sharkx` (+ `sharkx_test` for Vitest) | own Railway Postgres | own Railway Postgres + backups |
 | Secrets/keys | dummy or none (`.env.local`) | staging-only values | production-only values |
 | Email sender | none required | Resend, test sender/domain | Resend, SHARKX verified domain |

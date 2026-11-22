@@ -1,5 +1,7 @@
 # F6 · Google Ads and YouTube lead forms
-Owner: A (Alex) · Days 13–13 · Release 2 · Tracker: F6.1, F6.2, F6.3 · PRD: [F6](../PRD.md#f6)
+Owner: B (John) · full stack (web + api + db + tests) · Days 13–13 · Release 2 · Tracker: F6.1, F6.2, F6.3 · PRD: [F6](../PRD.md#f6)
+
+> Ownership changed: B (John) builds this feature end to end, web and api. Where "Files touched" below splits files between A and B, read it as a list of paths only.
 
 ## Goal
 Google Search, YouTube and Demand Gen lead forms deliver leads into the CRM.

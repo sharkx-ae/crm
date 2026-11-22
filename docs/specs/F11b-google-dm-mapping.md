@@ -1,5 +1,5 @@
 # F11b · Google Data Manager sender and mapping table
-Owner: A (Alex) · Days 15–15 · Release 3 · Tracker: F11.3, F11.4 · PRD: [F11](../PRD.md#f11)
+Owner: A (Alex) · full stack (web + api + db + tests) · Days 18–18 · Release 3 · Tracker: F11.3, F11.4 · PRD: [F11](../PRD.md#f11)
 
 ## Goal
 Status changes also reach Google Ads, and each client controls which statuses are sent to which platform.
@@ -11,7 +11,7 @@ Status changes also reach Google Ads, and each client controls which statuses ar
 ## Data model / API / job changes
 - `conversion_mappings` defaults created per project (mockup values minus Won).
 - Google sender in `conversion.send`: Data Manager API with the OAuth grant from F6; destination = client's Ads account + conversion action id; no developer token.
-- Settings page "Conversion feedback" (mockup) shows mapping toggles + event log from F11a.
+- Settings page "Conversion feedback" (mockup) shows the mapping toggles.
 
 ## Files touched
 - A (Alex): src/modules/conversion/google/*, tests/fixtures/google-dm/*

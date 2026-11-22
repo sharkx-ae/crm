@@ -1,5 +1,5 @@
 # F3a · WhatsApp onboarding and webhook receiver
-Owner: A (Alex) · Days 7–7 · Release 1 · Tracker: F3.1, F3.2 · PRD: [F3](../PRD.md#f3)
+Owner: A (Alex) · full stack (web + api + db + tests) · Days 9–9 · Release 2 · Tracker: F3.1, F3.2 · PRD: [F3](../PRD.md#f3)
 
 ## Goal
 A client's WhatsApp Business number connects by QR (Embedded Signup v4, Coexistence) and Meta webhooks are verified, stored and queued.

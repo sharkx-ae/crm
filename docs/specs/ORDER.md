@@ -1,57 +1,91 @@
-# ORDER · build order by dependency
+# ORDER · build order, full-stack ownership
 
-- Day 1 = Fri 20 Nov 2026 · Day 21 = Thu 10 Dec · Day 28 = Thu 17 Dec. Calendar days, weekends included (shaded in `docs/plan.html`).
-- **Alex** = Dev A (Pipes) · **John** = Dev B (Product). Data source for the timeline: `docs/plan-data.js`; keep both in sync.
-- Release = first release on or after the spec's end day: R1 Day 7, R2 Day 14, R3 Day 18. Days 19–21 hardening/staging/demo; Days 22–28 UAT + production (outside the 21-day build).
+- Day 1 = Fri 20 Nov 2026 · Day 3 = Sun 22 Nov (today's baseline) · Day 14 = Thu 3 Dec · Day 21 = Thu 10 Dec. Calendar days, weekends included.
+- **Alex** and **John** each own whole features: screen, Server Action, api route, service, schema, tests. Nobody waits for the other half of a feature.
+- **Priority:** Phase 1 Base portal (sign-in, invites, reset password, role dashboards) → Phase 2 WhatsApp → Phase 3 lead sources → Phase 4 work the leads → Phase 5 close the loop → hardening. Phases overlap only where the two devs work in parallel.
+- Re-baselined from D3 (F1b was in progress, F2a not started). Estimates, not promises: feature freeze lands about D19 (was D18); see "Risks".
 
-| Start | End | Spec | Owner | Release | Depends on |
-|---|---|---|---|---|---|
-| D1 Fri 20 Nov | D1 | [F1a Scaffold, CI, Railway, contracts](F1a-scaffold-contracts.md) | Both | R1 | — |
-| D1 | D2 Sat 21 Nov | [F2a Shell, tokens, i18n/RTL](F2a-shell-i18n.md) | John | R1 | F1a |
-| D2 | D3 Sun 22 Nov | [F1b Schema, RLS, tenant helpers](F1b-schema-rls.md) | Alex | R1 | F1a |
-| D3 | D4 Mon 23 Nov | [F4a Lead engine and seed](F4a-lead-engine.md) | John | R1 | F1b |
-| D4 | D5 Tue 24 Nov | [F1c Auth, 2FA, roles](F1c-auth.md) | Alex | R1 | F1b |
-| D5 | D5 | [F2b Clients home, projects, settings](F2b-clients-projects.md) | John | R1 | F2a, F1b |
-| D6 Wed 25 Nov | D6 | [F1d Queue, audit, limits, alerts](F1d-queue-audit.md) | Alex | R1 | F1b |
-| D6 | D7 Thu 26 Nov | [F4b Leads screen, drawer, contacts](F4b-leads-ui.md) | John | R1 | F4a, F2a |
-| D7 | D7 | [F3a WhatsApp onboarding + webhook](F3a-whatsapp-onboarding.md) | Alex | R1 | F1d |
-| D8 Fri 27 Nov | D9 Sat 28 Nov | [F3b WhatsApp sync, ingest, linking](F3b-whatsapp-sync.md) | Alex | R2 | F3a, F4a |
-| D8 | D9 | [F3c Inbox UI](F3c-inbox-ui.md) | John | R2 | F4b, F3b (parallel, on fixtures) |
-| D10 Sun 29 Nov | D10 | [F7 Website forms and CSV](F7-website-csv.md) | Alex | R2 | F4a, F1d |
-| D10 | D10 | [F14b Hub UI and connect wizard](F14b-hub-ui.md) | John | R2 | F2a, F1d |
-| D11 Mon 30 Nov | D12 Tue 1 Dec | [F5 Meta Lead Ads](F5-meta-lead-ads.md) | Alex | R2 | F3a, F4a, F14b |
-| D11 | D11 | [F8a Stages and kanban](F8a-stages-kanban.md) | John | R2 | F2b, F4b |
-| D12 | D12 | [F8b Tasks and reminders](F8b-tasks-reminders.md) | John | R2 | F8a, F1d |
-| D13 Wed 2 Dec | D13 | [F6 Google lead forms](F6-google.md) | Alex | R2 | F4a, F14b |
-| D13 | D14 Thu 3 Dec | [F10a Client link and portal](F10a-client-link-portal.md) | John | R2 | F2a, F1b |
-| D14 | D14 | [F11a Outbox and Meta CAPI](F11a-outbox-meta-capi.md) | Alex | R2 | F1d, F4b |
-| D15 Fri 4 Dec | D15 | [F11b Google Data Manager and mapping](F11b-google-dm-mapping.md) | Alex | R3 | F11a |
-| D15 | D15 | [F10b Marking and link settings](F10b-marking-settings.md) | John | R3 | F10a, F11a |
-| D16 Sat 5 Dec | D16 | [F14a Health, events, alerts](F14a-health-events.md) | Alex | R3 | F1d |
-| D16 | D16 | [F12 Routing and automation](F12-routing-automation.md) | John | R3 | F8b, F3b |
-| D17 Sun 6 Dec | D17 | [F9a Adapter interface and TikTok](F9a-adapters-tiktok.md) | Alex | R3 | F4a, F14b |
-| D17 | D17 | [F13a Overview and agency view](F13a-overview-agency.md) | John | R3 | F4b, F3b |
-| D17 | D17 | [F1e Audit log viewer](F1e-audit-viewer.md) | John | R3 | F1d, F2a |
-| D18 Mon 7 Dec | D18 | [F9b LinkedIn and Snapchat](F9b-linkedin-snapchat.md) | Alex | R3 | F9a |
-| D18 | D18 | [F13b Reports and export](F13b-reports.md) | John | R3 | F13a |
-| D19 Tue 8 Dec | D20 Wed 9 Dec | [F15a Security and fixture suites](F15a-security-fixtures.md) | Alex | — | F1b, F3b, F5, F9b |
-| D19 | D19 | [F2c Arabic/French and RTL QA](F2c-ar-fr-rtl.md) | John | — | F13b |
-| D20 | D20 | [F15b Playwright smoke flows](F15b-playwright.md) | John | — | F13b, F10b |
-| D19 | D21 Thu 10 Dec | [F15c Staging, backups, handover, demo](F15c-staging-handover-demo.md) | Both | — | F15a, F15b |
-| D22 Fri 11 Dec | D28 Thu 17 Dec | [F15d UAT and production](F15d-uat-production.md) | Both | — | F15c |
+## Phase 1 · Base portal (Release 1, demo D10)
+Demo script: super admin signs in with a code → creates a client → invites its first user → the user accepts, sets a password, signs in and lands on its own dashboard; a manager is invited; a password is reset; every step is in the audit table.
 
-## Releases
-- **R1 (D7):** scaffold, schema/RLS, auth + 2FA, queue/audit, shell, clients/projects, lead engine + seed, leads screen; WhatsApp onboarding started.
-- **R2 (D14):** WhatsApp sync + inbox, website/CSV, hub + wizard, Meta Lead Ads, Google, pipeline + tasks, client portal, outbox + Meta CAPI.
-- **R3 (D18, feature freeze):** Google Data Manager + mapping, client marking, health/events/alerts, automation, TikTok/LinkedIn/Snapchat, overview/reports, audit viewer.
+| Start | End | Spec | Owner | Depends on |
+|---|---|---|---|---|
+| D3 | D4 | [F1b Schema, RLS, tenant helpers](F1b-schema-rls.md) | Alex | F1a |
+| D3 | D4 | [F2a Shell, tokens, i18n/RTL, role-gated nav](F2a-shell-i18n.md) | John | F1a |
+| D5 | D7 | [F1c Access: sign-in, code, reset, invites, roles](F1c-auth.md) | Alex | F1b |
+| D5 | D6 | [F4a Lead engine and seed](F4a-lead-engine.md) | John | F1b |
+| D7 | D7 | [F2b Workspace: clients home, create client, team, settings](F2b-clients-projects.md) | John | F2a, F1b (invite action from F1c S4) |
+| D8 | D8 | [F1d Audit writes, queue, email, limits, alerts](F1d-queue-audit.md) | Alex | F1b |
+| D8 | D8 | [F10a Client dashboard foundation + client users](F10a-client-workspace.md) | John | F2a, F1c |
+| D9 | D10 | [F4b Leads screen, drawer, contacts](F4b-leads-ui.md) | John | F4a, F2a |
+| D11 | D11 | [F13a Overview (staff and client)](F13a-overview-agency.md) | John | F4b |
+
+## Phase 2 · WhatsApp (Alex, one feature end to end)
+| Start | End | Spec | Owner | Depends on |
+|---|---|---|---|---|
+| D9 | D9 | [F3a Onboarding + webhook](F3a-whatsapp-onboarding.md) | Alex | F1d |
+| D10 | D11 | [F3b History sync, ingest, linking](F3b-whatsapp-sync.md) | Alex | F3a, F4a |
+| D12 | D13 | [F3c Inbox UI](F3c-inbox-ui.md) | Alex | F4b, F3b |
+
+## Phase 3 · Lead sources
+| Start | End | Spec | Owner | Depends on |
+|---|---|---|---|---|
+| D12 | D12 | [F7 Website forms and CSV](F7-website-csv.md) | John | F4a, F1d |
+| D13 | D13 | [F6 Google lead forms](F6-google.md) | John | F4a, F14b |
+| D14 | D14 | [F14b Hub UI and connect wizard](F14b-hub-ui.md) | Alex | F2a, F1d |
+| D15 | D16 | [F5 Meta Lead Ads](F5-meta-lead-ads.md) | Alex | F3a, F4a, F14b |
+
+Note: F6 needs the F14b wizard (D14), so John builds F6 on fixtures D13 and wires the wizard after D14.
+
+## Phase 4 · Work the leads (John)
+| Start | End | Spec | Owner | Depends on |
+|---|---|---|---|---|
+| D14 | D14 | [F8a Stages and kanban](F8a-stages-kanban.md) | John | F2b, F4b |
+| D15 | D15 | [F8b Tasks and reminders](F8b-tasks-reminders.md) | John | F8a, F1d |
+| D17 | D17 | [F12 Routing and automation](F12-routing-automation.md) | John | F8b, F3b |
+
+## Phase 5 · Close the loop
+| Start | End | Spec | Owner | Depends on |
+|---|---|---|---|---|
+| D16 | D16 | [F10b Client marking, export, qualification settings](F10b-marking-settings.md) | John | F10a, F11a (stub the outbox until D17) |
+| D17 | D17 | [F11a Outbox and Meta CAPI](F11a-outbox-meta-capi.md) | Alex | F1d, F4b |
+| D18 | D18 | [F11b Google Data Manager and mapping](F11b-google-dm-mapping.md) | Alex | F11a |
+| D19 | D19 | [F14a Health, events, alerts](F14a-health-events.md) | Alex | F1d |
+| D18 | D18 | [F13b Reports](F13b-reports.md) | John | F13a |
+| D19 | D19 | [F1e Audit log viewer](F1e-audit-viewer.md) | John | F1d, F2a |
+
+## Hardening and handover
+| Start | End | Spec | Owner | Depends on |
+|---|---|---|---|---|
+| D20 | D21 | [F9a Adapter interface and TikTok](F9a-adapters-tiktok.md) + [F9b LinkedIn and Snapchat](F9b-linkedin-snapchat.md) | John | F4a, F14b |
+| D20 | D21 | [F15a Security and fixture suites](F15a-security-fixtures.md) | Alex | F1b, F3b, F5 |
+| D22 | D22 | [F2c Arabic/French and RTL QA](F2c-ar-fr-rtl.md) | John | F13b |
+| D22 | D23 | [F15b Playwright smoke flows](F15b-playwright.md) | John | F13b, F10b |
+| D21 | D23 | [F15c Staging, backups, handover, demo](F15c-staging-handover-demo.md) | Both | F15a, F15b |
+| D24 | D30 | [F15d UAT and production](F15d-uat-production.md) | Both | F15c |
+
+## Who owns what (about 70 h each)
+- **Alex:** database and RLS, Access (sign-in, code, reset, invites, roles), audit/queue/email, WhatsApp, hub and wizard, Meta Lead Ads, conversion feedback, health and alerts, security suite.
+- **John:** shell and i18n, workspace (clients, team, client users, settings), client dashboard, lead engine, leads/contacts/overview/reports, website/CSV, Google, pipeline/tasks, client marking, automation, audit viewer, TikTok/LinkedIn/Snapchat, Playwright.
 
 ## Critical cross-dev links
-- F1b (Alex, D2–3) → F4a (John, D3–4): John starts lead engine on Alex's schema; RLS lands end of D3.
-- F4a (John, D3–4) → every adapter (Alex: F3b, F7, F5, F6, F9a): `ingestLead` must be real by end of D4.
-- F14b (John, D10) → F5, F6, F9a (Alex): connect wizard before platform connects.
-- F11a (Alex, D14) → F10b (John, D15): marking writes the outbox Alex sends.
-- Parallel-on-fixtures: F3c builds against `tests/fixtures/whatsapp` while F3b lands (D8–9).
+- F1b → everything: every new tenant table declares its `client_access` (ARCHITECTURE §4).
+- F1c S4 (invites, D6) → F2b and F10a: John calls Alex's `inviteUser` action; until it lands John stubs it behind the same contract.
+- F4a `ingestLead` must be real by D6 for every adapter (WhatsApp D9, Meta D15, Google D13).
+- F14b wizard (D14) → F5 and F6.
+- F11a outbox (D17) ← F10b marking writes the outbox rows; John stubs until then.
+
+## Risks
+- **Meta App Review:** WhatsApp submission moves from D9 to about D11, lead retrieval from D12 to about D16. Mitigation: Alex registers the Meta developer app and starts Tech Provider paperwork on D3; SHARKX business verification must be underway (CONTACT-SHARKX day 1).
+- **Capacity:** both devs are booked to about D19. If the freeze must stay D18, cut F9b (LinkedIn/Snapchat) to post-launch: it is fixture-only and awaiting platform access anyway.
+- `docs/plan-data.js` and `docs/plan.html` still show the old days and owners; re-sync them from this table.
+
+## Releases
+- **R1 (D10):** base portal and seeded dashboards.
+- **R2 (D16):** WhatsApp, website/CSV, Google, Meta, hub, pipeline, tasks.
+- **R3 (D19):** client marking, conversion feedback, health, automation, reports, audit viewer.
+- D20–23 hardening and the TikTok/LinkedIn/Snapchat fixtures; D24–30 UAT and production.
 
 ## External milestones (not build work)
-- Meta App Review submission: WhatsApp end of D9 (after F3b), lead retrieval end of D12 (after F5).
+- Meta App Review: WhatsApp about D11, lead retrieval about D16.
 - LinkedIn, TikTok, Snapchat access requests: D1–5 (no SLA for LinkedIn).

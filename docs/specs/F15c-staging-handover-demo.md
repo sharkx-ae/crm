@@ -1,5 +1,5 @@
 # F15c · Staging release, backups, handover, demo
-Owner: Both · Days 19–21 · Release none (hardening/demo) · Tracker: F15.1, F15.6, F15.7 · PRD: [F15](../PRD.md#f15), [Demo](../PRD.md#demo-success-criteria)
+Owner: Both · Days 21–23 · Release none (hardening/demo) · Tracker: F15.1, F15.6, F15.7 · PRD: [F15](../PRD.md#f15), [Demo](../PRD.md#demo-success-criteria)
 
 ## Goal
 A release candidate runs on staging, backups are proven, handover material exists, and the Day 21 demo passes.

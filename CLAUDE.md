@@ -1,6 +1,6 @@
 # SHARKX Agency CRM
 
-Multi-client CRM for ad agency SHARKX: capture leads → follow up → client marks MQL/SQL/Not qualified via a secure link → results sent to Meta/Google. Contract: SOW 2026-10-16. 21-day build, 2 devs (Alex = A "Pipes", John = B "Product"); Claude Code writes most of the code.
+Multi-client CRM for ad agency SHARKX: capture leads → follow up → client signs in and marks MQL/SQL/Not qualified → results sent to Meta/Google. Contract: SOW 2026-10-16. 21-day build, 2 devs (Alex = A "Pipes", John = B "Product"); Claude Code writes most of the code.
 
 ## Read on demand (don't load all)
 
@@ -10,6 +10,7 @@ Multi-client CRM for ad agency SHARKX: capture leads → follow up → client ma
 - Specs: `docs/specs/<id>-*.md` (one per spec), `docs/specs/CONTRACTS.md` (frozen shared shapes), `docs/specs/ORDER.md` (build order, days).
 - Timeline: docs/plan.html (data in docs/plan-data.js)
 - `docs/inputs/` (local only, git-ignored; get it from Vansh): SOW, mockup (UI truth), requirements. Open only to settle a conflict.
+- **Brand skill (read before any UI work):** `skills/sharkx-brand-guidelines/SKILL.md`. Colors, type, radius, tables, KPI strip, charts, logo and QA checklist come from it and `assets/tokens.json`. The mockup (`docs/inputs/sharkx-crm-mockup.html`) is built to it.
 
 ## Stack (details: ARCHITECTURE §1)
 
@@ -28,9 +29,10 @@ Two independent projects, each with its own `package.json`, lockfile and `node_m
 - web (pages, Server Actions, BFF route handlers; no DB) → HTTP via `web/src/lib/api` → api routes → `api/src/modules/<domain>/service.ts` → `api/src/db`. Worker calls the same services. Browser never calls the api.
 - Spec paths map: `src/app/api/**` → `api/src/routes`; other `src/app/**`, `src/components/**`, `messages/**` → `web/`; other `src/**` → `api/src/`; `src/contracts` → `api/src/contracts` (web gets a generated copy).
 - Imports: relative with explicit `.ts`/`.tsx` extension (api/worker run on Node's native TypeScript); `@/` alias only inside `web`. Erasable syntax only (no enums/namespaces).
-- One owner per path. Use another owner's module only through its `index.ts`; change it only after telling them, in its own commit.
-- **Dev A "Pipes" (Alex):** `api/src/{db,worker,routes}`, `api/src/lib/*`, api `modules/{auth,audit,webhooks,whatsapp,conversion}`, `modules/integrations/*`, `api/railway*.json`, `api/docker-compose.yml`, CI.
-- **Dev B "Product" (John):** all of `web` (pages, components, i18n, messages, BFF client) and api `modules/{leads,contacts,pipeline,tasks,automation,client-link,reports,projects,notifications}`.
+- **Ownership is by feature, full stack.** The dev who owns a spec builds it top to bottom: web screens, Server Actions, api routes, service, schema, tests. Who owns what and in which order: `docs/specs/ORDER.md`. Specs are written per sub-feature (`docs/specs/_TEMPLATE.md`); build one sub-feature at a time and tick its acceptance criteria.
+- One owner per module. Use another dev's module only through its `index.ts`; change it only after telling them, in its own commit.
+- **Alex:** `api/src/{db,worker}`, `lib/*`, CI, Railway config, and the features Access (auth), audit/queue/email, WhatsApp, hub and wizard, Meta Lead Ads, conversion feedback, health and alerts, security suite.
+- **John:** the app shell and i18n, and the features workspace (clients, team, client users, settings), client dashboard, lead engine, leads/contacts/overview/reports, website/CSV, Google, pipeline/tasks, client marking, automation, audit viewer, TikTok/LinkedIn/Snapchat, Playwright.
 - **Shared:** `api/src/contracts` (Zod; owner proposes and tells the other dev before pushing). Never edit `web/src/contracts` (generated): after any change run `node scripts/sync-contracts.mjs`. Also the `api/src/db/schema/index.ts` barrel (append-only).
 - Single migration lane: schema lives in `modules/<x>/schema.ts`, migrations only in `api/src/db/migrations`; run `db:generate` only after `git pull --rebase`; push migration commits the same day they are generated; never edit a pushed migration.
 - Git: no PRs; small commits pushed straight to `main`, message prefix `<spec-id>: ...` (e.g. `F1a: add session contract`). Before every push: `git pull --rebase`, then `node scripts/verify.mjs` (runs verify in the apps you changed + contracts sync); push only when it passes. Contract changes go in their own `contracts:` commit and you tell the other dev. `main` must always be green: if CI goes red, fix it first.
@@ -39,8 +41,10 @@ Two independent projects, each with its own `package.json`, lockfile and `node_m
 
 - Errors: throw `AppError(code, status)` in services; one wrapper per Server Action/route maps it to a translated message or HTTP status. Unexpected: generic message + `error_log` + rate-limited alert email.
 - Zod at every boundary (actions, routes, webhooks, env). Read env only via each app's `src/lib/env.ts`.
-- Tenant data only via `withTenant()` (web) or `withSystem(projectId)` (worker, webhooks, portal). Every mutation: `can()` check + audit row.
+- Tenant data only via `withTenant()` (web) or `withSystem(projectId)` (worker, webhooks). Every mutation: `can()` check + audit row.
+- Roles: `super_admin`, `manager`, `client` only (CONTRACTS §1; they don't nest). Client-role responses use client-safe projections; every new tenant table declares its `client_access` (ARCHITECTURE §4).
 - Webhooks: verify signature → insert raw event (unique key) → return 200 → process via queue.
+- UI follows `skills/sharkx-brand-guidelines` (SKILL.md golden rules): SHARKX Red `#e70101` and Black `#1c0f0f` only, light canvases (`#fff` / `#fafafa` / `#f5f5f5`), cards radius 16 and buttons 12, one primary red button per view, red table headers, max 6 KPI tiles, charts ≤5 series from `chart-theme.json`, SVG icons (no emoji), no gradients, no dark theme, 3px red focus ring, naming SHARKX (headlines) / SharkX (body). Use the real logo files from `assets/logos`. Don't invent palette colors; take tokens from `tokens.json`.
 - UI: Tailwind logical properties only (`ms-`, `ps-`, `start-`, `text-start`). Strings live in `messages/<locale>/<module>.json`; English first, AR/FR batch at the D18 freeze.
 - Names: DB snake_case plural tables; TS camelCase; components PascalCase; files kebab-case; UUID ids; UTC `timestamptz`; IANA time zones.
 - Biome is the only linter/formatter. Tests beside code (`*.test.ts`); fixtures in `tests/fixtures`.
@@ -52,11 +56,11 @@ Two independent projects, each with its own `package.json`, lockfile and `node_m
 - No features beyond the spec. Anything not in the PRD is an Extra: ask first, and only after F1–F15 are done.
 - No new dependencies without asking.
 - No tenant query outside the helpers; no BYPASSRLS; no caching of tenant data (`use cache`, fetch cache, `unstable_cache`).
-- No sending WhatsApp messages, ad spend, campaign management, calling, or client logins (SOW out of scope).
+- No sending WhatsApp messages, ad spend, campaign management, calling or white-label (SOW out of scope).
 - No PII, tokens or message bodies in logs, alerts or error text. Tokens only AES-256-GCM encrypted. No secrets in git.
 - No skipping webhook signature checks; no processing before the raw event is stored.
 - No physical-direction Tailwind (`ml-`, `pl-`, `left-`, `text-left`); no hard-coded UI strings.
-- No edits outside your owned paths, or in `contracts/`, without the other dev.
+- No edits in the other dev's modules, or in `contracts/`, without telling them first.
 - No `db:migrate` against production from a laptop; no hand-editing merged migrations.
 - No push to `main` before `node scripts/verify.mjs` passes; no force-push. GitHub CI is paused (billing), so that script is the only gate.
 
