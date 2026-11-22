@@ -5,7 +5,7 @@ Owner: A (Alex) · full stack (web + api + db + tests) · Days 3–4 · Release 
 All base tables exist with database-level client isolation, and every query runs through a tenant helper.
 
 ## Acceptance criteria
-- [ ] A client user reads zero rows from other clients, and none of its own client's staff-only tables (notes, tasks, lead_events, automation, conversion), via UI, actions, API and polling (isolation suite proves it). Super admin and managers read all clients.
+- [x] A client user reads zero rows from other clients, and none of its own client's staff-only tables (notes, tasks, lead_events, automation, conversion), via UI, actions, API and polling (isolation suite proves it). Super admin and managers read all clients.
 
 ## Data model / API / job changes
 - Create every table in CONTRACTS §3 (base columns only): `0001_base_tables.sql` (generated) and `0002_roles_rls.sql` (hand-written). Built: 29 tables, minus `client_links` (dropped with the secure link: regenerate `0001`/`0002` before the first push); `integration_tokens` and `notes` also got `project_id`. Role enum is `super_admin|manager|client` (CONTRACTS §1).
