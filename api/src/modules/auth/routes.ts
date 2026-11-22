@@ -12,6 +12,8 @@ import {
   meResponse,
   okResponse,
   pendingSessionResponse,
+  resetConfirmRequest,
+  resetRequest,
   setUserStatusRequest,
   tokenRequest,
   updateMeRequest,
@@ -20,7 +22,16 @@ import {
 } from '../../contracts/auth.ts';
 import type { ApiEnv } from '../../lib/env.ts';
 import { defineRoute } from '../../lib/http/route.ts';
-import { getMe, login, logout, resendCode, updateMe, verifyCode } from './service.ts';
+import {
+  confirmReset,
+  getMe,
+  login,
+  logout,
+  requestReset,
+  resendCode,
+  updateMe,
+  verifyCode,
+} from './service.ts';
 import { acceptInvite, inspectInvite, inviteUser, listUsers, setUserStatus } from './users.ts';
 
 // POST bodies with nothing to say still send `{}`; accepting a missing body too keeps curl and tests simple.
@@ -105,6 +116,48 @@ export const authRoutes: FastifyPluginAsync<{ env: ApiEnv }> = async (app, { env
       audit: 'one',
     },
     async ({ body, session }) => updateMe(session, body),
+  );
+
+  // Always {ok:true}: the same answer for every email. The mail goes out after the reply is sent.
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/auth/reset/request',
+      access: 'anon',
+      body: resetRequest,
+      response: okResponse,
+      audit: 'none', // an unknown email mutates nothing; a known one writes auth.reset_requested
+    },
+    async ({ body, req }) => {
+      const { deliver } = await requestReset(body, { appUrl: env.APP_URL });
+      if (deliver) {
+        // Not awaited. A failure is logged by name only (F1d routes it to error_log and the alert inbox).
+        void deliver().catch((err: unknown) =>
+          req.log.error(
+            { errorName: err instanceof Error ? err.name : 'unknown' },
+            'reset email failed',
+          ),
+        );
+      }
+      return { ok: true as const };
+    },
+  );
+
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/auth/reset/confirm',
+      access: 'anon',
+      body: resetConfirmRequest,
+      response: okResponse,
+      audit: 'one',
+    },
+    async ({ body }) => {
+      await confirmReset(body);
+      return { ok: true as const };
+    },
   );
 
   // POST, not GET /auth/invite/:token, so a raw token never appears in an api URL (request logs, proxies).

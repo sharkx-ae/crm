@@ -15,8 +15,16 @@ import { withSystem } from '../../lib/tenant/index.ts';
 import { audit } from '../audit/index.ts';
 import { actorOf, maskEmail } from './actor.ts';
 import { users } from './schema.ts';
-import { createSession, revokeByToken, revokeSession } from './sessions.ts';
-import { CODE_TTL_MS, checkCode, issueCode } from './tokens.ts';
+import { createSession, revokeAllSessions, revokeByToken, revokeSession } from './sessions.ts';
+import {
+  CODE_TTL_MS,
+  checkCode,
+  consumeToken,
+  issueCode,
+  issueToken,
+  RESET_TTL_MS,
+  revokeLiveTokens,
+} from './tokens.ts';
 
 // F1c S1/S2 (plan §6.1). Three rules shape this file:
 //  - time is injected (`now`), never read from the database;
@@ -211,4 +219,74 @@ export async function updateMe(session: ResolvedSession, input: { locale: Locale
     });
   });
   return toMe({ ...session, locale: input.locale }, session.stage);
+}
+
+/**
+ * S5 (plan §6.3). The answer is the same for every email: the limit counts every request, existing account or not,
+ * so even a 429 says nothing about which accounts exist. Returns `deliver` for the route to run AFTER it has replied,
+ * so response time does not reveal whether an email was sent. Unknown, invited and disabled users get no email.
+ */
+export async function requestReset(
+  input: { email: string },
+  o: { appUrl: string; now?: Date },
+): Promise<{ deliver: (() => Promise<void>) | null }> {
+  const now = o.now ?? new Date();
+  const out = await withSystem(null, async (tx) => {
+    const limit = await hit(tx, rateKey('reset', input.email), rules.reset, now);
+    if (!limit.allowed) return { limited: limit.retryAfterSec } as const;
+
+    const [user] = await tx.select().from(users).where(eq(users.email, input.email));
+    if (!user || user.status !== 'active') return { user: null } as const;
+
+    const token = await issueToken(tx, user.id, 'reset', RESET_TTL_MS, now);
+    await audit(tx, {
+      actor: actorOf({ userId: user.id, role: user.role }),
+      action: 'auth.reset_requested',
+      entity: 'user',
+      entityId: user.id,
+    });
+    return { user, token } as const;
+  });
+  if ('limited' in out) throw new AppError('RATE_LIMITED', { retryAfterSec: out.limited });
+  if (!out.user) return { deliver: null };
+
+  const { user, token } = out;
+  return {
+    deliver: () =>
+      sendEmail({
+        to: user.email,
+        template: 'reset',
+        locale: user.locale,
+        data: {
+          link: `${o.appUrl.replace(/\/$/, '')}/${user.locale}/reset/${token}`,
+          expiresInMinutes: RESET_TTL_MS / 60_000,
+        },
+      }),
+  };
+}
+
+/** Single use. Success signs the person out everywhere and voids every other open link or code. */
+export async function confirmReset(
+  input: { token: string; password: string },
+  now: Date = new Date(),
+): Promise<void> {
+  const pwHash = await hashPassword(input.password); // before the transaction
+
+  await withSystem(null, async (tx) => {
+    const consumed = await consumeToken(tx, input.token, 'reset', now);
+    if (!consumed) throw new AppError('NOT_FOUND');
+    const [user] = await tx.select().from(users).where(eq(users.id, consumed.userId));
+    if (!user || user.status !== 'active') throw new AppError('NOT_FOUND');
+
+    await tx.update(users).set({ pwHash }).where(eq(users.id, user.id));
+    await revokeAllSessions(tx, user.id);
+    await revokeLiveTokens(tx, user.id, now);
+    await audit(tx, {
+      actor: actorOf({ userId: user.id, role: user.role }),
+      action: 'auth.password_changed',
+      entity: 'user',
+      entityId: user.id,
+      meta: { via: 'reset' },
+    });
+  });
 }

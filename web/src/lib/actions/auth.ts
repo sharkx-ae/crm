@@ -11,6 +11,8 @@ import {
   meResponse,
   okResponse,
   pendingSessionResponse,
+  resetConfirmRequest,
+  resetRequest,
   updateMeRequest,
   verifyCodeRequest,
 } from '../../contracts/auth.ts';
@@ -82,5 +84,31 @@ export const acceptInvite = defineAction(
     });
     await setSessionCookie(res.sessionToken, res.expiresAt);
     redirect(`/${locale}/code`);
+  },
+);
+
+/** Always succeeds from the person's point of view: the api answers the same for every email. */
+export const requestReset = defineAction({ input: resetRequest, auth: 'none' }, async ({ input }) =>
+  apiCall(okResponse, '/auth/reset/request', { method: 'POST', body: input, session: 'none' }),
+);
+
+/** Single-use link. A used, expired or forged one shows the expired page; success goes to sign-in. */
+export const resetPassword = defineAction(
+  { input: resetConfirmRequest, auth: 'none' },
+  async ({ input, locale }) => {
+    try {
+      await apiCall(okResponse, '/auth/reset/confirm', {
+        method: 'POST',
+        body: input,
+        session: 'none',
+      });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'NOT_FOUND') {
+        redirect(`/${locale}/reset/${input.token}?expired=1`);
+      }
+      throw err;
+    }
+    await clearSessionCookie(); // every session was revoked, this browser's included
+    redirect(`/${locale}/login?reset=1`);
   },
 );
