@@ -1,0 +1,22 @@
+// What a client may do on each tenant table (F1 plan §3.2). Changing this map means changing the policy in a migration.
+export const CLIENT_ACCESS = {
+  projects: 'read',
+  pipeline_stages: 'none',
+  contacts: 'read',
+  leads: 'write',
+  lead_events: 'none',
+  lead_forms: 'write',
+  notes: 'none',
+  tasks: 'none',
+  qualification_settings: 'read',
+  automation_rules: 'none',
+  integrations: 'write',
+  integration_tokens: 'none',
+  wa_numbers: 'write',
+  wa_conversations: 'read',
+  wa_messages: 'read',
+  conversion_mappings: 'none',
+  conversion_events: 'none',
+  change_feed: 'read',
+  notifications: 'write',
+} as const;

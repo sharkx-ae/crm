@@ -49,7 +49,12 @@ export const iso = z.iso.datetime();
 export const e164 = z.string().regex(/^\+[1-9]\d{6,14}$/);
 export const email = z.string().trim().toLowerCase().max(254).pipe(z.email());
 // F1c S4 rules: 12+ characters, a letter and a number.
-export const password = z.string().min(12).max(128).regex(/[A-Za-z]/).regex(/\d/);
+export const password = z
+  .string()
+  .min(12)
+  .max(128)
+  .regex(/[A-Za-z]/)
+  .regex(/\d/);
 // 32 random bytes, base64url.
 export const opaqueToken = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 
@@ -64,7 +69,10 @@ export const errorStatus = {
   INTERNAL: 500,
 } as const;
 
-const errorCodes = Object.keys(errorStatus) as [keyof typeof errorStatus, ...(keyof typeof errorStatus)[]];
+const errorCodes = Object.keys(errorStatus) as [
+  keyof typeof errorStatus,
+  ...(keyof typeof errorStatus)[],
+];
 export const errorCode = z.enum(errorCodes);
 // One error shape for every api response.
 export const errorBody = z.object({

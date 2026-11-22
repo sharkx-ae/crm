@@ -1,4 +1,4 @@
-// `pnpm db:migrate` locally and as Railway's pre-deploy step for the web service.
+// `pnpm db:migrate` locally and as Railway's pre-deploy step for the api service.
 // Uses drizzle-orm's migrator (a runtime dependency), so drizzle-kit is not needed in production.
 import { getDbEnv } from '../lib/env.ts';
 import { createLogger } from '../lib/log/index.ts';
