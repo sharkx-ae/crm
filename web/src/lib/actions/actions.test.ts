@@ -45,3 +45,25 @@ describe('server actions', () => {
     expect(/export\s*\{/.test(src), `${file}: no re-export lists`).toBe(false);
   });
 });
+
+// Signed-in actions must declare the can() action they need (S3: every action calls can() first). Sign-in, reset and
+// accept-invite (auth 'none') and code/logout (auth 'pending') have no role yet. Acting on oneself is the only
+// other exception, and it is named here so adding one is a visible decision.
+const SELF_ONLY = ['updateMe'];
+
+describe('server action authorisation', () => {
+  it.each(serverFiles)('%s: every signed-in action declares its can() action', (file) => {
+    const src = readFileSync(file, 'utf8');
+    const missing: string[] = [];
+    for (const m of src.matchAll(/export const (\w+) = defineAction\(/g)) {
+      const name = m[1] ?? '';
+      const rest = src.slice((m.index ?? 0) + m[0].length);
+      const end = rest.search(/\n\s*async\s*\(|,\s*async\s*\(/);
+      const spec = rest.slice(0, end < 0 ? rest.length : end);
+      const auth = /auth:\s*'(none|pending|session)'/.exec(spec)?.[1] ?? 'session';
+      if (auth !== 'session' || SELF_ONLY.includes(name)) continue;
+      if (!/\baction:/.test(spec)) missing.push(name);
+    }
+    expect(missing, `${file}: add action: '<can() action>' to`).toEqual([]);
+  });
+});
