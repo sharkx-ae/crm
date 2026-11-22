@@ -4,6 +4,7 @@ import { apiSchema, parseEnv, testSchema, workerSchema } from './env.ts';
 const base = {
   DATABASE_URL: 'postgres://u:p@localhost:5433/sharkx',
   APP_URL: 'http://localhost:3000',
+  INTERNAL_API_TOKEN: 'x'.repeat(32),
 };
 
 describe('api env', () => {

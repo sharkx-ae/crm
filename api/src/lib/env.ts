@@ -35,6 +35,8 @@ export const apiSchema = shared
     PORT: z.coerce.number().int().positive().default(4000),
     APP_URL: z.url(), // web app URL, used in email links and CORS-free redirects
     TOKEN_ENC_KEY: z.string().min(1).optional(),
+    // Shared secret between web and api: every non-public route requires it (x-internal-token).
+    INTERNAL_API_TOKEN: z.string().min(32),
   })
   .superRefine(requireEmailOutsideLocal);
 
