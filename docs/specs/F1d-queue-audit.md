@@ -5,10 +5,11 @@ Owner: A (Alex) · full stack (web + api + db + tests) · Days 8–8 · Release 
 Background jobs run reliably, every mutation is audited, abuse is rate-limited and failures reach the alert inbox.
 
 ## Acceptance criteria
-- [ ] Every mutation, sign-in event, integration connect and client mark writes an audit row.
-- [ ] Failed jobs retry with backoff; exhausted jobs send an alert email.
+- [ ] Every mutation, sign-in event, integration connect and client mark writes an audit row. (Done for auth, invites, status changes and the seed, enforced by the route plugin assertion in tests; integration connect and client mark call `audit()` in their own features.)
+- [x] Failed jobs retry with backoff; exhausted jobs send an alert email.
 
 ## Data model / API / job changes
+- Invite, code and reset emails are sent directly, never through the queue (they carry a secret); `email.send` serves alerts and reminders.
 - pg-boss in the `worker` service; queue registry with every job in CONTRACTS §5 and its retry policy (ARCHITECTURE §5).
 - `audit()` helper used by every Server Action wrapper; `error_log` + alert email rate-limited to one per fingerprint per hour.
 - Postgres rate limits: login 5/15 min per email+IP, code send 3/10 min, reset 3/h, forms per IP.

@@ -16,7 +16,7 @@ Anyone can be invited, set a password, sign in with an emailed code, reset a for
 ## Shared by all sub-features
 - **Tables:** users, sessions, auth_tokens, project_members (client users only), audit_log, rate_limits (all from F1b).
 - **Passwords:** scrypt N=2^15, r=8, p=1, per-user salt, at least 12 characters (ARCHITECTURE §6). Tokens: 256-bit random, only the sha256 is stored.
-- **Email:** one `sendEmail(template, locale, data)` in `lib/email` (Resend). Templates `invite`, `code`, `reset`, English now, Arabic and French in F2c. F1d later routes it through the `email.send` job; until then it sends directly and the caller does not change.
+- **Email:** one `sendEmail(template, locale, data)` in `lib/email` (Resend). Templates `invite`, `code`, `reset`, English now, Arabic and French in F2c. Invite, code and reset mails carry a secret, so they are always sent directly from the request (reset after the reply) and never queued; F1d routes only alerts and reminders through the `email.send` job (F1 plan D1).
 - **Audit actions written:** `auth.login`, `auth.login_failed`, `auth.code_verified`, `auth.logout`, `auth.reset_requested`, `auth.password_changed`, `user.invited`, `user.invite_accepted`, `user.status_changed`.
 - **Contract additions (additive, `api/src/contracts/auth.ts`):** request/response schemas for the routes below.
 - **Files:** `api/src/modules/auth/{service,routes,schema,index}.ts` + tests; `api/src/lib/{email,crypto}`; `web/src/app/[locale]/(auth)/{login,code,reset,reset/[token],accept-invite/[token]}/page.tsx`; `web/src/lib/session.ts` (cookie read/write, redirect rules); `web/src/proxy.ts` (guard); `web/messages/en/auth.json`.
@@ -59,7 +59,7 @@ Anyone can be invited, set a password, sign in with an emailed code, reset a for
 **Screens:** `/accept-invite/[token]` shows who invited them and for which client, new password with live rules (12+ characters, a letter and a number), confirm, one button "Set password and continue" (then the code step). Expired, used or forged link → one "This link has expired. Ask for a new invite" page.
 **Actions → routes:**
 - `inviteUser({kind:'manager'|'client', email, name, projectId?})` → `POST /users/invite` (kind `manager` needs `user.manage`; kind `client` needs `clientuser.manage` and creates the `project_members` row). Returns the user in `invited` status.
-- `GET /auth/invite/:token` validates the link and returns the inviter and client names.
+- `POST /auth/invite/inspect` (was `GET /auth/invite/:token`: a POST keeps the raw token out of api URLs and request logs) validates the link and returns the inviter and client names.
 - `acceptInvite(token, password)` → `POST /auth/invite/accept` → status `active`, password set, then the S1 flow continues at the code step.
 - `setUserStatus(userId, 'active'|'disabled')` → `POST /users/:id/status` (revokes sessions on disable; a manager can only touch client users).
 - `listUsers({kind, projectId?})` → `GET /users` used by F2b (Team) and F10a (Client users).

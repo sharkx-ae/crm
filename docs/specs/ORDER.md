@@ -5,6 +5,8 @@
 - **Priority:** Phase 1 Base portal (sign-in, invites, reset password, role dashboards) → Phase 2 WhatsApp → Phase 3 lead sources → Phase 4 work the leads → Phase 5 close the loop → hardening. Phases overlap only where the two devs work in parallel.
 - Re-baselined from D3 (F1b was in progress, F2a not started). Estimates, not promises: feature freeze lands about D19 (was D18); see "Risks".
 
+> **F1 delivered (D3):** see [F1-technical-plan.md](F1-technical-plan.md). John: `getSession`/`requireSession`, `defineAction`, `inviteUser`/`setUserStatus`/`getUsers` and `inviteUserTx` (for F2b `createProject`, call `deliver()` after commit) are ready; `GET /audit` is ready for F1e. Local setup: both apps need the same `INTERNAL_API_TOKEN`.
+
 ## Phase 1 · Base portal (Release 1, demo D10)
 Demo script: super admin signs in with a code → creates a client → invites its first user → the user accepts, sets a password, signs in and lands on its own dashboard; a manager is invited; a password is reset; every step is in the audit table.
 

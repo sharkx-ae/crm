@@ -10,6 +10,8 @@ Shared between **Alex (Dev A, Pipes)** and **John (Dev B, Product)** so both bui
 - `Session { userId: uuid, role: super_admin|manager|client, projectIds: uuid[], locale: en|ar|fr, stage: active|pending_2fa }`
 - `can(session, action, projectId?) → boolean`. Super admin and manager: every project. Client: only `projectIds` (one client). `pending_2fa` → always false.
 - Roles do not nest: each action lists its allowed roles (`actionRoles` in `api/src/contracts/session.ts`, replacing `actionMinRole`).
+- `can()` lives in the contracts (pure, no imports but types), so web (UX: hide, refuse early) and api (enforcement) run the same table. A client asking about another client's project gets 404, not 403.
+- **Contracts 2.0.0** (breaking vs 1.0.0): `role` = super_admin|manager|client; `changeKind` loses `link`; `actionMinRole` replaced by `actionRoles` + `can()`. Additive: `auth.ts` (sign-in, code, reset, invite, user shapes), `audit.ts` (query, entry, page, `knownAuditActions`), `errorBody`, `email`, `password`, `opaqueToken`, `emailTemplate`. Each module appends its own audit actions in an additive `contracts:` commit.
 
 | Action | Super admin | Manager | Client (own client) |
 |---|---|---|---|
@@ -87,7 +89,10 @@ Every tenant table has `project_id uuid not null` (RLS). All have `id uuid`, tim
 
 ## 6 HTTP routes
 - **api public** (owner A): `GET|POST /webhooks/meta` (WhatsApp + Lead Ads, signature) · `POST /webhooks/{google,tiktok,linkedin,snapchat}` · `POST /forms/:key` (rate-limited) · `GET /oauth/:platform/callback` · `GET /health` → `{ status, service, version, checks: { db, queue, integrations }, lastWebhookAt }`
-- **api internal** (called only by web, user session token forwarded): one route group per module; shapes in `api/src/contracts`.
+- **api internal** (called only by web, user session token forwarded): one route group per module; shapes in `api/src/contracts`. Every non-public route requires `x-internal-token` = `INTERNAL_API_TOKEN` (a wrong or missing token answers 404) and is registered through `defineRoute` with an access level (`anon` | `pending` | `session`), a `can()` action and an `audit` declaration. Web also sends `x-session-token`, `x-client-ip` (trusted only after the token check) and `x-request-id`. Every error is `errorBody` `{ error: { code, details?, retryAfterSec? } }`.
+  - Auth (owner A): `POST /auth/login` · `POST /auth/code/verify` · `POST /auth/code/send` · `POST /auth/logout` · `GET|PATCH /me` · `POST /auth/reset/request` · `POST /auth/reset/confirm` · `POST /auth/invite/inspect` (a POST so a raw token never sits in an api URL) · `POST /auth/invite/accept`.
+  - Users (owner A, called by John's F2b and F10a screens): `POST /users/invite` (manager: `user.manage`; client user: `clientuser.manage` on its project) · `GET /users?kind=manager|client[&projectId]` · `POST /users/:id/status`.
+  - Audit (owner A, viewer is F1e by John): `GET /audit` (`audit.read`, super admin only; filters userId, action, projectId, from, to; keyset cursor).
 - **web BFF** (owner B unless noted): `GET /api/events?since=<cursor>` → `{ cursor, changes: [{ kind: changeKind, projectId, id }] }` (proxies the api) · `GET /api/health` (web + api + db) · `GET /api/export/[kind]` (kind: leads; scoped to the caller's role and projects; excludes is_test)
 
 ## 7 Errors

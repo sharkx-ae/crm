@@ -13,7 +13,7 @@ Features and acceptance: `docs/PRD.md`. Rules, ownership, conventions: `CLAUDE.m
 | UI | Tailwind 4.3.5 (logical properties), Radix (`radix-ui` 1.8.1), dnd-kit, hand-rolled SVG charts | Brand tokens from `skills/sharkx-brand-guidelines/assets/tokens.json`; Sharp Sans + GE Flow (Arabic), Segoe UI fallback until the licensed font files arrive |
 | Data | Postgres 18.7, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11 | RLS policies as SQL in migrations |
 | Libraries | next-intl 4.15.1, SWR, libphonenumber-js, Papaparse | Added in the spec that first needs them |
-| Email | Resend SDK, plain TS templates (EN/AR/FR) | |
+| Email | Resend HTTP API via `fetch` (no SDK), plain TS templates (EN now, AR/FR at the D18 batch) | |
 | Crypto | Node built-in `scrypt`, `crypto` (AES-256-GCM, sha256) | No native modules |
 | Quality | Biome 2.6.8, Vitest 5.1.1, Playwright 1.65.1, GitHub Actions | |
 
@@ -79,7 +79,9 @@ Tenant = `project` (client). Every tenant table has `project_id uuid not null`.
 - Helpers in `lib/tenant`: `withTenant({userId, role}, fn)` and `withSystem(projectId | null, fn)`. Each is one transaction that sets the role and `set_config('app.user_id' | 'app.role' | 'app.project_id', …, true)` (transaction-local, safe with pooled connections). Unset → policies match nothing. Only `db/` and `lib/tenant/` may touch the raw pool (`tests/rls/no-raw-pool.test.ts`).
 - Standard policy, applied by `app_secure_tenant_table('<table>', '<client_access>')`: row visible if role is `super_admin` or `manager`, or `project_id = app.project_id` (system context), or the user is a client in `project_members` for that project **and** the table's `client_access` allows it. `client_access` is `none` (clients read nothing: notes, tasks, lead_events, automation_rules, conversion_mappings, conversion_events, pipeline_stages), `read` (projects, contacts, leads, wa_numbers, wa_conversations, wa_messages, integrations, lead_forms, qualification_settings, change_feed limited to kinds lead, message, health, notification) or `write` (leads: status mark only, through the service; integrations, lead_forms, wa_numbers: connectors). Every new tenant table calls this function with an explicit `client_access` in its migration; `tests/rls/structure.test.ts` fails otherwise.
 - Column limits are not an RLS feature: services return client-safe projections for the client role (no owner_id, stage_id, notes, events), and only the marking service updates `leads.status`, `status_seq` and `reason` for clients.
-- Exceptions: `project_members` (own rows readable; only super admin, manager and system write); `projects` (key is `id`; `app_system` can list all rows for cron loops); `audit_log` (INSERT/SELECT only, reads for super admin or the system's project); `webhook_events` and `integration_tokens` are system-only; `sessions`, `auth_tokens`, `rate_limits`, `error_log` are system-only by grants; `app_user` reads `users` without `pw_hash`.
+- Policy shape (migration 0002, F1 plan §3.2): context readers `app_user_id()`, `app_project_id()`, `app_role()`, `app_is_staff()`, `app_client_project()` are `LANGUAGE sql STABLE`, security invoker; policies call `(SELECT app_client_project())` so it runs once per statement. `app_secure_tenant_table(table, client_access, key, client_filter)` records the table in the `tenant_tables` registry and writes four policies (`tenant_read|insert|update|delete`). `write` lets a client SELECT, INSERT and UPDATE; DELETE is always staff or system. `tests/rls/structure.test.ts` holds the registry map (19 tables).
+- Additions to the table above: `notifications` is `write` with `client_filter user_id = app_user_id()` (a client reads and marks only its own); `change_feed` has a `kind IN (lead, message, health, notification)` filter and two system-only policies, `change_feed_prune_read` and `change_feed_prune` (rows older than 7 days, no project context), which the daily maintenance job uses; a DELETE with a WHERE also needs a SELECT policy, hence the pair.
+- Exceptions: `project_members` (client users only, `unique(user_id)`: one client per user; staff and system write; system reads every membership because session resolution runs in `withSystem(null)`); `projects` (key is `id`; `app_system` can list all rows for cron loops); `audit_log` (INSERT/SELECT only; a web user may only insert rows with its own `actor_id` and, for a client, inside its project; reads are the **super admin** only, plus the system's own project); `users` (RLS forced: staff read all, a client reads itself, `app_system` everything; `pw_hash` is excluded from `app_user`'s column grant; one super admin by the unique index `users_one_super_admin`); `webhook_events` and `integration_tokens` are system-only; `sessions`, `auth_tokens`, `rate_limits`, `error_log` are system-only by grants.
 - Project creation: the service pre-generates the id and runs `withSystem(newId)` (project, member rows, default stages in one transaction).
 - Isolation suite (`tests/rls/`): cross-client reads and writes, no-context, per role (super admin, manager, client) and system, `client_access` per table, grants, concurrent pooled transactions, failure leaves no context.
 
@@ -98,7 +100,7 @@ Tenant = `project` (client). Every tenant table has `project_id uuid not null`.
 
 HTTP: api public routes `/webhooks/{meta,google,tiktok,linkedin,snapchat}`, `/forms/:key`, `/oauth/:platform/callback`, `/health`; api internal routes are called only by web (session token forwarded). Web BFF route handlers: `/api/health`, `/api/events`, `/api/export/[kind]`. Everything else in web is Server Components/Actions.
 
-Jobs (pg-boss, `singletonKey` for idempotency):
+Jobs (pg-boss; a `singletonKey` dedupes only inside a time window, so `enqueue()` always adds one, an hour by default). The api produces with `supervise:false, schedule:false`; the worker supervises and schedules. `enqueue()` runs after the producing transaction commits; conversion durability (F11a) comes from `conversion_events` as the outbox, not from a shared transaction:
 | Queue | Trigger | Retry |
 |---|---|---|
 | webhook.process | webhook stored | 5×, backoff |
@@ -107,16 +109,19 @@ Jobs (pg-boss, `singletonKey` for idempotency):
 | integration.health | cron 5 min | none |
 | automation.timer | delayed (no-reply 15 min, unreviewed 48 h) | 3× |
 | task.reminder | delayed to due_at | 3× |
-| email.send | any | 5× |
+| email.send | alerts and reminders (never invite, code or reset mails: they carry a secret and are sent directly) | 5×, 30 s backoff, kept 1 day |
 | csv.import | upload | none; row errors reported |
-| maintenance | cron daily: prune change_feed, rate_limits, expired tokens | none |
+| maintenance | cron daily 03:00 UTC: prune change_feed (7 d), rate_limits (1 d), auth_tokens (expired 7 d), sessions (expired), error_log (90 d) | none |
 
 Exhausted jobs → `error_log` + alert email.
 
 ## 6 Auth and sessions
 - Email + password: scrypt (N=2^15, r=8, p=1, per-user salt), ≥12 chars. Invite = single-use link (72 h) to set a password; reset link 1 h; tokens 256-bit, stored as sha256.
 - 2FA: after the password, a 6-digit emailed code (hashed, 10 min, 5 attempts); session stays `pending_2fa` until verified. TOTP is an Extra.
-- Session: opaque 256-bit token (sha256 in DB); `__Host-` cookie, HttpOnly, Secure, SameSite=Lax; rotated on login and 2FA; idle 12 h, absolute 7 d; revoked on password change.
+- Session: opaque 256-bit token (sha256 in DB); `__Host-sharkx_session` cookie, HttpOnly, Secure, SameSite=Lax (plain `sharkx_session` without Secure when `APP_ENV=local`, since local runs on http); rotated on login and 2FA; a `pending_2fa` session lives 15 min, an active one idle 12 h (slides at most every 5 min), absolute 7 d; revoked on password change, reset and disable. Web sets and clears the cookie in Server Actions only; the api never sets cookies.
+- **Internal token:** the api's public domain also serves the internal routes, so every non-public route needs `x-internal-token` = `INTERNAL_API_TOKEN` (32+ random characters, the same value in `web` and `api`, replaces web's unused `SESSION_SECRET`). `x-client-ip` is trusted only after that check.
+- **Email routing:** invite, code and reset mails carry a secret, so they are sent directly from the request (reset after the reply) and never queued; alerts and later reminders go through the `email.send` job. Resend is called with `fetch` (no SDK). `APP_ENV=local` writes mails to `api/.mail/*.json` (git-ignored) instead; tests use a memory transport.
+- **Failure bookkeeping** (rate-limit hits, `auth.login_failed` audits, code-attempt counters) commits before the error is thrown. Unknown users are verified against a dummy hash so timing does not reveal them. Re-inviting an email that is still `invited` (same role and client) reissues the link.
 - Rate limits (Postgres): login 5/15 min per email+IP; code verify 5 per code; code send 3/10 min; reset 3/h; forms per IP.
 - CSRF: Server Actions same-origin check; cookie-authenticated route handlers verify Origin; webhooks use signatures only.
 - Headers: CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors 'none'`.
