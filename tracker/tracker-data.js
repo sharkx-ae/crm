@@ -1,17 +1,17 @@
 window.TRACKER = {
-"now":"Root cleaned: web, api, docs",
-"lastActivity":{"time":"2026-11-19T11:50:21.376Z","file":"(turn finished)"},
+"now":"F1b building schema, RLS, tenant helpers",
+"lastActivity":{"time":"2026-11-22T11:15:10.876Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.270Z"},
-{"id":"F1.2","name":"Schema, RLS roles, tenant helpers, isolation tests","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F1.2","name":"Schema, RLS roles, tenant helpers, isolation tests","status":"doing","pct":5,"note":"plan approved, building","updated":"2026-11-19T12:57:40.289Z"},
 {"id":"F1.3","name":"Login, sessions, password reset","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F1.4","name":"Emailed-code 2FA","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F1.5","name":"Roles, can() matrix, invites","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F1.6","name":"Audit log writes and Admin viewer","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F1.7","name":"pg-boss queue, worker service, retries","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F1.8","name":"Rate limits, security headers, error alerts","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F1.9","name":"Shared contracts frozen (Zod, tables, jobs)","status":"todo","pct":0,"note":"","updated":"2026-11-19T08:56:36.288Z"}
+{"id":"F1.9","name":"Shared contracts frozen (Zod, tables, jobs)","status":"done","pct":100,"note":"Contracts 1.0.0 on main; CI result unchecked","updated":"2026-11-19T12:30:42.804Z"}
 ]},
 {"id":"F2","name":"App shell and projects","spec":"docs/PRD.md#f2","owner":"B","subs":[
 {"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
@@ -119,6 +119,9 @@ window.TRACKER = {
 "log":[
 {"t":"2026-11-19T07:55:47.276Z","m":"seeded from specs/STATUS.md"},
 {"t":"2026-11-19T08:56:36.289Z","m":"added F1.9 Shared contracts frozen (Zod, tables, jobs)"},
-{"t":"2026-11-19T08:56:36.395Z","m":"added F14.6 Generic connect wizard UI"}
+{"t":"2026-11-19T08:56:36.395Z","m":"added F14.6 Generic connect wizard UI"},
+{"t":"2026-11-19T12:28:35.532Z","m":"F1.9 doing 10% Writing Zod contracts from CONTRACTS.md"},
+{"t":"2026-11-19T12:30:42.804Z","m":"F1.9 done 100% Contracts 1.0.0 on main; CI result unchecked"},
+{"t":"2026-11-19T12:57:40.289Z","m":"F1.2 doing 5% plan approved, building"}
 ]
 };
