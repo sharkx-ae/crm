@@ -38,5 +38,7 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*..*).*)'],
+  // `[.]`, not an escaped dot: the build reads this string statically and dropped the backslash from `\\.`, which made
+  // the pattern exclude every path and silently turned the proxy off for all pages except `/`.
+  matcher: ['/((?!api|_next|_vercel|.*[.]).*)'],
 };
