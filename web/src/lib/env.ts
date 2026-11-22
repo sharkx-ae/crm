@@ -9,7 +9,8 @@ export const webSchema = z.object({
   APP_URL: z.url(),
   LEADS_URL: z.url().optional(),
   API_URL: z.url(), // server-side only; Railway private network URL of the api service
-  SESSION_SECRET: z.string().min(32, 'must be at least 32 characters'),
+  // Shared secret with the api: sent as x-internal-token on every BFF call (the api's public domain also serves internal routes).
+  INTERNAL_API_TOKEN: z.string().min(32, 'must be at least 32 characters'),
   RAILWAY_GIT_COMMIT_SHA: z.string().optional(),
 });
 

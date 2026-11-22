@@ -8,7 +8,7 @@ describe('web env', () => {
       {
         APP_URL: 'http://localhost:3000',
         API_URL: 'http://localhost:4000',
-        SESSION_SECRET: 'x'.repeat(32),
+        INTERNAL_API_TOKEN: 'x'.repeat(32),
       },
       'web',
     );
@@ -17,7 +17,7 @@ describe('web env', () => {
 
   it('lists every missing variable in one readable error', () => {
     expect(() => parseEnv(webSchema, {}, 'web')).toThrow(
-      /APP_URL[\s\S]*API_URL[\s\S]*SESSION_SECRET/,
+      /APP_URL[\s\S]*API_URL[\s\S]*INTERNAL_API_TOKEN/,
     );
   });
 });
