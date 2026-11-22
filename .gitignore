@@ -33,3 +33,6 @@ tracker/*.tmp
 
 # client documents (SOW, requirements, mockup): local only, never committed
 docs/inputs/
+
+# local email transport output (APP_ENV=local)
+api/.mail/

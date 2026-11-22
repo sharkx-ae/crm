@@ -19,7 +19,7 @@ const email = z.object({
 });
 
 function requireEmailOutsideLocal(
-  v: z.infer<typeof shared> & z.infer<typeof email>,
+  v: { APP_ENV: string } & z.infer<typeof email>,
   ctx: z.RefinementCtx,
 ): void {
   if (v.APP_ENV === 'local') return;
@@ -43,6 +43,12 @@ export const apiSchema = shared
 export const workerSchema = shared.extend(email.shape).superRefine(requireEmailOutsideLocal);
 
 export const dbSchema = shared.pick({ DATABASE_URL: true });
+
+// What lib/email needs; the api and the worker both send mail.
+export const emailEnvSchema = shared
+  .pick({ APP_ENV: true })
+  .extend(email.shape)
+  .superRefine(requireEmailOutsideLocal);
 
 export const testSchema = z.object({
   TEST_DATABASE_URL: z
@@ -82,5 +88,7 @@ export const getWorkerEnv = (): WorkerEnv =>
   cached('worker', () => parseEnv(workerSchema, process.env, 'worker'));
 export const getDbEnv = (): z.infer<typeof dbSchema> =>
   cached('db', () => parseEnv(dbSchema, process.env, 'database'));
+export const getEmailEnv = (): z.infer<typeof emailEnvSchema> =>
+  cached('email', () => parseEnv(emailEnvSchema, process.env, 'email'));
 export const getTestDbUrl = (): string =>
   cached('test', () => parseEnv(testSchema, process.env, 'test').TEST_DATABASE_URL);
