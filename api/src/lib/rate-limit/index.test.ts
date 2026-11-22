@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import { getPool } from '../../db/index.ts';
 import { withSystem } from '../tenant/index.ts';
-import { hit, peek, rateKey, rules } from './index.ts';
+import { hit, peek, rateKey, release, rules } from './index.ts';
 
 afterAll(() => getPool().end());
 
@@ -42,6 +42,17 @@ describe('rate limits', () => {
     expect(await peekOnce(key, at(5))).toMatchObject({ allowed: false, count: 3 });
     // a new window starts clean
     expect(await peekOnce(key, at(600))).toMatchObject({ allowed: true, count: 0 });
+  });
+
+  it('release gives one hit back and never goes below zero', async () => {
+    const key = fresh();
+    await hitOnce(key, at(1));
+    await hitOnce(key, at(2));
+    await withSystem(null, (tx) => release(tx, key, rule, at(3)));
+    expect(await peekOnce(key, at(4))).toMatchObject({ count: 1 });
+    await withSystem(null, (tx) => release(tx, key, rule, at(5)));
+    await withSystem(null, (tx) => release(tx, key, rule, at(6)));
+    expect(await peekOnce(key, at(7))).toMatchObject({ count: 0 });
   });
 
   it('keys are independent', async () => {

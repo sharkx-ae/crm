@@ -10,7 +10,7 @@ import { DUMMY_HASH, hashPassword, needsRehash, verifyPassword } from '../../lib
 import { sendEmail } from '../../lib/email/index.ts';
 import { AppError } from '../../lib/errors/index.ts';
 import type { ResolvedSession } from '../../lib/http/route.ts';
-import { hit, peek, rateKey, rules } from '../../lib/rate-limit/index.ts';
+import { hit, rateKey, release, rules } from '../../lib/rate-limit/index.ts';
 import { withSystem } from '../../lib/tenant/index.ts';
 import { audit } from '../audit/index.ts';
 import { actorOf, maskEmail } from './actor.ts';
@@ -61,9 +61,11 @@ export async function login(
 ): Promise<PendingSessionResponse> {
   const key = rateKey('login', input.email, ctx.ip);
 
-  // 1. rate limit (peek, so a locked-out caller cannot extend their own lock) and user lookup, one short tx.
+  // 1. rate limit and user lookup, one short tx. The attempt is reserved with an atomic `hit` BEFORE the ~100 ms
+  // password check: a peek here would let a parallel burst all read "0 so far" and every guess through. A correct
+  // password gives the reservation back (step 3), so the limit still counts failures only.
   const first = await withSystem(null, async (tx) => {
-    const limit = await peek(tx, key, rules.login, now);
+    const limit = await hit(tx, key, rules.login, now);
     if (!limit.allowed) {
       await audit(tx, {
         actor: { kind: 'system' },
@@ -89,7 +91,6 @@ export async function login(
         ? 'not_active'
         : 'bad_password';
     await withSystem(null, async (tx) => {
-      await hit(tx, key, rules.login, now);
       await audit(tx, {
         actor: user ? actorOf({ userId: user.id, role: user.role }) : { kind: 'system' },
         action: 'auth.login_failed',
@@ -107,6 +108,7 @@ export async function login(
 
   // 3. success: one transaction creates the pending session and the code.
   const out = await withSystem(null, async (tx) => {
+    await release(tx, key, rules.login, now);
     const sendLimit = await hit(tx, rateKey('code_send', user.id), rules.codeSend, now);
     if (!sendLimit.allowed) return { limited: sendLimit.retryAfterSec } as const;
 

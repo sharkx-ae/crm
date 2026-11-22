@@ -20,7 +20,7 @@ afterAll(async () => {
 
 describe('password length is judged after NFKC normalisation', () => {
   // 16 characters as typed (six "e" + combining acute, then "ab12"), 10 once normalised.
-  const shrinks = `${('e' + String.fromCodePoint(0x301)).repeat(6)}ab12`;
+  const shrinks = `${String.fromCodePoint(0x65, 0x301).repeat(6)}ab12`;
   // 128 characters as typed, thousands once normalised (U+FDFA expands to 18 characters).
   const expands = `a1${String.fromCodePoint(0xfdfa).repeat(126)}`;
 

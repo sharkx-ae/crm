@@ -55,6 +55,20 @@ export async function peek(
   return { allowed: count < rule.limit, count, retryAfterSec };
 }
 
+/** Gives one counted event back (a reserved login attempt that turned out to be right). Never below zero. */
+export async function release(
+  tx: Tx,
+  key: string,
+  rule: Rule,
+  now: Date = new Date(),
+): Promise<void> {
+  const { start } = windowOf(rule, now);
+  await tx
+    .update(rateLimits)
+    .set({ count: sql`greatest(${rateLimits.count} - 1, 0)` })
+    .where(and(eq(rateLimits.key, key), eq(rateLimits.windowStart, start)));
+}
+
 /** Counts one event; atomic, so parallel hits are each counted exactly once. */
 export async function hit(
   tx: Tx,
