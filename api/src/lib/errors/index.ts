@@ -27,3 +27,5 @@ export function toErrorBody(err: AppError): ErrorBody {
   if (err.retryAfterSec !== undefined) body.error.retryAfterSec = err.retryAfterSec;
   return body;
 }
+
+export { type ErrorReport, reportError } from './report.ts';

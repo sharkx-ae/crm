@@ -19,7 +19,7 @@ describe('GET /health', () => {
     expect(body).toMatchObject({
       status: 'ok',
       service: 'api',
-      checks: { db: 'ok', queue: 'unknown', integrations: {} },
+      checks: { db: 'ok', queue: 'ok', integrations: {} },
       lastWebhookAt: null,
     });
     expect(body.version).toBeTruthy();

@@ -127,7 +127,11 @@ SELECT app_secure_tenant_table('notifications', 'write', 'project_id', 'user_id 
 -- Cron loops list every client without a project context, then work one project at a time.
 CREATE POLICY projects_list ON projects FOR SELECT TO app_system USING (true);
 --> statement-breakpoint
--- The daily maintenance job prunes the polling feed across projects (project context unset).
+-- The daily maintenance job prunes the polling feed across projects (project context unset). A DELETE with a WHERE
+-- also needs SELECT on the rows it reads, so the prune has a matching read policy: old rows only, system role only.
+CREATE POLICY change_feed_prune_read ON change_feed FOR SELECT TO app_system
+  USING (app_project_id() IS NULL AND at < now() - interval '7 days');
+--> statement-breakpoint
 CREATE POLICY change_feed_prune ON change_feed FOR DELETE TO app_system
   USING (app_project_id() IS NULL AND at < now() - interval '7 days');
 --> statement-breakpoint

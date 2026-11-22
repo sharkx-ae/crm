@@ -3,6 +3,7 @@
 // Every other route is called only by web (the BFF) with the internal token and the user's session (F1c).
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { ApiEnv } from './lib/env.ts';
+import { reportError } from './lib/errors/index.ts';
 import { httpPlugin, serverOptions } from './lib/http/plugin.ts';
 import type { SessionResolver } from './lib/http/route.ts';
 import { authRoutes, resolveSession } from './modules/auth/index.ts';
@@ -18,9 +19,19 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
   await app.register(httpPlugin, {
     env,
     resolveSession: deps.resolveSession ?? resolveSession,
-    onUnexpected: deps.onUnexpected,
+    onUnexpected: deps.onUnexpected ?? reportUnexpected,
   });
   await app.register(healthRoutes, { env });
   await app.register(authRoutes, { env });
   return app;
+}
+
+/** Plan §6.7: an unexpected 500 goes to error_log and, rate-limited, to the alert inbox. Name only in the fingerprint. */
+function reportUnexpected(err: Error, route: string): void {
+  void reportError({
+    source: 'api',
+    fingerprint: `api:${route}:${err.name}`,
+    message: `${err.name}: ${err.message}`, // redacted by reportError: database errors can echo values
+    context: { route },
+  });
 }
