@@ -4,3 +4,4 @@ export type { Actor } from '../audit/index.ts';
 export { actorOf, maskEmail } from './actor.ts';
 export { authRoutes } from './routes.ts';
 export { type ResolvedSession, resolveSession } from './sessions.ts';
+export { inviteUser, inviteUserTx, listUsers, setUserStatus } from './users.ts';

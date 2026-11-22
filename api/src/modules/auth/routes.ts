@@ -1,23 +1,33 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import {
+  acceptInviteRequest,
   activeSessionResponse,
   codeSentResponse,
+  inviteInfoResponse,
+  inviteRequest,
+  listUsersQuery,
+  listUsersResponse,
   loginRequest,
   meResponse,
   okResponse,
   pendingSessionResponse,
+  setUserStatusRequest,
+  tokenRequest,
   updateMeRequest,
+  userSummary,
   verifyCodeRequest,
 } from '../../contracts/auth.ts';
+import type { ApiEnv } from '../../lib/env.ts';
 import { defineRoute } from '../../lib/http/route.ts';
 import { getMe, login, logout, resendCode, updateMe, verifyCode } from './service.ts';
+import { acceptInvite, inspectInvite, inviteUser, listUsers, setUserStatus } from './users.ts';
 
 // POST bodies with nothing to say still send `{}`; accepting a missing body too keeps curl and tests simple.
 const emptyBody = z.object({}).default({});
 
 // Plan §5. web forwards the cookie value as x-session-token; the api never sets cookies.
-export const authRoutes: FastifyPluginAsync = async (app) => {
+export const authRoutes: FastifyPluginAsync<{ env: ApiEnv }> = async (app, { env }) => {
   defineRoute(
     app,
     {
@@ -95,5 +105,82 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       audit: 'one',
     },
     async ({ body, session }) => updateMe(session, body),
+  );
+
+  // POST, not GET /auth/invite/:token, so a raw token never appears in an api URL (request logs, proxies).
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/auth/invite/inspect',
+      access: 'anon',
+      body: tokenRequest,
+      response: inviteInfoResponse,
+      audit: 'none',
+    },
+    async ({ body }) => inspectInvite(body.token),
+  );
+
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/auth/invite/accept',
+      access: 'anon',
+      body: acceptInviteRequest,
+      response: pendingSessionResponse,
+      audit: 'one',
+    },
+    async ({ body }) => acceptInvite(body),
+  );
+
+  // A manager is invited with user.manage (super admin only); a client user with clientuser.manage on its project.
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/users/invite',
+      access: 'session',
+      body: inviteRequest,
+      action: ({ body }) =>
+        body.kind === 'manager'
+          ? { action: 'user.manage' }
+          : { action: 'clientuser.manage', projectId: body.projectId },
+      response: userSummary,
+      audit: 'one',
+    },
+    async ({ body, session }) => inviteUser(session, body, { appUrl: env.APP_URL }),
+  );
+
+  defineRoute(
+    app,
+    {
+      method: 'GET',
+      url: '/users',
+      access: 'session',
+      query: listUsersQuery,
+      action: ({ query }) =>
+        query.kind === 'manager'
+          ? { action: 'user.manage' }
+          : { action: 'clientuser.manage', projectId: query.projectId },
+      response: listUsersResponse,
+    },
+    async ({ query, session }) => ({ users: await listUsers(session, query) }),
+  );
+
+  // The route gate is "staff"; the service then needs user.manage for a manager target, clientuser.manage for a client's.
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/users/:id/status',
+      access: 'session',
+      params: z.object({ id: z.uuid() }),
+      body: setUserStatusRequest,
+      action: 'clientuser.manage',
+      response: userSummary,
+      audit: 'one',
+    },
+    async ({ params, body, session }) => setUserStatus(session, params.id, body.status),
   );
 };

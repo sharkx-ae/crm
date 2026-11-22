@@ -21,6 +21,6 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
     onUnexpected: deps.onUnexpected,
   });
   await app.register(healthRoutes, { env });
-  await app.register(authRoutes);
+  await app.register(authRoutes, { env });
   return app;
 }

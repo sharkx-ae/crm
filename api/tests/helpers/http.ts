@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../src/app.ts';
 import type { Me } from '../../src/contracts/auth.ts';
@@ -7,6 +8,7 @@ import * as s from '../../src/db/schema/index.ts';
 import { hashPassword } from '../../src/lib/crypto/index.ts';
 import { memoryTransport, setEmailTransport } from '../../src/lib/email/index.ts';
 import { withSystem } from '../../src/lib/tenant/index.ts';
+import { ensureSuperAdmin } from './db.ts';
 import { INTERNAL_TOKEN, testEnv } from './env.ts';
 
 export const PASSWORD = 'Correct-horse-1234';
@@ -120,4 +122,16 @@ export async function signIn(
   if (verify.statusCode !== 200)
     throw new Error(`verify failed: ${verify.statusCode} ${verify.body}`);
   return { token: verify.json().sessionToken as string, me: verify.json().me as Me };
+}
+
+export const SUPER_EMAIL = 'super-admin@test.local';
+
+/** The single shared super admin, given a known password and signed in through the real flow. */
+export async function signInSuperAdmin(app: FastifyInstance, mail: Mail) {
+  const id = await ensureSuperAdmin();
+  const pwHash = await hashPassword(PASSWORD);
+  await withSystem(null, (tx) =>
+    tx.update(s.users).set({ pwHash, status: 'active' }).where(eq(s.users.id, id)),
+  );
+  return { id, ...(await signIn(app, mail, SUPER_EMAIL)) };
 }
