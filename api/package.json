@@ -19,6 +19,7 @@
     "test": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run",
     "db:generate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file-if-exists=.env.local src/db/migrate.ts",
+    "auth:seed-admin": "node --env-file-if-exists=.env.local src/db/seed-super-admin.ts",
     "db:studio": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "verify": "pnpm typecheck && pnpm lint && pnpm test"
   },
