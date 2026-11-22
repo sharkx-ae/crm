@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { locale } from './common.ts';
 
+// Later templates (task_due, connection_issue…) are added by their owners as new enum values.
+export const emailTemplate = z.enum(['invite', 'code', 'reset', 'alert']);
+
 // CONTRACTS §5: pg-boss job name → payload.
 export const jobs = {
   'webhook.process': z.object({ webhookEventId: z.uuid() }),
@@ -15,7 +18,7 @@ export const jobs = {
   'task.reminder': z.object({ taskId: z.uuid() }),
   'email.send': z.object({
     to: z.email(),
-    template: z.string(),
+    template: emailTemplate,
     locale,
     data: z.record(z.string(), z.unknown()),
   }),
@@ -27,5 +30,6 @@ export const jobs = {
   maintenance: z.object({}),
 };
 
+export type EmailTemplate = z.infer<typeof emailTemplate>;
 export type JobName = keyof typeof jobs;
 export type JobPayload<N extends JobName> = z.infer<(typeof jobs)[N]>;
