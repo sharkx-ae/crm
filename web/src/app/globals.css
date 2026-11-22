@@ -5,6 +5,18 @@
   --color-brand: #e70101;
   --color-ink: #1c0f0f;
   --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+
+  /* SHARKX brand tokens (skills/sharkx-brand-guidelines/assets/tokens.json): utilities like bg-sx-red, text-sx-muted. */
+  --color-sx-red: #e70101;
+  --color-sx-black: #1c0f0f;
+  --color-sx-red-soft: #fde6e6;
+  --color-sx-muted: #5c5656;
+  --color-sx-faint: #a49f9f;
+  --color-sx-border: #e8e7e7;
+  --color-sx-page: #fafafa;
+  --color-sx-shell: #f5f5f5;
+  --color-sx-destructive: #b91c1c;
+  --color-sx-success: #0a7c42;
 }
 
 :root {

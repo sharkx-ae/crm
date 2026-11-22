@@ -1,0 +1,10 @@
+{
+  "UNAUTHENTICATED": "Your session has ended. Sign in again.",
+  "FORBIDDEN": "You do not have access to this.",
+  "NOT_FOUND": "We could not find that.",
+  "CONFLICT": "That conflicts with something that already exists.",
+  "VALIDATION": "Check the highlighted fields and try again.",
+  "RATE_LIMITED": "Too many attempts. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+  "INTEGRATION_ERROR": "We could not send that email. Try again in a moment.",
+  "INTERNAL": "Something went wrong on our side. Try again."
+}
