@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import {
+  acceptInviteRequest,
   activeSessionResponse,
   codeSentResponse,
   loginRequest,
@@ -68,4 +69,18 @@ export const logout = defineAction({ input: empty, auth: 'pending' }, async ({ l
 export const updateMe = defineAction(
   { input: updateMeRequest, auth: 'session' },
   async ({ input }): Promise<Me> => apiCall(meResponse, '/me', { method: 'PATCH', body: input }),
+);
+
+/** Sets the password from an invite link, then continues at the code step like a normal sign-in. */
+export const acceptInvite = defineAction(
+  { input: acceptInviteRequest, auth: 'none' },
+  async ({ input, locale }) => {
+    const res = await apiCall(pendingSessionResponse, '/auth/invite/accept', {
+      method: 'POST',
+      body: input,
+      session: 'none',
+    });
+    await setSessionCookie(res.sessionToken, res.expiresAt);
+    redirect(`/${locale}/code`);
+  },
 );
