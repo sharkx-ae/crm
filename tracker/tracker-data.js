@@ -1,16 +1,16 @@
 window.TRACKER = {
 "now":"F1b building schema, RLS, tenant helpers",
-"lastActivity":{"time":"2026-11-22T11:15:10.876Z","file":"(turn finished)"},
+"lastActivity":{"time":"2026-11-22T13:20:11.025Z","file":"docs/ARCHITECTURE.md"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.270Z"},
-{"id":"F1.2","name":"Schema, RLS roles, tenant helpers, isolation tests","status":"doing","pct":5,"note":"plan approved, building","updated":"2026-11-19T12:57:40.289Z"},
-{"id":"F1.3","name":"Login, sessions, password reset","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F1.4","name":"Emailed-code 2FA","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F1.5","name":"Roles, can() matrix, invites","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F1.6","name":"Audit log writes and Admin viewer","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F1.7","name":"pg-boss queue, worker service, retries","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F1.8","name":"Rate limits, security headers, error alerts","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F1.2","name":"Schema, RLS roles, tenant helpers, isolation tests","status":"done","pct":100,"note":"Schema, RLS, isolation suite green","updated":"2026-11-22T13:06:22.830Z"},
+{"id":"F1.3","name":"Login, sessions, password reset","status":"done","pct":100,"note":"Login, sessions, reset password done","updated":"2026-11-22T13:20:35.636Z"},
+{"id":"F1.4","name":"Emailed-code 2FA","status":"done","pct":100,"note":"Emailed-code 2FA done","updated":"2026-11-22T13:20:35.720Z"},
+{"id":"F1.5","name":"Roles, can() matrix, invites","status":"done","pct":100,"note":"Roles, can() matrix, invites done","updated":"2026-11-22T13:20:35.824Z"},
+{"id":"F1.6","name":"Audit log writes and Admin viewer","status":"doing","pct":60,"note":"Audit writes and GET /audit done; viewer is F1e","updated":"2026-11-22T13:20:35.931Z"},
+{"id":"F1.7","name":"pg-boss queue, worker service, retries","status":"done","pct":100,"note":"Queue, worker, retries, email job done","updated":"2026-11-22T13:12:35.622Z"},
+{"id":"F1.8","name":"Rate limits, security headers, error alerts","status":"done","pct":100,"note":"Rate limits, headers, error alerts done","updated":"2026-11-22T13:20:36.026Z"},
 {"id":"F1.9","name":"Shared contracts frozen (Zod, tables, jobs)","status":"done","pct":100,"note":"Contracts 1.0.0 on main; CI result unchecked","updated":"2026-11-19T12:30:42.804Z"}
 ]},
 {"id":"F2","name":"App shell and projects","spec":"docs/PRD.md#f2","owner":"B","subs":[
@@ -122,6 +122,22 @@ window.TRACKER = {
 {"t":"2026-11-19T08:56:36.395Z","m":"added F14.6 Generic connect wizard UI"},
 {"t":"2026-11-19T12:28:35.532Z","m":"F1.9 doing 10% Writing Zod contracts from CONTRACTS.md"},
 {"t":"2026-11-19T12:30:42.804Z","m":"F1.9 done 100% Contracts 1.0.0 on main; CI result unchecked"},
-{"t":"2026-11-19T12:57:40.289Z","m":"F1.2 doing 5% plan approved, building"}
+{"t":"2026-11-19T12:57:40.289Z","m":"F1.2 doing 5% plan approved, building"},
+{"t":"2026-11-22T12:22:58.272Z","m":"F1.2 doing 40% Schema, RLS and isolation suite committed"},
+{"t":"2026-11-22T12:36:27.009Z","m":"F1.3 doing 15% Crypto, route guard, email done; sessions next"},
+{"t":"2026-11-22T12:47:25.501Z","m":"F1.3 doing 40% api sign-in and web plumbing committed"},
+{"t":"2026-11-22T12:47:25.652Z","m":"F1.4 doing 60% Emailed code api done; screen pending"},
+{"t":"2026-11-22T12:49:40.074Z","m":"F1.5 doing 35% Roles, can() everywhere done; invites next"},
+{"t":"2026-11-22T12:57:01.153Z","m":"F1.5 doing 60% Invites and user status api done"},
+{"t":"2026-11-22T13:01:04.935Z","m":"F1.3 doing 70% Login and code screens, headers done"},
+{"t":"2026-11-22T13:03:49.385Z","m":"F1.3 doing 90% Reset password done; seed and sweep left"},
+{"t":"2026-11-22T13:06:22.830Z","m":"F1.2 done 100% Schema, RLS, isolation suite green"},
+{"t":"2026-11-22T13:12:35.622Z","m":"F1.7 done 100% Queue, worker, retries, email job done"},
+{"t":"2026-11-22T13:12:35.701Z","m":"F1.8 doing 70% Rate limits, alerts, headers done"},
+{"t":"2026-11-22T13:20:35.636Z","m":"F1.3 done 100% Login, sessions, reset password done"},
+{"t":"2026-11-22T13:20:35.720Z","m":"F1.4 done 100% Emailed-code 2FA done"},
+{"t":"2026-11-22T13:20:35.824Z","m":"F1.5 done 100% Roles, can() matrix, invites done"},
+{"t":"2026-11-22T13:20:35.931Z","m":"F1.6 doing 60% Audit writes and GET /audit done; viewer is F1e"},
+{"t":"2026-11-22T13:20:36.026Z","m":"F1.8 done 100% Rate limits, headers, error alerts done"}
 ]
 };
