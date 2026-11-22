@@ -8,7 +8,6 @@ import type {
 } from '../../contracts/auth.ts';
 import type { Role, UserStatus } from '../../contracts/common.ts';
 import { type Action, can } from '../../contracts/session.ts';
-import { hashPassword } from '../../lib/crypto/index.ts';
 import { sendEmail } from '../../lib/email/index.ts';
 import { AppError } from '../../lib/errors/index.ts';
 import type { ResolvedSession } from '../../lib/http/route.ts';
@@ -18,6 +17,7 @@ import { projectMembers } from '../../lib/tenant/schema.ts';
 import { audit } from '../audit/index.ts';
 import { projects } from '../projects/schema.ts';
 import { actorOf, maskEmail } from './actor.ts';
+import { hashNewPassword } from './password.ts';
 import { users } from './schema.ts';
 import { createSession, revokeAllSessions } from './sessions.ts';
 import {
@@ -274,7 +274,7 @@ export async function acceptInvite(
   input: { token: string; password: string },
   now: Date = new Date(),
 ): Promise<PendingSessionResponse> {
-  const pwHash = await hashPassword(input.password); // before the transaction: ~100 ms and 32 MiB
+  const pwHash = await hashNewPassword(input.password); // before the transaction: ~100 ms and 32 MiB
 
   const out = await withSystem(null, async (tx) => {
     const consumed = await consumeToken(tx, input.token, 'invite', now);

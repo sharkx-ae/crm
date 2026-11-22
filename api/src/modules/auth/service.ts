@@ -14,6 +14,7 @@ import { hit, peek, rateKey, rules } from '../../lib/rate-limit/index.ts';
 import { withSystem } from '../../lib/tenant/index.ts';
 import { audit } from '../audit/index.ts';
 import { actorOf, maskEmail } from './actor.ts';
+import { hashNewPassword } from './password.ts';
 import { users } from './schema.ts';
 import { createSession, revokeAllSessions, revokeByToken, revokeSession } from './sessions.ts';
 import {
@@ -270,7 +271,7 @@ export async function confirmReset(
   input: { token: string; password: string },
   now: Date = new Date(),
 ): Promise<void> {
-  const pwHash = await hashPassword(input.password); // before the transaction
+  const pwHash = await hashNewPassword(input.password); // before the transaction
 
   await withSystem(null, async (tx) => {
     const consumed = await consumeToken(tx, input.token, 'reset', now);

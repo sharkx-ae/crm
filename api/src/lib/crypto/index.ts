@@ -28,11 +28,14 @@ const scrypt = (pw: string, salt: Buffer, keylen: number, o: Params): Promise<Bu
 
 const normalize = (pw: string) => pw.normalize('NFKC');
 
+/** The length rule is applied after normalisation, so a password that passed the form check can still land here. */
+export class PasswordLengthError extends RangeError {}
+
 /** `scrypt$<log2 N>$<r>$<p>$<salt b64url>$<hash b64url>`. Hash outside DB transactions: it takes ~100 ms and 32 MiB. */
 export async function hashPassword(pw: string): Promise<string> {
   const p = normalize(pw);
   if (p.length < MIN_PASSWORD || p.length > MAX_PASSWORD) {
-    throw new RangeError(`password must be ${MIN_PASSWORD}-${MAX_PASSWORD} characters`);
+    throw new PasswordLengthError(`password must be ${MIN_PASSWORD}-${MAX_PASSWORD} characters`);
   }
   const salt = randomBytes(SALT_BYTES);
   const key = await scrypt(p, salt, KEYLEN, { n: N, r: R, p: P });
