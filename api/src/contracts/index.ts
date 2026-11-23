@@ -5,8 +5,12 @@
 export * from './audit.ts';
 export * from './auth.ts';
 export * from './common.ts';
+export * from './contacts.ts';
 export * from './functions.ts';
 export * from './http.ts';
 export * from './jobs.ts';
+export * from './leads.ts';
+export * from './projects.ts';
+export * from './reports.ts';
 export * from './session.ts';
 export const CONTRACTS_VERSION = '2.0.0';

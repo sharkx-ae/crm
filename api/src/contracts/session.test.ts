@@ -13,8 +13,8 @@ const sessionOf = (role: Role, stage: 'active' | 'pending_2fa' = 'active') => ({
 });
 
 describe('can()', () => {
-  it('covers the 21 actions', () => {
-    expect(actions).toHaveLength(21);
+  it('covers the 22 actions', () => {
+    expect(actions).toHaveLength(22);
   });
 
   describe.each(actions)('%s', (a) => {

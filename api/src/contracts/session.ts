@@ -34,6 +34,7 @@ export const actionRoles = {
   'qualification.manage': STAFF,
   'project.update': STAFF,
   'clientuser.manage': STAFF,
+  'agency.read': STAFF,
   'project.create': SUPER,
   'user.manage': SUPER,
   'audit.read': SUPER,

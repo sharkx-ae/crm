@@ -4,6 +4,7 @@ Shared between **Alex (Dev A, Pipes)** and **John (Dev B, Product)** so both bui
 - Layout: `web` (Next.js BFF) calls `api` (Fastify) over HTTP; §4 functions run inside the api (and worker). Each web-facing api endpoint gets a Zod request/response schema in `api/src/contracts`, added by the spec that needs it. Path mapping for specs: CLAUDE.md "Layers and ownership".
 - After Day 1: additive changes only (new optional field, new enum value), in a `contracts:` commit that both devs have agreed to. Renames/removals need both devs and an ARCHITECTURE update.
 - Change 2026-11-21 (breaking; both devs agree before pushing; one `contracts:` commit): role enum becomes `super_admin|manager|client` (`admin` renamed, `agent` removed); `can()` no longer nests roles; actions changed per §1; `link` removed from `changeKind`; `client_links` table and `/api/portal/*` removed; `contact.read`, `lead.mark`, `qualification.manage`, `integration.test`, `clientuser.manage` added, `link.manage` removed. Scope trim (same commit): `integration.test`, `agency.manage`, `sendTestLead` and the `agency_settings` table removed; `projects.first_reply_minutes` added; export kind `report` dropped. Not pushed yet: regenerate F1b migrations `0001`/`0002` instead of adding a migration.
+- Change 2026-11-23 (additive, web plan F2 §5.1): action `agency.read` (staff; Clients home and agency totals); new files `projects.ts`, `leads.ts`, `contacts.ts`, `reports.ts` (web-facing request/response shapes; responses for staff and client carry a `view`, the client shape is the strict `clientLeadKeys` allowlist); `clientChangeKinds` in `common.ts`; `knownAuditActions` += `project.created, project.updated, lead.created, lead.merged, lead.status_changed, lead.assigned, lead.exported, form.mapping_saved`. `projects.business_hours` becomes seven `{ day, open, from, to }` entries (migration 0003, F4a).
 - Notation: `?` = optional, `uuid`, `iso` = ISO-8601 UTC string, `e164` = `+9715…`.
 
 ## 1 Session and permissions
@@ -16,7 +17,7 @@ Shared between **Alex (Dev A, Pipes)** and **John (Dev B, Product)** so both bui
 | Action | Super admin | Manager | Client (own client) |
 |---|---|---|---|
 | project.read, lead.read, lead.mark, lead.export, chat.read, report.read, integration.manage | ✓ | ✓ | ✓ |
-| contact.read, lead.update, lead.assign, chat.note, task.manage, pipeline.manage, automation.manage, conversion.manage, qualification.manage, project.update, clientuser.manage | ✓ | ✓ | |
+| contact.read, lead.update, lead.assign, chat.note, task.manage, pipeline.manage, automation.manage, conversion.manage, qualification.manage, project.update, clientuser.manage, agency.read | ✓ | ✓ | |
 | project.create, user.manage, audit.read | ✓ | | |
 
 - `lead.mark` = change status MQL/SQL/Not qualified (+ reason); `lead.update` = every other lead edit (stage, details). `chat.note` covers reading and writing internal notes. `integration.manage` = connect, reconnect. `clientuser.manage` = invite/disable client users; `user.manage` = invite/disable managers. `qualification.manage` = MQL/SQL definitions and reasons list (replaces `link.manage`).

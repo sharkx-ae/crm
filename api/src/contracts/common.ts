@@ -30,6 +30,13 @@ export const msgType = z.enum([
 export const actorKind = z.enum(['user', 'client', 'system']);
 export const conversionState = z.enum(['pending', 'sent', 'retrying', 'failed', 'skipped']);
 export const changeKind = z.enum(['lead', 'message', 'task', 'health', 'notification']);
+// The change kinds a client-role /api/events feed may carry (CONTRACTS §2).
+export const clientChangeKinds = [
+  'lead',
+  'message',
+  'health',
+  'notification',
+] as const satisfies readonly z.infer<typeof changeKind>[];
 export const notificationKind = z.enum([
   'new_lead',
   'new_message',

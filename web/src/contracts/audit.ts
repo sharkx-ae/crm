@@ -15,6 +15,14 @@ export const knownAuditActions = [
   'user.invited',
   'user.invite_accepted',
   'user.status_changed',
+  'project.created',
+  'project.updated',
+  'lead.created',
+  'lead.merged',
+  'lead.status_changed',
+  'lead.assigned',
+  'lead.exported',
+  'form.mapping_saved',
 ] as const;
 
 export const auditQuery = z.object({
