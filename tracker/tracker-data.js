@@ -1,21 +1,21 @@
 window.TRACKER = {
-"now":"F1b building schema, RLS, tenant helpers",
-"lastActivity":{"time":"2026-11-22T13:20:11.025Z","file":"docs/ARCHITECTURE.md"},
+"now":"F1b-F1d built and independently reviewed; next F2a, F4a",
+"lastActivity":{"time":"2026-11-23T14:34:40.014Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
-{"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.270Z"},
-{"id":"F1.2","name":"Schema, RLS roles, tenant helpers, isolation tests","status":"done","pct":100,"note":"Schema, RLS, isolation suite green","updated":"2026-11-22T13:06:22.830Z"},
-{"id":"F1.3","name":"Login, sessions, password reset","status":"done","pct":100,"note":"Login, sessions, reset password done","updated":"2026-11-22T13:20:35.636Z"},
-{"id":"F1.4","name":"Emailed-code 2FA","status":"done","pct":100,"note":"Emailed-code 2FA done","updated":"2026-11-22T13:20:35.720Z"},
-{"id":"F1.5","name":"Roles, can() matrix, invites","status":"done","pct":100,"note":"Roles, can() matrix, invites done","updated":"2026-11-22T13:20:35.824Z"},
-{"id":"F1.6","name":"Audit log writes and Admin viewer","status":"doing","pct":60,"note":"Audit writes and GET /audit done; viewer is F1e","updated":"2026-11-22T13:20:35.931Z"},
-{"id":"F1.7","name":"pg-boss queue, worker service, retries","status":"done","pct":100,"note":"Queue, worker, retries, email job done","updated":"2026-11-22T13:12:35.622Z"},
-{"id":"F1.8","name":"Rate limits, security headers, error alerts","status":"done","pct":100,"note":"Rate limits, headers, error alerts done","updated":"2026-11-22T13:20:36.026Z"},
+{"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
+{"id":"F1.2","name":"Schema, RLS roles, tenant helpers, isolation tests","status":"done","pct":100,"note":"Independent review passed; 2 bugs fixed","updated":"2026-11-22T17:06:38.221Z"},
+{"id":"F1.3","name":"Login, sessions, password reset","status":"done","pct":100,"note":"Independent review passed; 2 bugs fixed","updated":"2026-11-22T17:06:38.312Z"},
+{"id":"F1.4","name":"Emailed-code 2FA","status":"done","pct":100,"note":"Independent review passed; 2 bugs fixed","updated":"2026-11-22T17:06:38.396Z"},
+{"id":"F1.5","name":"Roles, can() matrix, invites","status":"done","pct":100,"note":"Independent review passed; 2 bugs fixed","updated":"2026-11-22T17:06:38.472Z"},
+{"id":"F1.6","name":"Audit log writes and Admin viewer","status":"doing","pct":60,"note":"Review passed; audit writes, GET /audit done; viewer F1e","updated":"2026-11-22T17:06:38.697Z"},
+{"id":"F1.7","name":"pg-boss queue, worker service, retries","status":"done","pct":100,"note":"Independent review passed; 2 bugs fixed","updated":"2026-11-22T17:06:38.547Z"},
+{"id":"F1.8","name":"Rate limits, security headers, error alerts","status":"done","pct":100,"note":"Independent review passed; 2 bugs fixed","updated":"2026-11-22T17:06:38.618Z"},
 {"id":"F1.9","name":"Shared contracts frozen (Zod, tables, jobs)","status":"done","pct":100,"note":"Contracts 1.0.0 on main; CI result unchecked","updated":"2026-11-19T12:30:42.804Z"}
 ]},
 {"id":"F2","name":"App shell and projects","spec":"docs/PRD.md#f2","owner":"B","subs":[
-{"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"doing","pct":15,"note":"Tokens done; shell, nav, switcher next","updated":"2026-11-23T12:15:49.864Z"},
+{"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"doing","pct":60,"note":"Lint checks, formatters, catalogs done; RTL pending","updated":"2026-11-23T12:15:49.952Z"},
 {"id":"F2.3","name":"Clients home cards","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F2.4","name":"New-project wizard and default pipeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F2.5","name":"Agency settings and business hours","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
@@ -117,9 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-19T07:55:47.276Z","m":"seeded from specs/STATUS.md"},
-{"t":"2026-11-19T08:56:36.289Z","m":"added F1.9 Shared contracts frozen (Zod, tables, jobs)"},
-{"t":"2026-11-19T08:56:36.395Z","m":"added F14.6 Generic connect wizard UI"},
 {"t":"2026-11-19T12:28:35.532Z","m":"F1.9 doing 10% Writing Zod contracts from CONTRACTS.md"},
 {"t":"2026-11-19T12:30:42.804Z","m":"F1.9 done 100% Contracts 1.0.0 on main; CI result unchecked"},
 {"t":"2026-11-19T12:57:40.289Z","m":"F1.2 doing 5% plan approved, building"},
@@ -138,6 +135,17 @@ window.TRACKER = {
 {"t":"2026-11-22T13:20:35.720Z","m":"F1.4 done 100% Emailed-code 2FA done"},
 {"t":"2026-11-22T13:20:35.824Z","m":"F1.5 done 100% Roles, can() matrix, invites done"},
 {"t":"2026-11-22T13:20:35.931Z","m":"F1.6 doing 60% Audit writes and GET /audit done; viewer is F1e"},
-{"t":"2026-11-22T13:20:36.026Z","m":"F1.8 done 100% Rate limits, headers, error alerts done"}
+{"t":"2026-11-22T13:20:36.026Z","m":"F1.8 done 100% Rate limits, headers, error alerts done"},
+{"t":"2026-11-22T17:06:38.221Z","m":"F1.2 done 100% Independent review passed; 2 bugs fixed"},
+{"t":"2026-11-22T17:06:38.312Z","m":"F1.3 done 100% Independent review passed; 2 bugs fixed"},
+{"t":"2026-11-22T17:06:38.396Z","m":"F1.4 done 100% Independent review passed; 2 bugs fixed"},
+{"t":"2026-11-22T17:06:38.472Z","m":"F1.5 done 100% Independent review passed; 2 bugs fixed"},
+{"t":"2026-11-22T17:06:38.547Z","m":"F1.7 done 100% Independent review passed; 2 bugs fixed"},
+{"t":"2026-11-22T17:06:38.618Z","m":"F1.8 done 100% Independent review passed; 2 bugs fixed"},
+{"t":"2026-11-22T17:06:38.697Z","m":"F1.6 doing 60% Review passed; audit writes, GET /audit done; viewer F1e"},
+{"t":"2026-11-22T17:06:38.898Z","m":"F1 independent review: 2 bugs fixed, report in docs/specs"},
+{"t":"2026-11-22T17:13:00.618Z","m":"F1.1 blocked 0% Railway admin pending (unconfirmed); skipped for now"},
+{"t":"2026-11-23T12:15:49.864Z","m":"F2.1 doing 15% Tokens done; shell, nav, switcher next"},
+{"t":"2026-11-23T12:15:49.952Z","m":"F2.2 doing 60% Lint checks, formatters, catalogs done; RTL pending"}
 ]
 };

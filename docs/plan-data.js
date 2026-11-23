@@ -15,9 +15,9 @@ window.PLAN = {
 ],
 "specs":[
 {"id":"F1a","name":"Scaffold + contracts","owner":"Both","startDay":1,"endDay":1,"release":1,"dependsOn":[],"subs":["F1.1","F1.9"]},
-{"id":"F1b","name":"Schema + RLS","owner":"A","startDay":3,"endDay":4,"release":1,"dependsOn":["F1a"],"subs":["F1.2"]},
-{"id":"F1c","name":"Access: sign-in, code, reset, invites","owner":"A","startDay":5,"endDay":7,"release":1,"dependsOn":["F1b"],"subs":["F1.3","F1.4","F1.5"]},
-{"id":"F1d","name":"Audit, queue, email, limits","owner":"A","startDay":8,"endDay":8,"release":1,"dependsOn":["F1b"],"subs":["F1.6","F1.7","F1.8"]},
+{"id":"F1b","name":"Schema + RLS","owner":"A","startDay":3,"endDay":3,"release":1,"dependsOn":["F1a"],"subs":["F1.2"]},
+{"id":"F1c","name":"Access: sign-in, code, reset, invites","owner":"A","startDay":3,"endDay":3,"release":1,"dependsOn":["F1b"],"subs":["F1.3","F1.4","F1.5"]},
+{"id":"F1d","name":"Audit, queue, email, limits","owner":"A","startDay":3,"endDay":3,"release":1,"dependsOn":["F1b"],"subs":["F1.7","F1.8"],"note":"Audit writes (F1.6) also done here; the viewer is F1e"},
 {"id":"F3a","name":"WA onboarding","owner":"A","startDay":9,"endDay":9,"release":2,"dependsOn":["F1d"],"subs":["F3.1","F3.2"]},
 {"id":"F3b","name":"WA sync + ingest","owner":"A","startDay":10,"endDay":11,"release":2,"dependsOn":["F3a","F4a"],"subs":["F3.3","F3.4","F3.5","F3.8"]},
 {"id":"F3c","name":"WA inbox","owner":"A","startDay":12,"endDay":13,"release":2,"dependsOn":["F4b","F3b"],"subs":["F3.6","F3.7"]},
