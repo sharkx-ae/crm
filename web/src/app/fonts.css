@@ -1,0 +1,42 @@
+/*
+ * Sharp Sans (Latin) and GE Flow (Arabic) are licensed; SHARKX has not sent the files yet.
+ * Until then local() picks them up if installed and the stack falls through to Segoe UI.
+ * When the files land, put them in public/fonts and add `url(/fonts/<file>.woff2) format("woff2")`
+ * after each local() (CSP already allows font-src 'self').
+ */
+@font-face {
+  font-family: "Sharp Sans";
+  font-weight: 300;
+  font-display: swap;
+  src: local("Sharp Sans Light"), local("SharpSans-Light");
+}
+@font-face {
+  font-family: "Sharp Sans";
+  font-weight: 400;
+  font-display: swap;
+  src: local("Sharp Sans"), local("Sharp Sans Regular"), local("SharpSans-Regular");
+}
+@font-face {
+  font-family: "Sharp Sans";
+  font-weight: 500;
+  font-display: swap;
+  src: local("Sharp Sans Medium"), local("SharpSans-Medium");
+}
+@font-face {
+  font-family: "Sharp Sans";
+  font-weight: 700;
+  font-display: swap;
+  src: local("Sharp Sans Bold"), local("SharpSans-Bold");
+}
+@font-face {
+  font-family: "GE Flow";
+  font-weight: 400;
+  font-display: swap;
+  src: local("GE Flow"), local("GE Flow Regular"), local("GEFlow-Regular");
+}
+@font-face {
+  font-family: "GE Flow";
+  font-weight: 700;
+  font-display: swap;
+  src: local("GE Flow Bold"), local("GEFlow-Bold");
+}

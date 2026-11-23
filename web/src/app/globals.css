@@ -1,29 +1,92 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
-/* Design tokens (mockup values arrive in F2a). Use logical utilities only: ms-/me-/ps-/pe-/start-/end-/text-start. */
+/*
+ * SHARKX design tokens. Source of truth: skills/sharkx-brand-guidelines/assets/tokens.json;
+ * src/lib/design/tokens.test.ts fails if a colour here is not in it. Light canvas only.
+ * Logical utilities only: ms-/me-/ps-/pe-/start-/end-/text-start (check-logical-css.mjs).
+ */
 @theme {
-  --color-brand: #e70101;
-  --color-ink: #1c0f0f;
-  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
-
-  /* SHARKX brand tokens (skills/sharkx-brand-guidelines/assets/tokens.json): utilities like bg-sx-red, text-sx-muted. */
   --color-sx-red: #e70101;
   --color-sx-black: #1c0f0f;
   --color-sx-red-soft: #fde6e6;
+  --color-sx-red-mid: #f59999;
   --color-sx-muted: #5c5656;
+  --color-sx-muted-60: #776f6f;
   --color-sx-faint: #a49f9f;
   --color-sx-border: #e8e7e7;
+  --color-sx-line: #1c0f0f26;
   --color-sx-page: #fafafa;
   --color-sx-shell: #f5f5f5;
-  --color-sx-destructive: #b91c1c;
-  --color-sx-success: #0a7c42;
+  --color-sx-paper: #ffffff;
+  --color-sx-ok: #0a7c42;
+  --color-sx-warn: #ff691e;
+  --color-sx-bad: #b91c1c;
+  --color-sx-success: var(--color-sx-ok);
+  --color-sx-destructive: var(--color-sx-bad);
+
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --radius-field: 10px;
+  --radius-tile: 20px;
+
+  --shadow-sx: 0 1px 3px rgb(28 15 15 / 0.08);
+  --shadow-sx-md: 0 4px 12px rgb(28 15 15 / 0.1);
+
+  --font-sans: "Sharp Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-ar: "GE Flow", "Segoe UI", "Traditional Arabic", sans-serif;
+
+  /* Sizes and weights follow the mockup while on Segoe UI (no 300/500 face); switch the weights to the brand's (heading 700/500, body 300) when Sharp Sans lands. */
+  --text-label: 13px;
+  --text-body: 14px;
+  --text-section: 16px;
+  --text-figure: 22px;
+  --text-hero: 34px;
+  --font-weight-body: 400;
+  --font-weight-label: 500;
+  --font-weight-heading: 600;
+  --font-weight-display: 700;
+
+  --rail-w: 72px;
+  --side-w: 248px;
+  --top-h: 56px;
+
+  --breakpoint-rail: 900px;
+  --breakpoint-wide: 1100px;
+}
+
+/* Devices that cannot hover get the off-canvas rail instead of the hover rail. */
+@custom-variant touch (@media (hover: none));
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 3px solid var(--color-sx-red);
+    outline-offset: 2px;
+  }
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 body {
-  background: light-dark(#ffffff, #0f1115);
-  color: light-dark(var(--color-ink), #e8eaee);
+  background: var(--color-sx-page);
+  color: var(--color-sx-black);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+[lang="ar"] body {
+  font-family: var(--font-ar);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
