@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { createFormat, EMPTY, type Translate, zoneLabel } from './format.ts';
 
 const DUBAI = 'Asia/Dubai';
+// Offsets and labels are asserted on zones with stable rules. Africa/Casablanca changes between tz-data
+// releases (UTC+1 on Node 22's data, UTC+0 "WET" on Node 26's for the same Nov 2026 date), so it only
+// appears where every offset gives the same answer.
 const CASA = 'Africa/Casablanca';
-const AT = '2026-11-22T10:05:00.000Z'; // 14:05 in Dubai (UTC+4), 11:05 in Casablanca (UTC+1)
+const RIYADH = 'Asia/Riyadh';
+const LONDON = 'Europe/London';
+const AT = '2026-11-22T10:05:00.000Z'; // 14:05 in Dubai (UTC+4), 13:05 in Riyadh (UTC+3)
 const at = (locale: 'en' | 'ar' | 'fr', timeZone = DUBAI, now = '2026-11-22T12:00:00.000Z') =>
   createFormat({ locale, timeZone }, () => new Date(now));
 
@@ -18,10 +23,10 @@ describe('dates in the project zone', () => {
     expect(f.dateTime(AT)).toBe('22 Nov 2026, 14:05');
   });
 
-  it('shows the same instant differently in Dubai and Casablanca', () => {
+  it('shows the same instant differently in two project zones', () => {
     expect(at('en', DUBAI).time(AT)).toBe('14:05');
-    expect(at('en', CASA).time(AT)).toBe('11:05');
-    // 21:30 UTC on the 22nd is already the 23rd in Dubai, still the 22nd in Casablanca
+    expect(at('en', RIYADH).time(AT)).toBe('13:05');
+    // 21:30 UTC on the 22nd is already the 23rd in Dubai, still the 22nd in Casablanca (UTC+0 or +1)
     expect(at('en', DUBAI).date('2026-11-22T21:30:00.000Z')).toBe('23 Nov 2026');
     expect(at('en', CASA).date('2026-11-22T21:30:00.000Z')).toBe('22 Nov 2026');
   });
@@ -56,7 +61,7 @@ describe('dayLabel', () => {
   });
 
   it('counts calendar days in the project zone, not 24 h blocks', () => {
-    // 22 Nov 22:30 in Casablanca (21:30Z) vs now = 23 Nov 06:00 there: yesterday
+    // 22 Nov 21:30Z or 22:30 in Casablanca (UTC+0 or +1) vs now = 23 Nov 05:00Z or 06:00 there: yesterday
     expect(at('en', CASA, '2026-11-23T05:00:00.000Z').dayLabel('2026-11-22T21:30:00.000Z')).toBe(
       'Yesterday',
     );
@@ -130,10 +135,28 @@ describe('numbers', () => {
 });
 
 describe('zoneLabel', () => {
+  // Every instant is fixed: the label depends on the date, so a test that reads the clock goes red on its own.
+  const NOV = new Date('2026-11-23T12:00:00.000Z');
+  const JAN = new Date('2027-01-15T12:00:00.000Z');
+  const JUL = new Date('2027-07-15T12:00:00.000Z');
+
   it('gives the short zone name for the agency view', () => {
-    expect(zoneLabel(DUBAI, 'en')).toBe('GST');
-    expect(zoneLabel(CASA, 'en')).toBe('GMT+1');
-    expect(at('en').zoneLabel(CASA)).toBe('GMT+1');
-    expect(at('en', CASA).zoneLabel()).toBe('GMT+1');
+    expect(zoneLabel(DUBAI, 'en', NOV)).toBe('GST');
+    expect(zoneLabel(RIYADH, 'en', NOV)).toBe('GMT+3');
+    expect(at('en', DUBAI, NOV.toISOString()).zoneLabel(RIYADH)).toBe('GMT+3');
+    expect(at('en', RIYADH, NOV.toISOString()).zoneLabel()).toBe('GMT+3');
+  });
+
+  it('follows the instant, so a zone that changes rules is labelled for the date asked', () => {
+    expect(zoneLabel(LONDON, 'en', JAN)).toBe('GMT');
+    expect(zoneLabel(LONDON, 'en', JUL)).toBe('BST');
+    expect(zoneLabel(DUBAI, 'en', JUL)).toBe('GST');
+    // the formatter's own clock is the default, an explicit instant overrides it
+    expect(at('en', LONDON, JAN.toISOString()).zoneLabel()).toBe('GMT');
+    expect(at('en', LONDON, JAN.toISOString()).zoneLabel(LONDON, JUL)).toBe('BST');
+  });
+
+  it('always answers with a short name for Casablanca, whatever the tz data says', () => {
+    expect(zoneLabel(CASA, 'en', NOV)).toMatch(/^(GMT(\+1)?|WET|WEST)$/);
   });
 });

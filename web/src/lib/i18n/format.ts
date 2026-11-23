@@ -19,10 +19,13 @@ const parse = (iso: string | null | undefined): Date | null => {
 const finite = (n: number | null | undefined): n is number =>
   typeof n === 'number' && Number.isFinite(n);
 
-/** Short zone name for the agency view: GST, GMT+1. */
-export function zoneLabel(timeZone: string, locale: Locale): string {
+/**
+ * Short zone name for the agency view: GST, GMT+1. It depends on the instant: Africa/Casablanca is
+ * GMT+1 but GMT during Ramadan, so callers pass the moment they are labelling.
+ */
+export function zoneLabel(timeZone: string, locale: Locale, at: Date = new Date()): string {
   const part = new Intl.DateTimeFormat(intlOf(locale), { timeZone, timeZoneName: 'short' })
-    .formatToParts(new Date())
+    .formatToParts(at)
     .find((p) => p.type === 'timeZoneName');
   return part?.value ?? timeZone;
 }
@@ -124,7 +127,7 @@ export function createFormat(
       const m = total % 60;
       return m === 0 ? t('h', { n: h }) : t('hMin', { h, m });
     },
-    zoneLabel: (tz: string = timeZone) => zoneLabel(tz, locale),
+    zoneLabel: (tz: string = timeZone, at: Date = now()) => zoneLabel(tz, locale, at),
   };
 }
 
