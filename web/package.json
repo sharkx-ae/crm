@@ -12,7 +12,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "lint": "biome lint . && node scripts/check-logical-css.mjs",
+    "lint": "biome lint . && node scripts/check-logical-css.mjs && node scripts/check-hardcoded-strings.mjs",
     "format": "biome format --write .",
     "check": "biome check .",
     "test": "vitest run",
