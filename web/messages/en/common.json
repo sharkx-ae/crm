@@ -1,4 +1,43 @@
 {
   "hello": "SHARKX Agency CRM",
-  "tagline": "Every client's leads, conversations and results in one place."
+  "tagline": "Every client's leads, conversations and results in one place.",
+  "status": {
+    "new": "New",
+    "mql": "MQL",
+    "sql": "SQL",
+    "not_qualified": "Not qualified"
+  },
+  "source": {
+    "meta": "Meta Lead Ads",
+    "google": "Google Ads",
+    "youtube": "YouTube lead forms",
+    "tiktok": "TikTok",
+    "snapchat": "Snapchat",
+    "linkedin": "LinkedIn",
+    "website": "Website form",
+    "whatsapp": "WhatsApp direct",
+    "csv": "CSV import"
+  },
+  "role": {
+    "super_admin": "Super admin",
+    "manager": "Manager",
+    "client": "Client"
+  },
+  "health": {
+    "connected": "Connected",
+    "needs_attention": "Needs attention",
+    "broken": "Broken",
+    "not_connected": "Not connected"
+  },
+  "ago": {
+    "now": "just now",
+    "min": "{n} min ago",
+    "h": "{n} h ago",
+    "d": "{n} d ago"
+  },
+  "duration": {
+    "min": "{n} min",
+    "h": "{n} h",
+    "hMin": "{h} h {m} min"
+  }
 }

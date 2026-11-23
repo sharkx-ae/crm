@@ -1,0 +1,16 @@
+{
+  "skipToContent": "Skip to content",
+  "menu": "Menu",
+  "close": "Close",
+  "cancel": "Cancel",
+  "save": "Save",
+  "saving": "Saving...",
+  "search": "Search",
+  "loading": "Loading",
+  "tryAgain": "Try again",
+  "back": "Back",
+  "open": "Open",
+  "closed": "Closed",
+  "nothingYet": "Nothing here yet",
+  "showMore": "Show {n} more"
+}

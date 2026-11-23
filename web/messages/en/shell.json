@@ -1,0 +1,44 @@
+{
+  "nav": {
+    "label": "Main",
+    "clients": "Clients",
+    "team": "Team",
+    "audit": "Audit log",
+    "overview": "Overview",
+    "inbox": "Inbox",
+    "leads": "Leads",
+    "contacts": "Contacts",
+    "pipeline": "Pipeline",
+    "tasks": "Tasks",
+    "reports": "Reports",
+    "integrations": "Integrations",
+    "settings": "Settings"
+  },
+  "navClient": {
+    "inbox": "WhatsApp",
+    "integrations": "Connectors"
+  },
+  "group": {
+    "agency": "Agency",
+    "admin": "Admin",
+    "workspace": "Workspace",
+    "setup": "Setup"
+  },
+  "switcher": {
+    "label": "Client",
+    "allClients": "All clients",
+    "agencyWorkspace": "Agency workspace",
+    "clientDashboard": "Client dashboard",
+    "noClients": "No clients yet",
+    "addClient": "Add client"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "me": {
+    "signOut": "Sign out"
+  },
+  "footer": {
+    "line": "SharkX · {date} · Confidential · sharkx.ae"
+  }
+}
