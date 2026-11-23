@@ -7,14 +7,10 @@ export const projectCity = z.enum(['Dubai', 'Abu Dhabi', 'Morocco']);
 
 // Token colours only (brand skill): the service always returns one.
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
-const timezone = z.string().refine((tz) => {
-  try {
-    new Intl.DateTimeFormat('en', { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}, 'IANA time zone');
+// Canonical IANA names only. `new Intl.DateTimeFormat(…, { timeZone })` also takes "+04:00" and "asia/dubai",
+// and Postgres reads "+04:00" POSIX-style (UTC-4), which would shift every "today" bucket by 8 hours.
+const ianaZones = new Set(Intl.supportedValuesOf('timeZone'));
+const timezone = z.string().refine((tz) => ianaZones.has(tz), 'IANA time zone');
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 // One entry per ISO weekday (1 = Monday … 7 = Sunday); seven different windows are possible.

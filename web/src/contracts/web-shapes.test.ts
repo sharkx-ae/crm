@@ -81,12 +81,24 @@ describe('business hours', () => {
     );
   });
 
-  it('settings need a real IANA zone', () => {
+  it('settings need a canonical IANA zone, not an offset or a differently cased name', () => {
     const ok = { projectId: ID, timezone: 'Africa/Casablanca', businessHours: week() };
-    expect(updateProjectSettingsRequest.safeParse(ok).success).toBe(true);
-    expect(updateProjectSettingsRequest.safeParse({ ...ok, timezone: 'Mars/Base' }).success).toBe(
-      false,
-    );
+    const accepts = (timezone: string) =>
+      updateProjectSettingsRequest.safeParse({ ...ok, timezone }).success;
+    expect(accepts('Africa/Casablanca')).toBe(true);
+    expect(accepts('Asia/Dubai')).toBe(true);
+    // Intl takes these, and Postgres reads "+04:00" as UTC-4: 8 hours off for a Dubai project.
+    for (const bad of [
+      '+04:00',
+      '-0300',
+      'asia/dubai',
+      'ASIA/DUBAI',
+      'Mars/Base',
+      '',
+      ' Asia/Dubai',
+    ]) {
+      expect(accepts(bad), bad).toBe(false);
+    }
   });
 });
 
