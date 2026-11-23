@@ -5,7 +5,7 @@ Owner: Both · Days 21–23 · Release none (hardening/demo) · Tracker: F15.1, 
 A release candidate runs on staging, backups are proven, handover material exists, and the Day 21 demo passes.
 
 ## Acceptance criteria
-- [ ] Staging auto-deploys from `main`; production promoted manually.
+- [ ] Staging auto-deploys from `master`; production is promoted by merging `master` into `main`.
 - [ ] Backups on; restore drill passed before production.
 - [ ] Handover: runbook, env/secrets list, reconnect guide, team training session.
 - [ ] Day 21 scripted demo (PRD steps 1–10), each integration labelled Live or Fixture-verified.

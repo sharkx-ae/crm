@@ -19,7 +19,7 @@ F15c.
 ## Edge cases
 - Platform access still missing → integration stays Fixture-verified, logged under SOW T&C 4.
 - Arabic/French reviewer feedback → string-only fixes allowed; no feature changes.
-- Bug found in UAT → fixed on `main`, re-verified on staging, then promoted.
+- Bug found in UAT → fixed on `master`, re-verified on staging, then promoted to `main`.
 
 ## Out of scope
 Extras, new features, warranty work (starts at go-live).

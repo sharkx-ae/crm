@@ -134,7 +134,7 @@
 
 ### F15
 **Testing, deploy, handover** · A + B · SOW: testing, deployment, handover (14h)
-- CI: typecheck, Biome, Vitest (Postgres), audit; runs on every push to `main` (devs run `node scripts/verify.mjs` first). Staging auto-deploys from `main` only after green CI (Railway "Wait for CI"); production promoted manually.
+- CI: typecheck, Biome, Vitest (Postgres), audit; runs on every push to `master` (devs run `node scripts/verify.mjs` first). Staging auto-deploys from `master` only after green CI (Railway "Wait for CI"); production promoted manually.
 - Tests: isolation + permission suite (super admin, manager, client), webhook signature and idempotency, adapter fixtures, 6 Playwright flows; manual UAT checklist.
 - Seed/demo data from the mockup (5 clients, ~64 leads) plus a super admin, two managers and one client user per client.
 - Backups on; restore drill passed before production.

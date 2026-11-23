@@ -25,8 +25,8 @@ Exact versions are pinned in each `package.json` and the lockfile. No other depe
 - Traffic: browser → `web` only. `web` → `api` over Railway private networking (`API_URL`). Public `api` domain only for platform webhooks, OAuth callbacks and the website form endpoint.
 - Domains: `app.<domain>` → `web` (staff and client users); `api.<domain>` → `api`.
 - Public HTTPS staging URLs from day 1 (Meta/Google webhooks and OAuth callbacks need them).
-- CI (GitHub Actions, runs on every push to `main`; developers also run `node scripts/verify.mjs` before pushing): jobs `api` and `web`, each: install `--frozen-lockfile` → typecheck → Biome → Vitest (api with a Postgres service) → `pnpm audit --prod` (non-blocking for now); web also checks the contracts copy. Aggregate required check: `verify`.
-- CD: Railway GitHub integration with wait-for-CI. `main` → staging automatically; production promoted manually after UAT. Healthchecks: web `/api/health` (checks api + db), api `/health` (checks db). Steps: `docs/ENVIRONMENTS.md`.
+- CI (GitHub Actions, runs on every push to `master`; developers also run `node scripts/verify.mjs` before pushing): jobs `api` and `web`, each: install `--frozen-lockfile` → typecheck → Biome → Vitest (api with a Postgres service) → `pnpm audit --prod` (non-blocking for now); web also checks the contracts copy. Aggregate required check: `verify`.
+- CD: Railway GitHub integration with wait-for-CI. `master` → staging automatically; production deploys from `main`, which only changes through a `master` → `main` release pull request after UAT. Healthchecks: web `/api/health` (checks api + db), api `/health` (checks db). Steps: `docs/ENVIRONMENTS.md`.
 - Backups: Railway Postgres backups on (verify availability day 1) + one restore drill before production.
 - Residency: Railway has no UAE region. Single connection-string config so a later move is config + data migration.
 
