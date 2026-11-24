@@ -53,6 +53,41 @@
 
   --breakpoint-rail: 900px;
   --breakpoint-wide: 1100px;
+
+  /* Layers answer an action and nothing else moves (mockup). The drawer enters from the inline end, so RTL has its own direction. */
+  --animate-sx-slide: sx-slide 0.18s ease-out;
+  --animate-sx-slide-rtl: sx-slide-rtl 0.18s ease-out;
+  --animate-sx-rise: sx-rise 0.18s ease-out;
+  @keyframes sx-slide {
+    from {
+      transform: translateX(28px);
+      opacity: 0.4;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-slide-rtl {
+    from {
+      transform: translateX(-28px);
+      opacity: 0.4;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-rise {
+    from {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
 }
 
 /* Devices that cannot hover get the off-canvas rail instead of the hover rail. */
