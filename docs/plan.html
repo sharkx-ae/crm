@@ -159,6 +159,7 @@ summary{cursor:pointer;color:var(--mut);font-weight:600}
     if (late(s)) m.append(document.createTextNode(' '), el('span', 'chip late', 'behind plan'));
     m.append(document.createTextNode('  Planned ' + days(s) + (s.release ? ' · Release ' + s.release : '')));
     card.append(m);
+    if (s.what) card.append(el('div', 'meta', s.what));
     var ul = el('ul', 'subs');
     var ss = subsOf(s);
     if (!ss.length) ss = (s.subs || []).map(function (id) { return { id: id, name: id, status: 'todo', pct: 0, note: '' }; });
@@ -195,10 +196,10 @@ summary{cursor:pointer;color:var(--mut);font-weight:600}
   if (waitingAll > waiting.length) { var mr = el('tr'); var mc = el('td', 'none', '+ ' + (waitingAll - waiting.length) + ' more, all listed in the plan below.'); mc.colSpan = 4; mr.append(mc); wt.append(mr); }
 
   // ---- roadmap by release ----
-  var groups = [
-    { title: 'Release 1 · base portal', key: 1 }, { title: 'Release 2', key: 2 }, { title: 'Release 3 · feature freeze', key: 3 },
-    { title: 'Hardening, staging, demo', key: null, max: 23 }, { title: 'UAT and production (outside the build)', key: null, min: 24 }
-  ];
+  var groups = (P.releases || []).map(function (r) { return { title: r.name, what: r.what, key: r.key, due: r.due }; }).concat([
+    { title: 'Testing and handover', what: 'No new features. Security and connector tests, Arabic and French, browser tests, staging, backups and training.', key: null, max: 23 },
+    { title: 'UAT and production go-live (outside the build)', what: 'SHARKX tests on live accounts, signs off, and the CRM goes live.', key: null, min: 24 }
+  ]);
   groups.forEach(function (g) {
     var items = P.specs.filter(function (s) {
       if (g.key) return s.release === g.key;
@@ -207,13 +208,14 @@ summary{cursor:pointer;color:var(--mut);font-weight:600}
     if (!items.length) return;
     var doneN = items.filter(function (s) { return status(s) === 'done'; }).length;
     var d = el('details'); if (doneN < items.length && (g.key === 1 || g.key === 2 || (g.key == null && g.max))) d.open = g.key === 1 || doneN > 0 || items.some(function (s) { return status(s) === 'doing'; });
-    var sm = el('summary', '', g.title + ' · ' + doneN + ' of ' + items.length + ' done'); d.append(sm);
+    var sm = el('summary', '', g.title + (g.due ? ' · due ' + fmt(g.due, short) : '') + ' · ' + doneN + ' of ' + items.length + ' done'); d.append(sm);
+    if (g.what) d.append(el('p', 'lead', g.what));
     var wrap = el('div', 'tablewrap'), tb = el('table'), hr = el('tr');
-    ['Spec', 'What', 'Owner', 'Planned', 'Status', 'Waits for'].forEach(function (h) { hr.append(el('th', '', h)); }); tb.append(hr);
+    ['What it delivers', 'Spec', 'Owner', 'Planned', 'Status', 'Waits for'].forEach(function (h) { hr.append(el('th', '', h)); }); tb.append(hr);
     items.forEach(function (s) {
       var st = status(s), r = el('tr', st === 'done' ? 'isdone' : '');
+      var n = el('td', 'name'); n.append(el('b', '', s.name)); if (s.what) n.append(el('small', '', s.what)); if (s.note) n.append(el('small', '', s.note)); r.append(n);
       r.append(el('td', 'id', s.id));
-      var n = el('td', 'name', s.name); if (s.note) n.append(el('small', '', s.note)); r.append(n);
       r.append(el('td', '', who(s.owner)), el('td', 'days', days(s)));
       var sc = el('td'); sc.append(chip(st)); if (late(s)) sc.append(document.createTextNode(' '), el('span', 'chip late', 'behind')); r.append(sc);
       var u = unmet(s); var bn = subsOf(s).filter(function (x) { return x.status === 'blocked'; })[0];
