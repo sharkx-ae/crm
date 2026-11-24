@@ -92,6 +92,8 @@
 
 /* Devices that cannot hover get the off-canvas rail instead of the hover rail. */
 @custom-variant touch (@media (hover: none));
+/* Wide screen with a pointer that hovers: the icon rail that opens on hover or focus and pushes the page. */
+@custom-variant desk (@media (min-width: 900px) and (hover: hover));
 
 @utility focus-ring {
   &:focus-visible {

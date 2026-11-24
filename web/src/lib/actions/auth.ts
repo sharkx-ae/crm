@@ -42,13 +42,14 @@ export const login = defineAction(
 /** Code step. The api swaps the pending token for an active one; the cookie is replaced and the person lands. */
 export const verifyCode = defineAction(
   { input: verifyCodeRequest, auth: 'pending' },
-  async ({ input, locale }) => {
+  async ({ input }) => {
     const res = await apiCall(activeSessionResponse, '/auth/code/verify', {
       method: 'POST',
       body: input,
     });
     await setSessionCookie(res.sessionToken, res.expiresAt);
-    redirect(landingPath(res.me, locale));
+    // The saved language wins at sign-in (F2a: "language saved per user"); the URL locale only for this request.
+    redirect(landingPath(res.me, res.me.locale));
   },
 );
 

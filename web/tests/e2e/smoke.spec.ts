@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-test('home page loads', async ({ page }) => {
+test('home sends a visitor to sign in', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveURL(/\/en$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('SHARKX Agency CRM');
+  await expect(page).toHaveURL(/\/en\/login$/);
+  await expect(page.getByLabel('Email')).toBeVisible();
 });
 
 test('arabic renders right-to-left', async ({ page }) => {

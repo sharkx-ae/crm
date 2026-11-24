@@ -1,6 +1,6 @@
 window.TRACKER = {
-"now":"F1b-F1d built and independently reviewed; next F2a, F4a",
-"lastActivity":{"time":"2026-11-24T13:36:22.577Z","file":"(turn finished)"},
+"now":"F2a done (shell, projects api, auth restyle, e2e); next F4a lead engine",
+"lastActivity":{"time":"2026-11-24T17:58:14.763Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
@@ -14,8 +14,8 @@ window.TRACKER = {
 {"id":"F1.9","name":"Shared contracts frozen (Zod, tables, jobs)","status":"done","pct":100,"note":"Contracts 1.0.0 on main; CI result unchecked","updated":"2026-11-19T12:30:42.804Z"}
 ]},
 {"id":"F2","name":"App shell and projects","spec":"docs/PRD.md#f2","owner":"B","subs":[
-{"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"doing","pct":45,"note":"Tokens, base components, overlays done; shell next","updated":"2026-11-24T13:40:48.978Z"},
-{"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"doing","pct":70,"note":"RTL-safe components, direction provider done; AR strings later","updated":"2026-11-24T13:40:49.256Z"},
+{"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"done","pct":100,"note":"Shell, guards, projects api, auth restyle, e2e done","updated":"2026-11-24T17:30:37.002Z"},
+{"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"done","pct":100,"note":"Framework, RTL, saved locale done; strings are F2.6","updated":"2026-11-24T17:32:39.440Z"},
 {"id":"F2.3","name":"Clients home cards","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F2.4","name":"New-project wizard and default pipeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F2.5","name":"Agency settings and business hours","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
@@ -117,11 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-19T12:57:40.289Z","m":"F1.2 doing 5% plan approved, building"},
-{"t":"2026-11-22T12:22:58.272Z","m":"F1.2 doing 40% Schema, RLS and isolation suite committed"},
-{"t":"2026-11-22T12:36:27.009Z","m":"F1.3 doing 15% Crypto, route guard, email done; sessions next"},
-{"t":"2026-11-22T12:47:25.501Z","m":"F1.3 doing 40% api sign-in and web plumbing committed"},
-{"t":"2026-11-22T12:47:25.652Z","m":"F1.4 doing 60% Emailed code api done; screen pending"},
 {"t":"2026-11-22T12:49:40.074Z","m":"F1.5 doing 35% Roles, can() everywhere done; invites next"},
 {"t":"2026-11-22T12:57:01.153Z","m":"F1.5 doing 60% Invites and user status api done"},
 {"t":"2026-11-22T13:01:04.935Z","m":"F1.3 doing 70% Login and code screens, headers done"},
@@ -146,6 +141,11 @@ window.TRACKER = {
 {"t":"2026-11-23T12:15:49.864Z","m":"F2.1 doing 15% Tokens done; shell, nav, switcher next"},
 {"t":"2026-11-23T12:15:49.952Z","m":"F2.2 doing 60% Lint checks, formatters, catalogs done; RTL pending"},
 {"t":"2026-11-24T13:40:48.978Z","m":"F2.1 doing 45% Tokens, base components, overlays done; shell next"},
-{"t":"2026-11-24T13:40:49.256Z","m":"F2.2 doing 70% RTL-safe components, direction provider done; AR strings later"}
+{"t":"2026-11-24T13:40:49.256Z","m":"F2.2 doing 70% RTL-safe components, direction provider done; AR strings later"},
+{"t":"2026-11-24T15:14:38.261Z","m":"F2.1 doing 85% Shell, nav guard, switcher, projects api done; auth restyle next"},
+{"t":"2026-11-24T15:14:38.347Z","m":"F2.2 doing 90% Language menu saves locale; AR/FR strings in F2c"},
+{"t":"2026-11-24T17:30:37.002Z","m":"F2.1 done 100% Shell, guards, projects api, auth restyle, e2e done"},
+{"t":"2026-11-24T17:30:37.087Z","m":"F2.2 doing 90% Saved locale applied at sign-in; AR/FR strings in F2c"},
+{"t":"2026-11-24T17:32:39.440Z","m":"F2.2 done 100% Framework, RTL, saved locale done; strings are F2.6"}
 ]
 };
