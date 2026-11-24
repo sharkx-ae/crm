@@ -100,8 +100,19 @@ describe('globals.css tokens', () => {
   });
 
   it('keeps reduced motion above the animate utilities, with the reason on record', () => {
-    // !important is load-bearing here (see the comment in globals.css); the biome-ignore must not be dropped.
+    // !important is load-bearing here (see the comment in globals.css). Each one carries its own biome-ignore with a
+    // reason, so Biome's warning stays silent and nobody "fixes" it by deleting the declaration.
+    const lines = css.replaceAll('\r\n', '\n').split('\n');
+    const important = lines.flatMap((line, i) =>
+      /^\s*[a-z-]+:\s*[^;]*!important/.test(line) ? [i] : [],
+    );
+    expect(important.length, 'animation and transition').toBe(2);
     expect(css).toMatch(/animation:\s*none !important/);
-    expect(css).toMatch(/biome-ignore lint\/complexity\/noImportantStyles/);
+    expect(css).toMatch(/transition:\s*none !important/);
+    for (const i of important) {
+      expect(lines[i - 1], `line ${i + 1} needs a biome-ignore with a reason`).toMatch(
+        /biome-ignore lint\/complexity\/noImportantStyles: \S/,
+      );
+    }
   });
 });
