@@ -1,0 +1,71 @@
+{
+  "now": "2026-11-25T10:00:00.000Z",
+  "totalLeads": 64,
+  "clients": {
+    "lum": {
+      "leads": 16,
+      "testLeads": 1,
+      "byStatus": {
+        "new": 4,
+        "mql": 4,
+        "sql": 6,
+        "not_qualified": 1
+      },
+      "withChat": 11,
+      "unreplied": 4,
+      "overdueTasks": 2
+    },
+    "prl": {
+      "leads": 13,
+      "testLeads": 0,
+      "byStatus": {
+        "new": 1,
+        "mql": 10,
+        "sql": 1,
+        "not_qualified": 1
+      },
+      "withChat": 10,
+      "unreplied": 5,
+      "overdueTasks": 0
+    },
+    "nov": {
+      "leads": 12,
+      "testLeads": 0,
+      "byStatus": {
+        "new": 4,
+        "mql": 3,
+        "sql": 4,
+        "not_qualified": 1
+      },
+      "withChat": 7,
+      "unreplied": 4,
+      "overdueTasks": 1
+    },
+    "fal": {
+      "leads": 12,
+      "testLeads": 1,
+      "byStatus": {
+        "new": 1,
+        "mql": 4,
+        "sql": 4,
+        "not_qualified": 2
+      },
+      "withChat": 6,
+      "unreplied": 4,
+      "overdueTasks": 0
+    },
+    "oas": {
+      "leads": 11,
+      "testLeads": 0,
+      "byStatus": {
+        "new": 4,
+        "mql": 1,
+        "sql": 1,
+        "not_qualified": 5
+      },
+      "withChat": 9,
+      "unreplied": 7,
+      "overdueTasks": 1
+    }
+  }
+}

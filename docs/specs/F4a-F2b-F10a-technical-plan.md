@@ -59,19 +59,20 @@ Spec conflict, already settled in the F2 plan §0: F2b says a client opening `/c
 ### 2.2 Files
 ```
 api/src/modules/leads/
-  phone.ts          normalisePhone(raw, city) → { e164 } | { raw, invalid: true }   (libphonenumber-js, D1)
+  phone.ts          normalisePhone(raw, city) → { valid: true, e164, display } | { valid: false, raw } | null   (libphonenumber-js, D1)
   mapping.ts        applyMapping(answers, mapping) → { name?, phone?, email?, custom, notes }
   assign.ts         nextManager(tx, projectId) → userId | null   (cursor on projects.assign_cursor)
-  ingest.ts         ingestLead(input) (CONTRACTS §4)
+  ingest.ts         ingestLead(input) (CONTRACTS §4); ingestLeadTx(tx, input) → result + afterCommit() for callers already in withSystem
   forms.ts          saveFormMapping(session, formId, input)
   routes.ts         PUT /lead-forms/:id/mapping
-  index.ts          export { ingestLead, leadRoutes, saveFormMapping }
-  *.test.ts
+  index.ts          export { ingestLead, ingestLeadTx, leadRoutes, saveFormMapping, applyMapping, normalisePhone }
+  phone.test.ts, ingest.test.ts (includes round-robin), forms.test.ts
 api/src/modules/contacts/service.ts   findOrCreateContact(tx, projectId, { e164?, email?, name? })
 api/src/modules/notifications/{service,index}.ts   notify(input) (CONTRACTS §4 notifyInput)
 api/src/modules/projects/schema.ts    assignCursor column; BusinessHours = BusinessHoursDay[]
 api/src/db/migrations/0003_*.sql      generated (D4)
-api/src/db/seed.ts + seed/data.ts     pnpm db:seed (D5)
+api/src/db/migrations/0004_*.sql      partial index lead_events_merged_external_idx (merged-replay check)
+api/src/db/seed.ts + seed/{data,build}.ts   pnpm db:seed (D5); build.ts = pure buildSeed(now) + summarise()
 api/tests/fixtures/seed/expected.json hand-checked numbers for the frozen `now`
 api/package.json                      "db:seed" script; libphonenumber-js (D1)
 api/src/app.ts                        register leadRoutes
@@ -84,24 +85,25 @@ web/messages/en/leads.json            leads.mapping.* (register module in reques
 - **`ingestLead(input)`**, in one `withSystem(projectId)` transaction:
   1. Validate with `ingestLeadInput` (unknown project → `NOT_FOUND`, schema error → `VALIDATION`).
   2. **Idempotency:** if `externalId` is set and `(projectId, source, externalId)` exists, return that lead with `{ created: false, merged: false }`.
-  3. **Mapping:** if `formId` has a `lead_forms.mapping`, apply it to `answers` (name / phone / email / custom → kept in `answers` / notes → a `notes` row / ignore → dropped). Explicit `name`, `phone`, `email` fields win over mapped ones.
-  4. **Phone:** `normalisePhone(raw, project.city)` with default region Dubai/Abu Dhabi → `AE`, Morocco → `MA`. Invalid → no `phone_e164`; the raw value is kept in the creation `lead_events.data` with `phone_invalid: true` (spec edge case).
+  3. **Mapping:** `formId` is the platform's **external** form id: it is matched against `lead_forms.external_form_id` and stored as text in `leads.form_id` (not `lead_forms.id`; F4b must not join them on id). If that form has a mapping, apply it to `answers` (name / phone / email / custom → kept in `answers` / notes → a `notes` row / ignore → dropped). Explicit `name`, `phone`, `email` fields win over mapped ones.
+  4. **Phone:** `normalisePhone(raw, project.city)` with default region Dubai/Abu Dhabi → `AE`, Morocco → `MA`. Invalid → no `phone_e164`; the raw value is kept in the creation `lead_events.data` as `{ phoneInvalid: true, phoneRaw }` (spec edge case).
   5. **Contact:** match on `phone_e164`, else email (lower-cased). No phone and no email → new contact, no match attempted. Insert relies on the unique constraint; on conflict, re-select (two submissions at the same moment → one contact).
-  6. **Open lead:** the contact's latest lead with `status <> 'not_qualified'`. If one exists → append a `lead_events` row (`kind: 'merged'`, source, campaign, answers), audit `lead.merged`, return `{ created: false, merged: true }`. Otherwise → new lead on the same contact.
+  0. Blank or whitespace-only `externalId`, `formId`, `campaign`, `name`, `phone`, `email` count as not sent.
+  6. **Open lead:** the contact's latest lead with `status <> 'not_qualified'` and the same `isTest` (test and real leads never merge into each other). If one exists → append a `lead_events` row (`kind: 'merged'`, source, campaign, answers), audit `lead.merged`, return `{ created: false, merged: true }`. Otherwise → new lead on the same contact.
   7. **New lead:** insert with `isTest`, `stageId` = the project's first stage, `ownerId` = `nextManager()` (skipped for test leads), `lead_events` `created`, audit `lead.created` (actor system).
-  8. `emitChange('lead')` in the same transaction. After commit: `notify({ projectId, role: 'manager', kind: 'new_lead', refId })` for a new, non-test lead.
+  8. `emitChange('lead')` in the same transaction. After commit, for a new, non-test lead: `new_lead` notifications to every active manager, the super admin and the client's active users (PRD F14: client users also get new leads in the bell). A failed notify is reported with `reportError` and never undoes the lead. `ingestLeadTx` callers must call `afterCommit()` themselves after their transaction commits.
 - **Round-robin (`assign.ts`):** `select … for update` on the project row; active managers ordered by `created_at, id`; take the first after `assign_cursor` (wrap around); update the cursor. No active manager → `null` (unassigned). Client users and disabled managers are never picked.
 - **`saveFormMapping`:** `PUT /lead-forms/:id/mapping`, body `saveFormMappingRequest` (has `projectId`), action `integration.manage` with that project (clients may save their own wizard step; RLS `lead_forms: 'write'`), `audit: 'one'` (`form.mapping_saved`). The form must belong to the project, otherwise `NOT_FOUND`.
 - **`MappingStep`** (client component): one row per form question with the sample answer and a native `Select` (Name, Phone, Email, Custom field, Notes, Ignore). Props are in the F2 plan §4.1; it's reused by Alex's F14b wizard.
-- **`notify()`:** inserts one `notifications` row per target user (managers: all active managers; `role: 'client'`: the project's members), then `emitChange('notification')`.
-- **Seed (`pnpm db:seed`):** refuses unless `APP_ENV` is `local` or `staging`; aborts if clients exist unless `--reset`; deterministic, with a `now` parameter. It inserts **directly**, not through `ingestLead`, so the numbers stay fixed and timestamps can be in the past; one test does run `ingestLead` on top of the seed. Content is per F2 plan §5.2: 2 managers, 5 clients (Lumière, Pearl, Nova Casablanca, Falcon, Oasis) with colours, cities, zones, the default 6 stages, qualification settings, an integrations mix (some `needs_attention`/`broken`), WhatsApp numbers, ~64 leads over 30 days (source and status mix, 2 test leads, ~70 % `first_reply_at`), conversations ending inbound, a few overdue tasks, and one active client user per client. It uses the existing super admin and never creates a second one.
+- **`notify()`:** inserts one `notifications` row per target user (explicit `userIds`, or a role: `manager` = all active managers, `super_admin` = the super admin, `client` = the project's active client users), then `emitChange('notification')`.
+- **Seed (`pnpm db:seed`):** refuses unless `APP_ENV` is `local` or `staging`; aborts if clients exist unless `--reset`; deterministic, with a `now` parameter. It inserts **directly**, not through `ingestLead`, so the numbers stay fixed and timestamps can be in the past; one test does run `ingestLead` on top of the seed. Content follows F2 plan §5.2 with these differences: 4 managers (Aisha Rahman, Rami Haddad, Sana Idrissi active; Yara Nassar invited, no password), every email on a `.test` domain, about 58 % of real leads with `first_reply_at`. 5 clients (Lumière, Pearl, Nova Casablanca, Falcon, Oasis) with colours, cities, zones, the default 6 stages, qualification settings, an integrations mix (some `needs_attention`/`broken`), WhatsApp numbers, 64 leads over 30 days (source and status mix, 2 test leads), conversations ending inbound, a few overdue tasks, and one active client user per client. It uses the existing super admin and never creates a second one. `--reset` deletes every client and the seed's own users (`.test` emails); real staff and the super admin stay. Seeded users that already exist are updated in place, so a re-run after a half-finished run or hand-deleted clients works. `expected.json` holds, per client: leads, test leads, count by status, leads with a chat, unreplied, overdue tasks. The other numbers in F2 plan §5.2 (new today, leads in 30 days, MQL/SQL rates, median reply) get added when F2b S1 and F13a need them.
 
 ### 2.4 Tests (checkpoints)
 - `phone.test.ts`: UAE local/international/with spaces (`050 412 7781`, `+971 50 412 7781`, `00971…`), Morocco (`06…`, `+212…`), garbage → invalid.
 - `ingest.test.ts`, the **dedupe matrix**: phone / email / neither × open lead / closed (not qualified) / none × same / different source; idempotent `externalId`; **concurrent** same phone (two parallel calls) → one contact; mapping applied; invalid phone kept raw; test lead not assigned and not notified; audit, `lead_events` and `change_feed` rows written.
-- `assign.test.ts`: fairness over 9 leads × 3 managers (3 each), a disabled manager skipped, no managers → unassigned, never a client user.
-- `forms.test.ts`: route guard (client of A → 404 on B's form), audit row.
-- `seed.test.ts`: on an empty DB the counts equal `expected.json`; a second run aborts without `--reset`; refuses when `APP_ENV=production`.
+- Round-robin (in `ingest.test.ts`, no separate `assign.test.ts`): 2n leads over all n active managers (two each, same order both rounds), a disabled manager skipped, never a client user. "No managers → unassigned" runs inside a rolled-back transaction, so other files keep their managers.
+- `forms.test.ts`: route guard (client of A → 404 on B's form, also when the body names client A), form not in the named client → 404 even for staff, unknown target → 422, audit row.
+- `seed.test.ts`: `buildSeed` is deterministic and matches `expected.json`; with `--reset` the database counts equal `expected.json`; seeded users sign in with `SEED_PASSWORD`, no super admin created; a second run aborts without `--reset`; refuses when `APP_ENV=production`; `ingestLead` merges into a seeded open lead. It runs `--reset` on the shared test database, so later test files must not count all projects or users.
 - `mapping-step.test.tsx` (jsdom): rows, change callback, disabled state, labels.
 
 ### 2.5 Tasks and commits
@@ -114,6 +116,8 @@ web/messages/en/leads.json            leads.mapping.* (register module in reques
 | P1.5 | `saveFormMapping` route/action, `MappingStep`, `leads.json` | 2.5 | `F4a: form field mapping` |
 | P1.6 | Seed, `expected.json`, `db:seed` script | 3.5 | `F4a: seed from the mockup` |
 | | **Total** | **14 h** | |
+
+**Status 2026-11-25: P1.1–P1.6 built and tested, not committed** (api 774 tests, web 586; review fixes applied: blank inputs, test/real merge, seed reset scope and re-run, index 0004). Notes from the build: the seed inserts with `.test` email domains so a dev code never reaches a real inbox; about 58 % of seeded real leads have a first reply (the plan said ~70 %; the numbers are frozen in `expected.json`, so this stays unless the owner wants it tuned).
 
 **Done when:** all six acceptance criteria in the F4a spec are ticked; `node scripts/verify.mjs --all` passes; `pnpm db:seed` on the local DB gives 5 clients and ~64 leads. **Tell Alex:** `ingestLead` is real (his WhatsApp/Meta/Google adapters call it), and `0003` is pushed. **Tracker:** F4.1, F4.2, F4.3, F4.7, F15.5 → done.
 

@@ -1,6 +1,6 @@
 window.TRACKER = {
-"now":"F2a done (shell, projects api, auth restyle, e2e); next F4a lead engine",
-"lastActivity":{"time":"2026-11-24T17:58:14.763Z","file":"(turn finished)"},
+"now":"F4a done (lead engine, seed); next F2b workspace",
+"lastActivity":{"time":"2026-11-24T19:06:25.103Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
@@ -32,13 +32,13 @@ window.TRACKER = {
 {"id":"F3.8","name":"Number health and inactivity alerts","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"}
 ]},
 {"id":"F4","name":"Lead engine and contacts","spec":"docs/PRD.md#f4","owner":"B","subs":[
-{"id":"F4.1","name":"ingestLead, phone normalisation, dedupe","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F4.2","name":"Per-form field mapping model and UI","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F4.3","name":"Round-robin assignment","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F4.1","name":"ingestLead, phone normalisation, dedupe","status":"done","pct":100,"note":"ingestLead: E.164, dedupe, merge, idempotent, 24 tests","updated":"2026-11-24T18:29:29.386Z"},
+{"id":"F4.2","name":"Per-form field mapping model and UI","status":"done","pct":100,"note":"saveFormMapping route, action, MappingStep component","updated":"2026-11-24T18:40:29.049Z"},
+{"id":"F4.3","name":"Round-robin assignment","status":"done","pct":100,"note":"Round-robin cursor per client, active managers only","updated":"2026-11-24T18:29:29.587Z"},
 {"id":"F4.4","name":"Leads screen (tabs, filters, export)","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F4.5","name":"Lead drawer and timeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F4.6","name":"Contacts list and profile","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F4.7","name":"Test-lead flag","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"}
+{"id":"F4.7","name":"Test-lead flag","status":"done","pct":100,"note":"Flag stored; exclusion is checked in F4b, F13, F11a","updated":"2026-11-24T18:51:35.217Z"}
 ]},
 {"id":"F5","name":"Meta Lead Ads","spec":"docs/PRD.md#f5","owner":"A","subs":[
 {"id":"F5.1","name":"OAuth connect, page and form selection","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
@@ -110,21 +110,13 @@ window.TRACKER = {
 {"id":"F15.2","name":"Security and isolation suite","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F15.3","name":"Adapter fixture suite","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F15.4","name":"Playwright smoke flows","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F15.5","name":"Seed demo data","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F15.5","name":"Seed demo data","status":"done","pct":100,"note":"db:seed: 5 clients, 64 leads, expected.json frozen","updated":"2026-11-24T18:40:29.241Z"},
 {"id":"F15.6","name":"Backups and restore drill","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F15.7","name":"Handover docs and training","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F15.8","name":"UAT checklist and production go-live","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"}
 ]}
 ],
 "log":[
-{"t":"2026-11-22T12:49:40.074Z","m":"F1.5 doing 35% Roles, can() everywhere done; invites next"},
-{"t":"2026-11-22T12:57:01.153Z","m":"F1.5 doing 60% Invites and user status api done"},
-{"t":"2026-11-22T13:01:04.935Z","m":"F1.3 doing 70% Login and code screens, headers done"},
-{"t":"2026-11-22T13:03:49.385Z","m":"F1.3 doing 90% Reset password done; seed and sweep left"},
-{"t":"2026-11-22T13:06:22.830Z","m":"F1.2 done 100% Schema, RLS, isolation suite green"},
-{"t":"2026-11-22T13:12:35.622Z","m":"F1.7 done 100% Queue, worker, retries, email job done"},
-{"t":"2026-11-22T13:12:35.701Z","m":"F1.8 doing 70% Rate limits, alerts, headers done"},
-{"t":"2026-11-22T13:20:35.636Z","m":"F1.3 done 100% Login, sessions, reset password done"},
 {"t":"2026-11-22T13:20:35.720Z","m":"F1.4 done 100% Emailed-code 2FA done"},
 {"t":"2026-11-22T13:20:35.824Z","m":"F1.5 done 100% Roles, can() matrix, invites done"},
 {"t":"2026-11-22T13:20:35.931Z","m":"F1.6 doing 60% Audit writes and GET /audit done; viewer is F1e"},
@@ -146,6 +138,14 @@ window.TRACKER = {
 {"t":"2026-11-24T15:14:38.347Z","m":"F2.2 doing 90% Language menu saves locale; AR/FR strings in F2c"},
 {"t":"2026-11-24T17:30:37.002Z","m":"F2.1 done 100% Shell, guards, projects api, auth restyle, e2e done"},
 {"t":"2026-11-24T17:30:37.087Z","m":"F2.2 doing 90% Saved locale applied at sign-in; AR/FR strings in F2c"},
-{"t":"2026-11-24T17:32:39.440Z","m":"F2.2 done 100% Framework, RTL, saved locale done; strings are F2.6"}
+{"t":"2026-11-24T17:32:39.440Z","m":"F2.2 done 100% Framework, RTL, saved locale done; strings are F2.6"},
+{"t":"2026-11-24T18:23:09.931Z","m":"F4.1 doing 10% Phase 1 started: phone normalisation"},
+{"t":"2026-11-24T18:29:29.386Z","m":"F4.1 done 100% ingestLead: E.164, dedupe, merge, idempotent, 24 tests"},
+{"t":"2026-11-24T18:29:29.587Z","m":"F4.3 done 100% Round-robin cursor per client, active managers only"},
+{"t":"2026-11-24T18:29:29.837Z","m":"F4.7 doing 60% is_test stored; no assign or notify; reports later"},
+{"t":"2026-11-24T18:40:29.049Z","m":"F4.2 done 100% saveFormMapping route, action, MappingStep component"},
+{"t":"2026-11-24T18:40:29.241Z","m":"F15.5 done 100% db:seed: 5 clients, 64 leads, expected.json frozen"},
+{"t":"2026-11-24T18:40:29.432Z","m":"F4.7 doing 80% Flag, no assign/notify, seed; reports filter later"},
+{"t":"2026-11-24T18:51:35.217Z","m":"F4.7 done 100% Flag stored; exclusion is checked in F4b, F13, F11a"}
 ]
 };

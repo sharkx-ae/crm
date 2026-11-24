@@ -8,6 +8,7 @@ import { httpPlugin, serverOptions } from './lib/http/plugin.ts';
 import type { SessionResolver } from './lib/http/route.ts';
 import { auditRoutes } from './modules/audit/index.ts';
 import { authRoutes, resolveSession } from './modules/auth/index.ts';
+import { leadRoutes } from './modules/leads/index.ts';
 import { projectRoutes } from './modules/projects/index.ts';
 import { healthRoutes } from './routes/health.ts';
 
@@ -27,6 +28,7 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
   await app.register(authRoutes, { env });
   await app.register(auditRoutes);
   await app.register(projectRoutes);
+  await app.register(leadRoutes);
   return app;
 }
 

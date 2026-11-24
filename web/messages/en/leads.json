@@ -1,0 +1,17 @@
+{
+  "mapping": {
+    "label": "Form fields",
+    "help": "Check how each form question becomes a lead field.",
+    "question": "Form question",
+    "field": "Lead field",
+    "sample": "Example: <a>{answer}</a>",
+    "target": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "custom": "Custom field",
+      "notes": "Note",
+      "ignore": "Ignore"
+    }
+  }
+}

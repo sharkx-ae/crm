@@ -14,6 +14,9 @@ importers:
       fastify:
         specifier: 5.12.8
         version: 5.12.8
+      libphonenumber-js:
+        specifier: 1.13.17
+        version: 1.13.17
       pg:
         specifier: 8.23.1
         version: 8.23.1
@@ -988,6 +991,9 @@ packages:
 
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+
+  libphonenumber-js@1.13.17:
+    resolution: {integrity: sha512-V92dxRHhYTsHF5B6IjR8rtKW6qL7xKuERPFFqZt7XQl8A+NikbwEzjhxGpM+R6JnWjaL7/wokWSdTG/eyYAscQ==}
 
   light-my-request@6.8.1:
     resolution: {integrity: sha512-20biUK0HAIPG9BZOK3/4s8uVAkAoi1+qW55lciHZCR0puTWipBgyMPEUjqXDWLjsZeqfO6DGsuwW5eyfsTGtyg==}
@@ -2028,6 +2034,8 @@ snapshots:
       dequal: 2.0.3
 
   json-schema-traverse@1.0.0: {}
+
+  libphonenumber-js@1.13.17: {}
 
   light-my-request@6.8.1:
     dependencies:
