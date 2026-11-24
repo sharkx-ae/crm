@@ -1,6 +1,6 @@
 window.TRACKER = {
 "now":"F1b-F1d built and independently reviewed; next F2a, F4a",
-"lastActivity":{"time":"2026-11-23T14:34:40.014Z","file":"(turn finished)"},
+"lastActivity":{"time":"2026-11-24T13:36:22.577Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
@@ -14,8 +14,8 @@ window.TRACKER = {
 {"id":"F1.9","name":"Shared contracts frozen (Zod, tables, jobs)","status":"done","pct":100,"note":"Contracts 1.0.0 on main; CI result unchecked","updated":"2026-11-19T12:30:42.804Z"}
 ]},
 {"id":"F2","name":"App shell and projects","spec":"docs/PRD.md#f2","owner":"B","subs":[
-{"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"doing","pct":15,"note":"Tokens done; shell, nav, switcher next","updated":"2026-11-23T12:15:49.864Z"},
-{"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"doing","pct":60,"note":"Lint checks, formatters, catalogs done; RTL pending","updated":"2026-11-23T12:15:49.952Z"},
+{"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"doing","pct":45,"note":"Tokens, base components, overlays done; shell next","updated":"2026-11-24T13:40:48.978Z"},
+{"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"doing","pct":70,"note":"RTL-safe components, direction provider done; AR strings later","updated":"2026-11-24T13:40:49.256Z"},
 {"id":"F2.3","name":"Clients home cards","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F2.4","name":"New-project wizard and default pipeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F2.5","name":"Agency settings and business hours","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
@@ -117,8 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-19T12:28:35.532Z","m":"F1.9 doing 10% Writing Zod contracts from CONTRACTS.md"},
-{"t":"2026-11-19T12:30:42.804Z","m":"F1.9 done 100% Contracts 1.0.0 on main; CI result unchecked"},
 {"t":"2026-11-19T12:57:40.289Z","m":"F1.2 doing 5% plan approved, building"},
 {"t":"2026-11-22T12:22:58.272Z","m":"F1.2 doing 40% Schema, RLS and isolation suite committed"},
 {"t":"2026-11-22T12:36:27.009Z","m":"F1.3 doing 15% Crypto, route guard, email done; sessions next"},
@@ -146,6 +144,8 @@ window.TRACKER = {
 {"t":"2026-11-22T17:06:38.898Z","m":"F1 independent review: 2 bugs fixed, report in docs/specs"},
 {"t":"2026-11-22T17:13:00.618Z","m":"F1.1 blocked 0% Railway admin pending (unconfirmed); skipped for now"},
 {"t":"2026-11-23T12:15:49.864Z","m":"F2.1 doing 15% Tokens done; shell, nav, switcher next"},
-{"t":"2026-11-23T12:15:49.952Z","m":"F2.2 doing 60% Lint checks, formatters, catalogs done; RTL pending"}
+{"t":"2026-11-23T12:15:49.952Z","m":"F2.2 doing 60% Lint checks, formatters, catalogs done; RTL pending"},
+{"t":"2026-11-24T13:40:48.978Z","m":"F2.1 doing 45% Tokens, base components, overlays done; shell next"},
+{"t":"2026-11-24T13:40:49.256Z","m":"F2.2 doing 70% RTL-safe components, direction provider done; AR strings later"}
 ]
 };
