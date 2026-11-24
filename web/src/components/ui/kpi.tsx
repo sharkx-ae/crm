@@ -1,7 +1,14 @@
-import { Children, type ReactNode } from 'react';
+import {
+  Children,
+  cloneElement,
+  Fragment,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { cx } from '../../lib/cx.ts';
 
-// Brand rule: at most six KPI tiles above the fold. A seventh child is not rendered.
+// Brand rule: at most six KPI tiles above the fold (KpiStrip's type enforces it; at runtime a seventh is dropped).
 export const MAX_KPI_TILES = 6;
 
 // Under 900px the strip is a two-column grid (first tile across, a lone last tile across); from 900px it is one
@@ -36,9 +43,31 @@ export function Kpi({
   );
 }
 
+// One tile: a <Kpi>, or `cond && <Kpi/>` for the conditional ones (the client's "Waiting for review").
+type Tile = ReactElement | false | null | undefined;
+
+/**
+ * One to six tiles, as a tuple, so a seventh is a TYPE ERROR rather than a tile that silently disappears (it would be
+ * the last one, which is usually the conditional "needs attention" tile). `.map()` output is an unbounded array and
+ * does not fit: a strip is a fixed set of metrics, written out.
+ */
+export type KpiTiles = Tile | readonly [Tile, Tile?, Tile?, Tile?, Tile?, Tile?];
+
+// Fragments hold tiles too: unwrap them, or `<><Kpi/>…</>` would count as one child and dodge the cap.
+function flatten(nodes: ReactNode, path = ''): ReactElement[] {
+  return Children.toArray(nodes).flatMap((node, i) => {
+    const key = `${path}${i}`;
+    if (isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment) {
+      return flatten(node.props.children, `${key}.`);
+    }
+    return isValidElement(node) ? [cloneElement(node, { key })] : [];
+  });
+}
+
 /** A continuous row of metrics on the canvas, no boxes. */
-export function KpiStrip({ children }: { children: ReactNode }) {
-  const tiles = Children.toArray(children).slice(0, MAX_KPI_TILES);
+export function KpiStrip({ children }: { children: KpiTiles }) {
+  // The type already forbids more than six; this is the backstop for what the type cannot see (a spread array).
+  const tiles = flatten(children).slice(0, MAX_KPI_TILES);
   return (
     <div className="grid grid-cols-2 rail:flex rail:flex-wrap rail:items-end rail:gap-y-4">
       {tiles}

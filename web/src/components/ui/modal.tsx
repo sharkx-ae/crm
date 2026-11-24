@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Dialog } from 'radix-ui';
-import { type ReactNode, useRef } from 'react';
+import { type ReactNode, type RefObject, useRef } from 'react';
 import { cx } from '../../lib/cx.ts';
 import { IconButton } from './button.tsx';
 import { useFocusReturn } from './focus-return.ts';
@@ -16,6 +16,7 @@ export function Modal({
   description,
   footer,
   wide = false,
+  returnFocusTo,
   children,
 }: {
   open: boolean;
@@ -24,11 +25,13 @@ export function Modal({
   description?: string;
   footer?: ReactNode;
   wide?: boolean;
+  /** Where focus goes on close when the opener is gone (a dialog opened from a menu item): the menu's trigger. */
+  returnFocusTo?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   const t = useTranslations('ui');
   const body = useRef<HTMLDivElement>(null);
-  const focusReturn = useFocusReturn();
+  const focusReturn = useFocusReturn(returnFocusTo);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

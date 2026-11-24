@@ -84,4 +84,24 @@ describe('globals.css tokens', () => {
   it('keeps the 3px red focus ring', () => {
     expect(css).toMatch(/outline:\s*3px solid var\(--color-sx-red\)/);
   });
+
+  it('gives every focusable element the brand ring by default, below the utilities', () => {
+    // Without a baseline a bare link (the first cell of a table row) shows the browser's 1px outline.
+    const base = css.match(/@layer base\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
+    expect(base, 'a baseline rule inside @layer base').toMatch(/:focus-visible\s*\{/);
+    for (const el of ['a[href]', 'button', 'input', 'select', 'textarea'])
+      expect(base).toContain(el);
+    expect(base).toMatch(/outline:\s*3px solid var\(--color-sx-red\)/);
+    // programmatic focus targets (dialog, toast viewport, tab panel) are not tab stops and draw no ring
+    expect(base).toContain('[tabindex]:not([tabindex="-1"])');
+    // Unlayered, it would beat every Tailwind utility (the Tabs' inset ring offset, outline-none on menu items).
+    const unlayered = css.replace(/@layer base\s*\{[\s\S]*?\n\}/, '');
+    expect(unlayered).not.toMatch(/:where\([\s\S]*?\)\s*:focus-visible/);
+  });
+
+  it('keeps reduced motion above the animate utilities, with the reason on record', () => {
+    // !important is load-bearing here (see the comment in globals.css); the biome-ignore must not be dropped.
+    expect(css).toMatch(/animation:\s*none !important/);
+    expect(css).toMatch(/biome-ignore lint\/complexity\/noImportantStyles/);
+  });
 });

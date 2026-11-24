@@ -136,7 +136,11 @@ export function TabsTrigger({
   );
 }
 
-/** The content for one tab. Only the active panel is mounted. */
+/**
+ * The content for one tab. Only the active panel is mounted.
+ * Radix makes a panel a tab stop (`tabIndex=0`). Ours hold their own focusable controls (tables, forms), so the panel
+ * itself would be an extra stop with a browser-default outline instead of the brand ring: it stays out of the tab order.
+ */
 export function TabsPanel({
   value,
   children,
@@ -147,7 +151,7 @@ export function TabsPanel({
   className?: string;
 }) {
   return (
-    <RadixTabs.Content value={value} className={className}>
+    <RadixTabs.Content value={value} tabIndex={-1} className={className}>
       {children}
     </RadixTabs.Content>
   );

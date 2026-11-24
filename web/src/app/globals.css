@@ -100,6 +100,27 @@
   }
 }
 
+/*
+ * Baseline for everything focusable that has no component of its own (a link in a table cell, a bare <a>): the
+ * brand's 3px red ring. It lives in @layer base so a utility (focus-ring, or the Tabs' inset offset) always wins;
+ * unlayered CSS would beat every utility. tabindex="-1" is left out: those are programmatic focus targets (dialog,
+ * toast viewport, tab panel), not tab stops, and should not draw a ring.
+ */
+@layer base {
+  :where(
+    a[href],
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+    outline: 3px solid var(--color-sx-red);
+    outline-offset: 2px;
+  }
+}
+
 :root {
   color-scheme: light;
 }
@@ -117,11 +138,17 @@ body {
   font-family: var(--font-ar);
 }
 
+/*
+ * !important is deliberate: this rule must beat the animate-* and transition utilities (higher specificity than `*`),
+ * otherwise reduced motion would not turn the drawer, toast and rail animations off.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override the animate-* utilities */
     animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override the transition utilities */
     transition: none !important;
   }
 }

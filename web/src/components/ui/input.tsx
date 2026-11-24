@@ -15,8 +15,10 @@ export const CONTROL_HEIGHT: Record<FieldSize, string> = {
   sm: 'h-[34px] text-label',
 };
 
-// Emails, phone numbers, passwords and times keep their LTR order inside Arabic pages; names and free
-// text follow the direction of what the user typed.
+// Emails, phone numbers, passwords and times keep their LTR order inside Arabic pages. Names and free text set no
+// `dir`, so they inherit the page: `dir="auto"` looks right once something is typed, but an EMPTY auto input
+// resolves to LTR, which puts an Arabic placeholder and the caret on the wrong side of an RTL page (the browser
+// still shapes whatever is typed correctly). Use `UserText` (`bdi dir="auto"`) to DISPLAY typed text.
 const LTR_TYPES = new Set([
   'email',
   'tel',
@@ -37,7 +39,7 @@ export function Input({ size = 'md', className, type = 'text', dir, ...rest }: I
       {...rest}
       {...a11y}
       type={type}
-      dir={dir ?? (LTR_TYPES.has(type) ? 'ltr' : 'auto')}
+      dir={dir ?? (LTR_TYPES.has(type) ? 'ltr' : undefined)}
       className={cx(CONTROL, CONTROL_HEIGHT[size], className)}
     />
   );
@@ -47,13 +49,12 @@ export type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 's
   size?: FieldSize;
 };
 
-export function Textarea({ size = 'md', className, dir, ...rest }: TextareaProps) {
+export function Textarea({ size = 'md', className, ...rest }: TextareaProps) {
   const a11y = useControlA11y(rest);
   return (
     <textarea
       {...rest}
       {...a11y}
-      dir={dir ?? 'auto'}
       className={cx(
         CONTROL,
         'min-h-[84px] resize-y py-2.5',

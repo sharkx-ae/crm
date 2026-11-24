@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { screen } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderIntl } from '../../test/render.tsx';
 import { Avatar } from './avatar.tsx';
@@ -96,17 +97,71 @@ describe('Kpi', () => {
     expect(screen.getByText('New today')).toBeTruthy();
   });
 
-  it('renders at most six tiles (brand rule)', () => {
-    renderIntl(
-      <KpiStrip>
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-          <Kpi key={n} label={`Tile ${n}`} value={n * 10} />
-        ))}
-      </KpiStrip>,
-    );
+  it('drops everything past the sixth tile at runtime (backstop for what the type cannot see)', () => {
+    const eight = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+      <Kpi key={n} label={`Tile ${n}`} value={n * 10} />
+    ));
+    // `as never`: an unbounded array is exactly what the type forbids; this is the runtime path.
+    renderIntl(<KpiStrip>{eight as never}</KpiStrip>);
     expect(MAX_KPI_TILES).toBe(6);
     expect(screen.getAllByText(/^Tile \d$/)).toHaveLength(6);
     expect(screen.queryByText('Tile 7')).toBeNull();
+  });
+
+  it('unwraps fragments, so a fragment cannot smuggle a seventh tile in', () => {
+    // A fragment of tiles: it must count as three tiles, not as one child.
+    const group = (
+      <>
+        <Kpi label="Tile 5" value={5} />
+        <Kpi label="Tile 6" value={6} />
+        <Kpi label="Tile 7" value={7} />
+      </>
+    );
+    renderIntl(
+      <KpiStrip>
+        <Kpi label="Tile 1" value={1} />
+        <Kpi label="Tile 2" value={2} />
+        <Kpi label="Tile 3" value={3} />
+        <Kpi label="Tile 4" value={4} />
+        {group}
+      </KpiStrip>,
+    );
+    expect(screen.getAllByText(/^Tile \d$/)).toHaveLength(6);
+    expect(screen.queryByText('Tile 7')).toBeNull();
+  });
+
+  it('accepts one to six tiles, including conditional ones, and rejects a seventh at compile time', () => {
+    const waiting = false as boolean;
+    renderIntl(
+      <>
+        <KpiStrip>
+          <Kpi label="Only" value={1} />
+        </KpiStrip>
+        <KpiStrip>
+          <Kpi label="A" value={1} />
+          {waiting && <Kpi label="Waiting" value={2} hot />}
+          <Kpi label="B" value={3} />
+        </KpiStrip>
+        <KpiStrip>
+          <Kpi label="T1" value={1} />
+          <Kpi label="T2" value={2} />
+          <Kpi label="T3" value={3} />
+          <Kpi label="T4" value={4} />
+          <Kpi label="T5" value={5} />
+          <Kpi label="T6" value={6} />
+        </KpiStrip>
+      </>,
+    );
+    expect(screen.queryByText('Waiting')).toBeNull();
+  });
+
+  it('types the strip as one to six tiles: a seventh does not compile', () => {
+    type Children = ComponentProps<typeof KpiStrip>['children'];
+    const tile = <Kpi label="x" value={1} />;
+    const six: Children = [tile, tile, tile, tile, tile, tile];
+    // @ts-expect-error seven tiles do not fit: `tsc` (part of the gate) fails if this ever compiles
+    const seven: Children = [tile, tile, tile, tile, tile, tile, tile];
+    expect([six, seven]).toHaveLength(2); // the assertions are the two declarations above
   });
 
   it('lets the first tile be the one large figure', () => {

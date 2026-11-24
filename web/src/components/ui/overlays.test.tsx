@@ -2,7 +2,7 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Direction } from 'radix-ui';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderIntl } from '../../test/render.tsx';
 import { Button } from './button.tsx';
@@ -102,6 +102,110 @@ describe('Modal', () => {
   });
 });
 
+// A dialog opened from a menu item: the item unmounts as the menu closes, so there is no opener to return to.
+function MenuDialogHarness({
+  kind,
+  withReturn,
+}: {
+  kind: 'modal' | 'drawer';
+  withReturn: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const returnFocusTo = withReturn ? trigger : undefined;
+  return (
+    <>
+      <Menu
+        trigger={
+          <button ref={trigger} type="button">
+            Actions
+          </button>
+        }
+      >
+        <MenuItem onSelect={() => setOpen(true)}>Edit</MenuItem>
+      </Menu>
+      {kind === 'modal' ? (
+        <Modal open={open} onOpenChange={setOpen} title="Edit" returnFocusTo={returnFocusTo}>
+          <Input aria-label="field" />
+        </Modal>
+      ) : (
+        <Drawer open={open} onOpenChange={setOpen} title="Edit" returnFocusTo={returnFocusTo}>
+          <Input aria-label="field" />
+        </Drawer>
+      )}
+    </>
+  );
+}
+
+// The opener is removed from the page while the dialog is open (a row that disappeared after a refresh).
+function VanishingOpenerHarness() {
+  const [open, setOpen] = useState(false);
+  const [showOpener, setShowOpener] = useState(true);
+  return (
+    <>
+      {showOpener ? (
+        <button type="button" onClick={() => setOpen(true)}>
+          Open row
+        </button>
+      ) : null}
+      <button type="button" onClick={() => setShowOpener(false)}>
+        Remove row
+      </button>
+      <Modal open={open} onOpenChange={setOpen} title="Row">
+        <Input aria-label="field" />
+      </Modal>
+    </>
+  );
+}
+
+async function openFromMenuAndClose() {
+  const trigger = screen.getByRole('button', { name: 'Actions' });
+  trigger.focus();
+  await userEvent.keyboard('{Enter}');
+  await userEvent.keyboard('{Enter}'); // select "Edit"
+  await screen.findByRole('dialog');
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  await new Promise((r) => setTimeout(r, 50)); // Radix hands focus back on the next tick
+  return trigger;
+}
+
+describe('focus return when the opener is gone', () => {
+  it.each(['modal', 'drawer'] as const)(
+    'a %s opened from a menu item returns focus to the menu trigger via returnFocusTo',
+    async (kind) => {
+      renderIntl(<MenuDialogHarness kind={kind} withReturn />);
+      const trigger = await openFromMenuAndClose();
+      expect(document.activeElement).toBe(trigger);
+    },
+  );
+
+  it.each(['modal', 'drawer'] as const)(
+    'without returnFocusTo a %s from a menu leaves focus on the page, and does not throw',
+    async (kind) => {
+      renderIntl(<MenuDialogHarness kind={kind} withReturn={false} />);
+      const trigger = await openFromMenuAndClose();
+      expect(document.activeElement).toBe(document.body);
+      expect(document.activeElement).not.toBe(trigger);
+    },
+  );
+
+  it('does not throw or focus a removed node when the opener left the page while the dialog was open', async () => {
+    renderIntl(<VanishingOpenerHarness />);
+    const opener = screen.getByRole('button', { name: 'Open row' });
+    await userEvent.click(opener);
+    await screen.findByRole('dialog');
+    // The dialog is modal: act on the page behind it directly, as a background refresh would.
+    const remove = screen.getByRole('button', { name: 'Remove row', hidden: true });
+    await act(async () => remove.click());
+    expect(opener.isConnected).toBe(false);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.activeElement).toBe(document.body);
+  });
+});
+
 function DrawerHarness() {
   const [open, setOpen] = useState(false);
   return (
@@ -137,22 +241,26 @@ describe('Drawer', () => {
     expect(dialog.textContent).toContain('Qualification');
   });
 
-  it('is pinned to the inline end and slides in the matching direction (English)', () => {
+  // Exact class tokens: `animate-sx-slide` is a substring of `rtl:animate-sx-slide-rtl`, so a substring match would
+  // let the RTL class satisfy the English assertion.
+  const tokens = () => new Set(screen.getByRole('dialog').className.split(/\s+/));
+
+  it('is pinned to the inline end and slides in from it (English)', () => {
     open('en');
-    const cls = screen.getByRole('dialog').className;
     expect(document.documentElement.dir).toBe('ltr');
-    expect(cls).toContain('end-0');
-    expect(cls).toContain('animate-sx-slide');
+    expect(tokens().has('end-0')).toBe(true);
+    expect(tokens().has('animate-sx-slide')).toBe(true);
   });
 
   it('is pinned to the inline end and mirrors its slide in Arabic', () => {
     open('ar');
-    const cls = screen.getByRole('dialog').className;
     expect(document.documentElement.dir).toBe('rtl');
-    expect(cls).toContain('end-0');
-    expect(cls).toContain('rtl:animate-sx-slide-rtl');
+    expect(tokens().has('end-0')).toBe(true);
+    expect(tokens().has('rtl:animate-sx-slide-rtl')).toBe(true);
+    // the English slide stays in the list: the rtl: variant overrides it only under dir="rtl"
+    expect(tokens().has('animate-sx-slide')).toBe(true);
     // physical sides would pin it to the wrong edge in Arabic
-    expect(cls).not.toMatch(/(^|\s)(left|right)-0/);
+    expect([...tokens()].filter((c) => /^(left|right)-/.test(c))).toEqual([]);
   });
 
   it('returns focus to the control that opened it', async () => {
@@ -335,6 +443,19 @@ describe('Tabs', () => {
     expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'MQL' }));
     await userEvent.keyboard('{Enter}');
     expect(onValueChange).toHaveBeenCalledExactlyOnceWith('mql');
+  });
+
+  it('keeps the panel out of the tab order: it holds its own controls, and would show a browser outline', () => {
+    tabs('all');
+    const panel = screen.getByRole('tabpanel');
+    expect(panel.getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('keeps the tab list as the only tab stop (roving tabindex), not the panel', async () => {
+    tabs('all');
+    screen.getByRole('tab', { name: /^All/ }).focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(document.body);
   });
 
   it('underline shows the count beside the label', () => {

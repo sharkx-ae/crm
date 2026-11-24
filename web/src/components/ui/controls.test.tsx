@@ -180,7 +180,7 @@ describe('Field', () => {
 });
 
 describe('Input and Textarea', () => {
-  it('follows the typed direction for text, keeps emails, phones and passwords left-to-right', () => {
+  it('inherits the page direction for text (no dir), keeps emails, phones and passwords left-to-right', () => {
     renderIntl(
       <>
         <Input aria-label="n" />
@@ -190,16 +190,20 @@ describe('Input and Textarea', () => {
         <Input aria-label="x" dir="rtl" />
         <Textarea aria-label="a" />
       </>,
+      { locale: 'ar' },
     );
     const dir = (name: string) => screen.getByLabelText(name).getAttribute('dir');
+    // null = no attribute: the control inherits <html dir="rtl">. An explicit dir="auto" would make an EMPTY
+    // input resolve to LTR in Chromium (placeholder and caret on the wrong side of an Arabic page).
     expect([dir('n'), dir('e'), dir('t'), dir('p'), dir('x'), dir('a')]).toEqual([
-      'auto',
+      null,
       'ltr',
       'ltr',
       'ltr',
       'rtl',
-      'auto',
+      null,
     ]);
+    expect(document.documentElement.dir).toBe('rtl');
   });
 
   it('is 40px high, or 34px when small, and shows the red focus ring utility', () => {

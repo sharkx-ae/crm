@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Dialog } from 'radix-ui';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { IconButton } from './button.tsx';
 import { useFocusReturn } from './focus-return.ts';
 
@@ -13,16 +13,19 @@ export function Drawer({
   onOpenChange,
   title,
   subtitle,
+  returnFocusTo,
   children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   subtitle?: ReactNode;
+  /** Where focus goes on close when the opener is gone (a drawer opened from a menu item): the menu's trigger. */
+  returnFocusTo?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   const t = useTranslations('ui');
-  const focusReturn = useFocusReturn();
+  const focusReturn = useFocusReturn(returnFocusTo);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
