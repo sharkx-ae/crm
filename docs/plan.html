@@ -3,61 +3,74 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SHARKX CRM plan</title>
+<title>SHARKX CRM · what to build next</title>
 <style>
-:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mut:#5b6472;--line:#e3e6ec;--wk:#f0f2f6;--today:#fff3c4;--out:#ece6fb;--hard:#fdf1e7;--todo:#8f98a6;--doing:#2563eb;--done:#16a34a;--blocked:#dc2626;--ms:#e11d48;--warn:#f59e0b;--col:66px;--lab:150px}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaee;--mut:#9aa3b2;--line:#272c37;--wk:#1c2029;--today:#3b3313;--out:#251e36;--hard:#2c2117;--todo:#646c7a;--doing:#4f8dff;--done:#2fb463;--blocked:#ef5b5b;--ms:#fb7185;--warn:#fbbf24}}
+:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mut:#5b6472;--line:#e3e6ec;--soft:#f0f2f6;
+--todo:#8f98a6;--doing:#2563eb;--done:#16a34a;--blocked:#d97706;--late:#dc2626;--accent:#2563eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaee;--mut:#9aa3b2;--line:#272c37;--soft:#1c2029;
+--todo:#7c8594;--doing:#5b95ff;--done:#34d399;--blocked:#fbbf24;--late:#f87171;--accent:#5b95ff}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{padding:20px 16px 40px;max-width:100%}
-h1{font-size:19px;margin:0 0 4px}
-h2{font-size:14px;margin:26px 0 8px}
-.sub{color:var(--mut);margin:0 0 12px}
-.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;color:var(--mut);font-size:12.5px;margin-bottom:10px}
-.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:5px;vertical-align:-1px}
-.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tl{display:grid;grid-template-columns:var(--lab) repeat(28,var(--col));min-width:max-content;position:relative}
-.lab{position:sticky;left:0;z-index:5;background:var(--card);border-inline-end:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 10px;font-weight:650;font-size:12.5px;display:flex;align-items:center}
-.lab small{display:block;font-weight:500;color:var(--mut)}
-.hd{border-bottom:1px solid var(--line);border-inline-start:1px solid var(--line);padding:6px 4px;text-align:center;font-size:11.5px;line-height:1.25}
-.hd b{display:block;font-size:12.5px}
-.hd span{color:var(--mut)}
-.bg{border-inline-start:1px solid var(--line);border-bottom:1px solid var(--line);z-index:0}
-.wk{background:var(--wk)}
-.hard{background:var(--hard)}
-.out{background:repeating-linear-gradient(135deg,var(--out) 0 7px,transparent 7px 14px)}
-.today{background:var(--today)!important;box-shadow:inset 0 0 0 2px var(--warn)}
-.msl{border-inline-end:2px dashed var(--ms)}
-.bar{z-index:2;margin:4px 2px;height:36px;align-self:center;border-radius:7px;padding:3px 7px;color:#fff;font-size:11.5px;line-height:1.3;overflow:hidden;background:var(--todo);cursor:default}
-.bar .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar .t b{margin-inline-end:4px}
-.bar .d{display:flex;gap:3px;flex-wrap:nowrap;overflow:hidden}
-.dep{background:rgba(0,0,0,.28);border-radius:4px;padding:0 4px;font-size:10.5px;white-space:nowrap}
-.dep.par{background:var(--warn);color:#1b1300}
-.s-doing{background:var(--doing)}.s-done{background:var(--done)}.s-blocked{background:var(--blocked)}
-.thin{height:20px;padding:1px 7px;font-size:11px;background:transparent;color:var(--ink);border:1px dashed var(--mut)}
-.thin.spec{border-style:solid;background:var(--todo);color:#fff}
-.thin.spec.s-doing{background:var(--doing)}.thin.spec.s-done{background:var(--done)}.thin.spec.s-blocked{background:var(--blocked)}
-.pt{z-index:3;align-self:center;font-size:11px;font-weight:650;color:var(--ms);white-space:nowrap;padding:0 4px;overflow:visible}
-.rg{z-index:2;margin:4px 2px;align-self:center;border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:600;border:1px solid var(--line);background:var(--hard)}
-.rg.outside{background:var(--out);border-style:dashed}
-.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:16px}
-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:12.5px}
-th,td{text-align:start;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--mut);font-weight:600;background:var(--wk)}
-tr.w td{background:var(--wk)}
-tr.o td{color:var(--mut)}
-td.ship{font-weight:600}
-td code{font:11.5px ui-monospace,Menlo,Consolas,monospace}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 56px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:16px;margin:34px 0 4px}
+.lead{color:var(--mut);margin:0 0 14px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:10px 0 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:120px}
+.stat b{display:block;font-size:22px;line-height:1.1}
+.stat span{color:var(--mut);font-size:12.5px}
+.bar{height:8px;border-radius:8px;background:var(--soft);overflow:hidden;margin-top:14px;display:flex}
+.bar i{display:block;height:100%}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.who{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+.title{font-size:20px;font-weight:700;margin:4px 0 2px}
+.title small{font-weight:600;color:var(--mut);font-size:14px;margin-inline-end:6px}
+.meta{color:var(--mut);font-size:13px;margin-bottom:10px}
+.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:650;color:#fff;background:var(--todo);white-space:nowrap}
+.chip.doing{background:var(--doing)}.chip.done{background:var(--done)}.chip.blocked{background:var(--blocked);color:#1b1300}.chip.late{background:var(--late)}
+.chip.ready{background:transparent;color:var(--done);border:1px solid var(--done)}
+.chip.wait{background:transparent;color:var(--blocked);border:1px solid var(--blocked)}
+ul.subs{list-style:none;margin:8px 0 0;padding:0}
+ul.subs li{display:flex;gap:9px;align-items:baseline;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
+ul.subs i{width:10px;height:10px;border-radius:50%;background:var(--todo);flex:none;transform:translateY(1px)}
+ul.subs i.doing{background:var(--doing)}ul.subs i.done{background:var(--done)}ul.subs i.blocked{background:var(--blocked)}
+ul.subs em{color:var(--mut);font-style:normal;font-size:12.5px}
+.path{font:12.5px ui-monospace,Menlo,Consolas,monospace;background:var(--soft);border-radius:6px;padding:2px 6px}
+.after{margin-top:12px;font-size:13.5px;color:var(--mut)}
+.after b{color:var(--ink)}
+.none{color:var(--mut)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14px;margin-top:8px}
+th,td{text-align:start;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);color:var(--mut);font-size:12.5px;font-weight:650}
+tr:last-child td{border-bottom:0}
+tr.isdone td{color:var(--mut)}
+tr.isdone td.name{text-decoration:line-through;text-decoration-color:var(--line)}
+td.id{font-weight:700;white-space:nowrap}
+td.days{white-space:nowrap}
+td small{display:block;color:var(--mut);font-size:12.5px}
+.tablewrap{overflow-x:auto}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--mut);font-weight:600}
 </style>
 </head>
 <body>
 <main>
-  <h1>SHARKX Agency CRM · build plan</h1>
-  <p class="sub" id="sub"></p>
-  <div class="legend" id="legend"></div>
-  <div class="scroll"><div class="tl" id="tl"></div></div>
-  <div class="tables" id="tables"></div>
+  <h1>SHARKX CRM · what to build next</h1>
+  <p class="lead" id="sub"></p>
+  <div class="top" id="top"></div>
+  <div class="bar" id="bar" title="done / in progress / blocked / not started"></div>
+
+  <h2>Build next</h2>
+  <p class="lead">One spec per developer. "Ready" means everything it depends on is done.</p>
+  <div class="cards" id="next"></div>
+
+  <h2>Waiting on something</h2>
+  <p class="lead">Not startable yet, and what each one waits for.</p>
+  <div class="tablewrap"><table id="waiting"></table></div>
+
+  <h2>Whole plan, by release</h2>
+  <div id="roadmap"></div>
 </main>
 <script src="plan-data.js"></script>
 <script src="../tracker/tracker-data.js" onerror="window.TRACKER=null"></script>
@@ -65,143 +78,156 @@ td code{font:11.5px ui-monospace,Menlo,Consolas,monospace}
 (function () {
   'use strict';
   var P = window.PLAN, T = window.TRACKER || null;
-  if (!P) { document.getElementById('sub').textContent = 'plan-data.js not found.'; return; }
-  var DAY = 864e5, N = P.days, start = Date.parse(P.start + 'T00:00:00Z');
-  var tl = document.getElementById('tl');
+  var $ = function (id) { return document.getElementById(id); };
+  if (!P) { $('sub').textContent = 'plan-data.js not found.'; return; }
+  var DAY = 864e5, start = Date.parse(P.start + 'T00:00:00Z');
+  var now = new Date();
+  var today = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - start) / DAY) + 1;
   var byId = {}; P.specs.forEach(function (s) { byId[s.id] = s; });
   var subs = {};
   if (T && T.features) T.features.forEach(function (f) { f.subs.forEach(function (s) { subs[s.id] = s; }); });
 
   function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
-  function date(d) { return new Date(start + (d - 1) * DAY); }
-  function fmt(d, o) { return date(d).toLocaleDateString('en-GB', Object.assign({ timeZone: 'UTC' }, o)); }
-  function wk(d) { var w = date(d).getUTCDay(); return w === 0 || w === 6; }
-  var now = new Date();
-  var today = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - start) / DAY) + 1;
-  var lines = {}; P.milestones.forEach(function (m) { if (m.day) lines[m.day] = 1; });
-  function zone(d) { return d > P.buildDays ? ' out' : d > P.buildDays - 3 ? ' hard' : wk(d) ? ' wk' : ''; }
+  function fmt(d, o) { return new Date(start + (d - 1) * DAY).toLocaleDateString('en-GB', Object.assign({ timeZone: 'UTC' }, o)); }
+  var short = { weekday: 'short', day: 'numeric', month: 'short' };
+  var who = function (o) { return o === 'Both' ? 'Both' : P.devs[o]; };
+  function days(s) {
+    return s.startDay === s.endDay ? 'Day ' + s.startDay + ' · ' + fmt(s.startDay, { day: 'numeric', month: 'short' })
+      : 'Days ' + s.startDay + '–' + s.endDay + ' · ' + fmt(s.startDay, { day: 'numeric', month: 'short' }) + ' – ' + fmt(s.endDay, { day: 'numeric', month: 'short' });
+  }
+
+  // ---- status from the tracker's sub-features ----
+  function subsOf(s) { return (s.subs || []).map(function (id) { return subs[id]; }).filter(Boolean); }
   function status(s) {
-    var ss = (s.subs || []).map(function (id) { return subs[id]; }).filter(Boolean);
+    var ss = subsOf(s);
     if (!ss.length) return 'todo';
-    if (ss.some(function (x) { return x.status === 'blocked'; })) return 'blocked';
     if (ss.every(function (x) { return x.status === 'done'; })) return 'done';
+    if (ss.some(function (x) { return x.status === 'blocked'; }) && ss.every(function (x) { return x.status === 'done' || x.status === 'blocked'; })) return 'blocked';
     if (ss.some(function (x) { return x.status !== 'todo' || x.pct > 0; })) return 'doing';
     return 'todo';
   }
-  function who(o) { return o === 'Both' ? 'Both' : P.devs[o]; }
-  function place(e, c1, c2, r1, span) {
-    e.style.gridColumn = (c1 + 1) + ' / ' + (c2 + 2);
-    e.style.gridRow = r1 + ' / span ' + (span || 1);
-    tl.appendChild(e);
+  // A dependency is met when it is done, or when all that is left of it is parked as blocked (e.g. Railway admin).
+  function met(id) {
+    var d = byId[id]; if (!d) return true;
+    var st = status(d);
+    if (st === 'done') return true;
+    var ss = subsOf(d);
+    return st === 'blocked' && ss.some(function (x) { return x.status === 'done'; });
   }
-  function background(row, span) {
-    for (var d = 1; d <= N; d++) {
-      var c = el('div', 'bg' + zone(d) + (d === today ? ' today' : '') + (lines[d] ? ' msl' : ''));
-      place(c, d, d, row, span);
-    }
+  function unmet(s) { return (s.dependsOn || []).filter(function (id) { return !met(id); }); }
+  var label = { todo: 'not started', doing: 'in progress', done: 'done', blocked: 'blocked' };
+  function chip(st) { return el('span', 'chip ' + st, label[st]); }
+  function late(s) { return status(s) !== 'done' && s.endDay < today; }
+
+  // ---- header ----
+  var open = P.specs.filter(function (s) { return status(s) !== 'done'; });
+  var c = { done: 0, doing: 0, blocked: 0, todo: 0 };
+  P.specs.forEach(function (s) { c[status(s)]++; });
+  var rel1 = P.milestones.filter(function (m) { return m.label.indexOf('Release 1') === 0; })[0];
+  $('sub').textContent = 'Today is Day ' + Math.max(today, 1) + ' of ' + P.buildDays + ' build days (' +
+    new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).toLocaleDateString('en-GB', Object.assign({ timeZone: 'UTC' }, { weekday: 'long', day: 'numeric', month: 'long' })) + ')' +
+    (rel1 ? ' · Release 1 is due Day ' + rel1.day + ' (' + fmt(rel1.day, short) + ')' : '') +
+    (T ? '' : ' · no tracker data: everything shows as not started');
+  [['done', 'done'], ['doing', 'in progress'], ['todo', 'not started'], ['blocked', 'blocked']].forEach(function (x) {
+    var s = el('div', 'stat'); s.append(el('b', '', String(c[x[0]])), el('span', '', 'specs ' + x[1])); $('top').append(s);
+  });
+  var late_n = P.specs.filter(late).length;
+  if (late_n) { var ls = el('div', 'stat'); ls.append(el('b', '', String(late_n)), el('span', '', 'specs behind plan')); $('top').append(ls); }
+  [['done', 'var(--done)'], ['doing', 'var(--doing)'], ['blocked', 'var(--blocked)']].forEach(function (x) {
+    var i = el('i'); i.style.width = (100 * c[x[0]] / P.specs.length) + '%'; i.style.background = x[1]; $('bar').append(i);
+  });
+
+  // ---- build next, per developer ----
+  function pick(dev) {
+    var mine = open.filter(function (s) { return (s.owner === dev || s.owner === 'Both') && status(s) !== 'blocked'; });
+    var ready = mine.filter(function (s) { return !unmet(s).length; });
+    var order = function (a, b) { return (status(b) === 'doing') - (status(a) === 'doing') || a.startDay - b.startDay || a.endDay - b.endDay; };
+    ready.sort(order);
+    var rest = mine.filter(function (s) { return unmet(s).length; }).sort(function (a, b) { return a.startDay - b.startDay; });
+    return { first: ready[0] || rest[0] || null, ready: ready, rest: rest };
   }
-  function pack(items) {
-    var ends = [];
-    items.sort(function (a, b) { return a.startDay - b.startDay || String(a.id || a.name).localeCompare(String(b.id || b.name)); });
-    items.forEach(function (it) {
-      var r = ends.findIndex(function (e) { return e < it.startDay; });
-      if (r < 0) { r = ends.length; ends.push(0); }
-      ends[r] = it.endDay; it._row = r;
+  ['A', 'B'].forEach(function (dev) {
+    var p = pick(dev), card = el('div', 'card');
+    card.append(el('div', 'who', 'Dev ' + dev + ' · ' + P.devs[dev]));
+    var s = p.first;
+    if (!s) { card.append(el('div', 'title', 'Nothing left to build'), el('div', 'none', 'Every spec for this developer is done or parked.')); $('next').append(card); return; }
+    var t = el('div', 'title'); t.append(el('small', '', s.id), document.createTextNode(s.name)); card.append(t);
+    var m = el('div', 'meta');
+    var w = unmet(s);
+    m.append(chip(status(s)), document.createTextNode(' '));
+    m.append(w.length ? el('span', 'chip wait', 'waits for ' + w.join(', ')) : el('span', 'chip ready', 'ready now'));
+    if (late(s)) m.append(document.createTextNode(' '), el('span', 'chip late', 'behind plan'));
+    m.append(document.createTextNode('  Planned ' + days(s) + (s.release ? ' · Release ' + s.release : '')));
+    card.append(m);
+    var ul = el('ul', 'subs');
+    var ss = subsOf(s);
+    if (!ss.length) ss = (s.subs || []).map(function (id) { return { id: id, name: id, status: 'todo', pct: 0, note: '' }; });
+    ss.forEach(function (x) {
+      var li = el('li'); li.append(el('i', x.status));
+      var tx = el('span'); tx.append(document.createTextNode(x.id + '  ' + x.name));
+      if (x.note) tx.append(el('em', '', ' · ' + x.note));
+      li.append(tx); ul.append(li);
     });
-    return Math.max(1, ends.length);
-  }
-
-  document.getElementById('sub').textContent = 'Dev A: Pipes = ' + P.devs.A + ' · Dev B: Product = ' + P.devs.B +
-    ' · Day 1 = ' + fmt(1, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
-    ' · build Days 1–' + P.buildDays + ', UAT Days ' + (P.buildDays + 1) + '–' + N + (T ? ' · status from tracker' : ' · no tracker data: all grey');
-  var lg = document.getElementById('legend');
-  [['todo', 'todo'], ['doing', 'doing'], ['done', 'done'], ['blocked', 'blocked']].forEach(function (x) {
-    var s = el('span'); var i = el('i'); i.style.background = 'var(--' + x[0] + ')'; s.append(i, document.createTextNode(x[1])); lg.append(s);
-  });
-  lg.append(el('span', '', '⧗ X = waits for the other dev\'s spec X (amber: overlaps, build on fixtures)'),
-    el('span', '', 'shaded = weekend · striped = outside the build (UAT)'));
-
-  // header
-  var row = 1;
-  place(el('div', 'lab', 'Day'), 0, -1, row);
-  tl.lastChild.style.gridColumn = '1';
-  for (var d = 1; d <= N; d++) {
-    var h = el('div', 'hd' + zone(d) + (d === today ? ' today' : '') + (lines[d] ? ' msl' : ''));
-    h.append(el('b', '', 'D' + d), el('span', '', fmt(d, { day: 'numeric', month: 'short' })), el('br'), el('span', '', fmt(d, { weekday: 'short' })));
-    place(h, d, d, row);
-  }
-  row++;
-
-  // milestones (row 1: points, row 2: ranges)
-  var ml = el('div', 'lab', 'Milestones'); ml.style.gridColumn = '1'; ml.style.gridRow = row + ' / span 2'; tl.appendChild(ml);
-  background(row, 2);
-  P.milestones.forEach(function (m) {
-    if (m.day) { var p = el('div', 'pt', '◆ ' + m.label); p.title = 'Day ' + m.day + ' · ' + fmt(m.day, { weekday: 'short', day: 'numeric', month: 'short' }); place(p, m.day, m.day, row); }
-    else { var g = el('div', 'rg' + (m.kind === 'outside' ? ' outside' : ''), m.label); g.title = 'Days ' + m.from + '–' + m.to; place(g, m.from, m.to, row + 1); }
-  });
-  row += 2;
-
-  function lane(title, note, items, thin) {
-    var n = pack(items);
-    var l = el('div', 'lab'); l.append(document.createTextNode(title)); if (note) l.append(el('small', '', note));
-    l.style.gridColumn = '1'; l.style.gridRow = row + ' / span ' + n; l.style.flexDirection = 'column'; l.style.alignItems = 'flex-start'; l.style.justifyContent = 'center';
-    tl.appendChild(l);
-    background(row, n);
-    items.forEach(function (it) {
-      var st = it.id ? status(it) : 'todo';
-      var b = el('div', 'bar' + (thin ? ' thin' : '') + (thin && it.id ? ' spec' : '') + (it.id ? ' s-' + st : ''));
-      var t = el('div', 't');
-      if (it.id) t.append(el('b', '', it.id));
-      t.append(document.createTextNode(it.name));
-      b.append(t);
-      var tip = (it.id ? it.id + ' · ' : '') + it.name + ' · ' + who(it.owner || 'Both') + ' · Days ' + it.startDay + '–' + it.endDay +
-        (it.release ? ' · Release ' + it.release : '') + (it.id ? ' · ' + st : '');
-      if (it.id && !thin) {
-        var dd = el('div', 'd');
-        (it.dependsOn || []).forEach(function (id) {
-          var dep = byId[id];
-          if (!dep || dep.owner === it.owner || dep.owner === 'Both' || it.owner === 'Both') return;
-          var par = dep.endDay >= it.startDay;
-          var x = el('span', 'dep' + (par ? ' par' : ''), '⧗ ' + id);
-          x.title = 'waits for ' + id + ' ' + dep.name + ' (' + who(dep.owner) + ', ends Day ' + dep.endDay + ')' + (par ? ' · overlaps: build on fixtures' : '');
-          dd.append(x);
-          tip += ' · waits for ' + id;
-        });
-        if (dd.childNodes.length) b.append(dd);
-      }
-      b.title = tip;
-      place(b, it.startDay, it.endDay, row + it._row);
-    });
-    row += n;
-  }
-
-  var shared = P.specs.filter(function (s) { return s.owner === 'Both'; }).concat((P.shared || []).map(function (s) { return Object.assign({ owner: 'Both' }, s); }));
-  lane('Shared', 'joint work', shared, true);
-  lane('Dev A: Pipes', P.devs.A, P.specs.filter(function (s) { return s.owner === 'A'; }));
-  lane('Dev B: Product', P.devs.B, P.specs.filter(function (s) { return s.owner === 'B'; }));
-
-  // day-by-day tables
-  var tables = document.getElementById('tables');
-  ['A', 'B'].forEach(function (o) {
-    var wrap = el('div');
-    wrap.append(el('h2', '', P.devs[o] + ' · Dev ' + o + (o === 'A' ? ': Pipes' : ': Product') + ' · day by day'));
-    var tb = el('table'), th = el('thead'), hr = el('tr');
-    ['Day', 'Date', 'What to ship', 'Specs'].forEach(function (x) { hr.append(el('th', '', x)); });
-    th.append(hr); tb.append(th);
-    var body = el('tbody');
-    for (var d = 1; d <= N; d++) {
-      var act = P.specs.filter(function (s) { return (s.owner === o || s.owner === 'Both') && s.startDay <= d && s.endDay >= d; });
-      var tr = el('tr', (d > P.buildDays ? 'o' : '') + (wk(d) ? ' w' : ''));
-      var ship = act.filter(function (s) { return s.endDay === d; });
-      var what = act.length ? act.map(function (s) { return s.name + (s.endDay === d ? ' ✓' : ' (cont.)'); }).join('; ') : '—';
-      tr.append(el('td', '', 'D' + d), el('td', '', fmt(d, { weekday: 'short', day: 'numeric', month: 'short' })),
-        el('td', ship.length ? 'ship' : '', what));
-      var c = el('td'); c.append(el('code', '', act.map(function (s) { return s.id; }).join(', ')));
-      tr.append(c);
-      body.append(tr);
+    card.append(ul);
+    if (s.note) card.append(el('div', 'after', s.note));
+    var sp = el('div', 'after'); sp.append(document.createTextNode('Spec: '), el('span', 'path', 'docs/specs/' + s.id + '-*.md')); card.append(sp);
+    var more = p.ready.concat(p.rest).filter(function (x) { return x !== s; }).sort(function (a, b) { return a.startDay - b.startDay; }).slice(0, 2);
+    if (more.length) {
+      var a = el('div', 'after'); a.append(document.createTextNode('Then: '));
+      more.forEach(function (x, i) { if (i) a.append(document.createTextNode(' · ')); var xw = unmet(x); a.append(el('b', '', x.id), document.createTextNode(' ' + x.name + ' (' + fmt(x.startDay, { day: 'numeric', month: 'short' }) + (xw.length ? ', waits for ' + xw.join(', ') : ', ready') + ')')); });
+      card.append(a);
     }
-    tb.append(body); wrap.append(tb); tables.append(wrap);
+    $('next').append(card);
   });
+
+  // ---- waiting ----
+  var wt = $('waiting');
+  var wh = el('tr'); ['Spec', 'Owner', 'Planned', 'Waits for'].forEach(function (h) { wh.append(el('th', '', h)); }); wt.append(wh);
+  var waiting = open.filter(function (s) { return unmet(s).length && status(s) !== 'blocked'; }).sort(function (a, b) { return a.startDay - b.startDay; });
+  var waitingAll = waiting.length; waiting = waiting.slice(0, 8);
+  if (!waiting.length) { var r0 = el('tr'); var c0 = el('td', 'none', 'Nothing is waiting.'); c0.colSpan = 4; r0.append(c0); wt.append(r0); }
+  waiting.forEach(function (s) {
+    var r = el('tr'); var n = el('td', 'name'); n.append(el('b', '', s.id + '  '), document.createTextNode(s.name));
+    var wf = el('td'); unmet(s).forEach(function (id, i) { if (i) wf.append(document.createTextNode(', ')); wf.append(el('b', '', id), document.createTextNode(' ' + byId[id].name + ' (' + who(byId[id].owner) + ', ' + label[status(byId[id])] + ')')); });
+    r.append(n, el('td', '', who(s.owner)), el('td', 'days', days(s)), wf); wt.append(r);
+  });
+
+  if (waitingAll > waiting.length) { var mr = el('tr'); var mc = el('td', 'none', '+ ' + (waitingAll - waiting.length) + ' more, all listed in the plan below.'); mc.colSpan = 4; mr.append(mc); wt.append(mr); }
+
+  // ---- roadmap by release ----
+  var groups = [
+    { title: 'Release 1 · base portal', key: 1 }, { title: 'Release 2', key: 2 }, { title: 'Release 3 · feature freeze', key: 3 },
+    { title: 'Hardening, staging, demo', key: null, max: 23 }, { title: 'UAT and production (outside the build)', key: null, min: 24 }
+  ];
+  groups.forEach(function (g) {
+    var items = P.specs.filter(function (s) {
+      if (g.key) return s.release === g.key;
+      return s.release == null && (g.max ? s.endDay <= g.max : s.endDay >= g.min);
+    }).sort(function (a, b) { return a.startDay - b.startDay || a.id.localeCompare(b.id); });
+    if (!items.length) return;
+    var doneN = items.filter(function (s) { return status(s) === 'done'; }).length;
+    var d = el('details'); if (doneN < items.length && (g.key === 1 || g.key === 2 || (g.key == null && g.max))) d.open = g.key === 1 || doneN > 0 || items.some(function (s) { return status(s) === 'doing'; });
+    var sm = el('summary', '', g.title + ' · ' + doneN + ' of ' + items.length + ' done'); d.append(sm);
+    var wrap = el('div', 'tablewrap'), tb = el('table'), hr = el('tr');
+    ['Spec', 'What', 'Owner', 'Planned', 'Status', 'Waits for'].forEach(function (h) { hr.append(el('th', '', h)); }); tb.append(hr);
+    items.forEach(function (s) {
+      var st = status(s), r = el('tr', st === 'done' ? 'isdone' : '');
+      r.append(el('td', 'id', s.id));
+      var n = el('td', 'name', s.name); if (s.note) n.append(el('small', '', s.note)); r.append(n);
+      r.append(el('td', '', who(s.owner)), el('td', 'days', days(s)));
+      var sc = el('td'); sc.append(chip(st)); if (late(s)) sc.append(document.createTextNode(' '), el('span', 'chip late', 'behind')); r.append(sc);
+      var u = unmet(s); var bn = subsOf(s).filter(function (x) { return x.status === 'blocked'; })[0];
+      r.append(el('td', '', st === 'done' ? '' : st === 'blocked' && bn ? bn.note : u.length ? u.join(', ') : 'nothing: ready'));
+      tb.append(r);
+    });
+    wrap.append(tb); d.append(wrap);
+    $('roadmap').append(d);
+  });
+  // milestones
+  var ml = el('p', 'lead'); ml.style.marginTop = '18px';
+  ml.textContent = 'Milestones: ' + P.milestones.filter(function (m) { return m.day; }).sort(function (a, b) { return a.day - b.day; })
+    .map(function (m) { return m.label + ' (Day ' + m.day + ', ' + fmt(m.day, { day: 'numeric', month: 'short' }) + ')'; }).join(' · ');
+  $('roadmap').append(ml);
 })();
 </script>
 </body>
