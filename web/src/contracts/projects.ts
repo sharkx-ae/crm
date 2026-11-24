@@ -62,7 +62,8 @@ export const createProjectRequest = z.object({
   name,
   city: projectCity,
   industry: z.string().trim().min(1).max(120),
-  firstUser: z.object({ email, name }),
+  // The Add-client modal asks only for the email (mockup, decision D3); the invite name is derived from it when absent.
+  firstUser: z.object({ email, name: name.optional() }),
 });
 export const createProjectResponse = z.object({ projectId: z.uuid() });
 

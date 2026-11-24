@@ -15,7 +15,7 @@ export type NavItem = {
 export type NavGroup = { labelKey?: string; items: NavItem[] };
 export type RoleNav = { agency: NavGroup[]; project: NavGroup[] };
 
-const READY: ReadonlySet<RouteKey> = new Set<RouteKey>(['clients', 'overview']);
+const READY: ReadonlySet<RouteKey> = new Set<RouteKey>(['clients', 'team', 'overview', 'settings']);
 
 const item = (key: RouteKey, icon: IconName, labelKey = `nav.${key}`): NavItem => ({
   key,

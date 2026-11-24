@@ -63,6 +63,7 @@ describe('seed (database)', () => {
       name: string;
       leads: string;
       tests: string;
+      new_today: string;
       new: string;
       mql: string;
       sql: string;
@@ -74,6 +75,8 @@ describe('seed (database)', () => {
       `select p.name,
          (select count(*) from leads l where l.project_id = p.id) leads,
          (select count(*) from leads l where l.project_id = p.id and l.is_test) tests,
+         (select count(*) from leads l where l.project_id = p.id and not l.is_test
+            and (l.created_at at time zone p.timezone)::date = ($1::timestamptz at time zone p.timezone)::date) new_today,
          (select count(*) from leads l where l.project_id = p.id and not l.is_test and l.status = 'new') new,
          (select count(*) from leads l where l.project_id = p.id and not l.is_test and l.status = 'mql') mql,
          (select count(*) from leads l where l.project_id = p.id and not l.is_test and l.status = 'sql') sql,
@@ -94,6 +97,7 @@ describe('seed (database)', () => {
         {
           leads: Number(row?.leads),
           testLeads: Number(row?.tests),
+          newToday: Number(row?.new_today),
           byStatus: {
             new: Number(row?.new),
             mql: Number(row?.mql),

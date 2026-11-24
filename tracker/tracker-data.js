@@ -1,6 +1,6 @@
 window.TRACKER = {
-"now":"F4a done (lead engine, seed); next F2b workspace",
-"lastActivity":{"time":"2026-11-24T19:06:25.103Z","file":"(turn finished)"},
+"now":"F2b built, awaiting review; next F10a client users",
+"lastActivity":{"time":"2026-11-24T19:56:38.049Z","file":"docs/specs/F4a-F2b-F10a-technical-plan.md"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
@@ -16,9 +16,9 @@ window.TRACKER = {
 {"id":"F2","name":"App shell and projects","spec":"docs/PRD.md#f2","owner":"B","subs":[
 {"id":"F2.1","name":"Shell, design tokens, nav, project switcher","status":"done","pct":100,"note":"Shell, guards, projects api, auth restyle, e2e done","updated":"2026-11-24T17:30:37.002Z"},
 {"id":"F2.2","name":"i18n framework, RTL, logical CSS","status":"done","pct":100,"note":"Framework, RTL, saved locale done; strings are F2.6","updated":"2026-11-24T17:32:39.440Z"},
-{"id":"F2.3","name":"Clients home cards","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F2.4","name":"New-project wizard and default pipeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F2.5","name":"Agency settings and business hours","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F2.3","name":"Clients home cards","status":"done","pct":100,"note":"Clients home: KPI strip, table, search, matches seed","updated":"2026-11-24T19:32:49.404Z"},
+{"id":"F2.4","name":"New-project wizard and default pipeline","status":"done","pct":100,"note":"Add client: 4 fields, atomic create, 2 audit rows","updated":"2026-11-24T19:32:49.482Z"},
+{"id":"F2.5","name":"Agency settings and business hours","status":"done","pct":100,"note":"Team page, settings tabs, business hours","updated":"2026-11-24T19:32:49.566Z"},
 {"id":"F2.6","name":"Arabic and French strings, RTL QA","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"}
 ]},
 {"id":"F3","name":"WhatsApp tracking","spec":"docs/PRD.md#f3","owner":"A","subs":[
@@ -117,12 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-22T13:20:35.720Z","m":"F1.4 done 100% Emailed-code 2FA done"},
-{"t":"2026-11-22T13:20:35.824Z","m":"F1.5 done 100% Roles, can() matrix, invites done"},
-{"t":"2026-11-22T13:20:35.931Z","m":"F1.6 doing 60% Audit writes and GET /audit done; viewer is F1e"},
-{"t":"2026-11-22T13:20:36.026Z","m":"F1.8 done 100% Rate limits, headers, error alerts done"},
-{"t":"2026-11-22T17:06:38.221Z","m":"F1.2 done 100% Independent review passed; 2 bugs fixed"},
-{"t":"2026-11-22T17:06:38.312Z","m":"F1.3 done 100% Independent review passed; 2 bugs fixed"},
 {"t":"2026-11-22T17:06:38.396Z","m":"F1.4 done 100% Independent review passed; 2 bugs fixed"},
 {"t":"2026-11-22T17:06:38.472Z","m":"F1.5 done 100% Independent review passed; 2 bugs fixed"},
 {"t":"2026-11-22T17:06:38.547Z","m":"F1.7 done 100% Independent review passed; 2 bugs fixed"},
@@ -146,6 +140,12 @@ window.TRACKER = {
 {"t":"2026-11-24T18:40:29.049Z","m":"F4.2 done 100% saveFormMapping route, action, MappingStep component"},
 {"t":"2026-11-24T18:40:29.241Z","m":"F15.5 done 100% db:seed: 5 clients, 64 leads, expected.json frozen"},
 {"t":"2026-11-24T18:40:29.432Z","m":"F4.7 doing 80% Flag, no assign/notify, seed; reports filter later"},
-{"t":"2026-11-24T18:51:35.217Z","m":"F4.7 done 100% Flag stored; exclusion is checked in F4b, F13, F11a"}
+{"t":"2026-11-24T18:51:35.217Z","m":"F4.7 done 100% Flag stored; exclusion is checked in F4b, F13, F11a"},
+{"t":"2026-11-24T19:10:11.949Z","m":"F2.3 doing 5% Phase 2 started: audit count, contract, home api"},
+{"t":"2026-11-24T19:14:40.515Z","m":"F2.3 doing 50% Home aggregates api matches seed; UI next"},
+{"t":"2026-11-24T19:14:40.587Z","m":"F2.4 doing 50% Create client api: atomic, 2 audit rows"},
+{"t":"2026-11-24T19:32:49.404Z","m":"F2.3 done 100% Clients home: KPI strip, table, search, matches seed"},
+{"t":"2026-11-24T19:32:49.482Z","m":"F2.4 done 100% Add client: 4 fields, atomic create, 2 audit rows"},
+{"t":"2026-11-24T19:32:49.566Z","m":"F2.5 done 100% Team page, settings tabs, business hours"}
 ]
 };

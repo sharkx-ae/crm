@@ -2,18 +2,26 @@
 // as the real api, and every response is parsed with the contract schema before it is sent, so a fixture that
 // drifts from the contract fails here instead of passing silently. Nothing in src/ knows it exists.
 // Run: node tests/e2e/support/fake-api.ts <port>
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { z } from 'zod';
 import {
   activeSessionResponse,
+  listUsersResponse,
   meResponse,
   okResponse,
   pendingSessionResponse,
   updateMeRequest,
 } from '../../../src/contracts/auth.ts';
 import type { Locale } from '../../../src/contracts/common.ts';
-import { projectDetail, projectOptionsResponse } from '../../../src/contracts/projects.ts';
+import {
+  createProjectRequest,
+  createProjectResponse,
+  projectDetail,
+  projectOptionsResponse,
+  projectsHomeResponse,
+  updateProjectSettingsRequest,
+} from '../../../src/contracts/projects.ts';
 import { FIXTURE } from './fixtures.ts';
 
 const port = Number(process.argv[2] ?? 4200);
@@ -110,10 +118,88 @@ const server = createServer(async (req, res) => {
   const visible = FIXTURE.projects.filter(
     (p) => session.user.role !== 'client' || session.user.projectIds.includes(p.id),
   );
+  // Clients home (staff only): every fixture client, quiet numbers, TikTok/LinkedIn/Snapchat not connected.
+  if (route === 'GET /projects') {
+    if (session.user.role === 'client') return fail(res, 403, 'FORBIDDEN');
+    const q = (url.searchParams.get('q') ?? '').toLowerCase();
+    const platforms = [
+      'whatsapp',
+      'meta',
+      'google',
+      'tiktok',
+      'linkedin',
+      'snapchat',
+      'website',
+    ] as const;
+    const rows = FIXTURE.projects.map(({ businessHours: _, ...o }) => ({
+      ...o,
+      newToday: 1,
+      unreplied: 0,
+      overdue: 0,
+      integrations: platforms.map((platform) => ({
+        platform,
+        status: ['tiktok', 'linkedin', 'snapchat'].includes(platform)
+          ? 'not_connected'
+          : 'connected',
+      })),
+    }));
+    return ok(res, projectsHomeResponse, {
+      totals: { newToday: rows.length, unreplied: 0, overdue: 0, toFix: 0 },
+      rows: rows.filter((r) => !q || `${r.name} ${r.city} ${r.industry}`.toLowerCase().includes(q)),
+    });
+  }
   if (route === 'GET /projects/options') {
     return ok(res, projectOptionsResponse, {
       options: visible.map(({ businessHours: _, ...o }) => o),
     });
+  }
+  // Create client (super admin): added to the fixture so the switcher, home and detail all see it.
+  if (route === 'POST /projects') {
+    if (session.user.role !== 'super_admin') return fail(res, 403, 'FORBIDDEN');
+    const parsed = createProjectRequest.safeParse(await readJson(req));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const { name, city, industry } = parsed.data;
+    if (FIXTURE.projects.some((p) => p.name.toLowerCase() === name.toLowerCase()))
+      return fail(res, 409, 'CONFLICT');
+    const id = randomUUID();
+    FIXTURE.projects.push({
+      id,
+      name,
+      city,
+      industry,
+      color: '#776f6f',
+      timezone: city === 'Morocco' ? 'Africa/Casablanca' : 'Asia/Dubai',
+      businessHours: FIXTURE.projects[0]?.businessHours ?? [],
+    });
+    return ok(res, createProjectResponse, { projectId: id });
+  }
+  // Team (super admin): the fixture's staff managers.
+  if (route === 'GET /users' && url.searchParams.get('kind') === 'manager') {
+    if (session.user.role !== 'super_admin') return fail(res, 403, 'FORBIDDEN');
+    return ok(res, listUsersResponse, {
+      users: FIXTURE.users
+        .filter((u) => u.role === 'manager')
+        .map((u) => ({
+          id: u.userId,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          status: 'active',
+          projectId: null,
+          createdAt: '2026-11-20T08:00:00.000Z',
+        })),
+    });
+  }
+  // Business hours (staff): validated with the contract, echoed back as the detail.
+  const settings = /^PATCH \/projects\/([^/]+)\/settings$/.exec(route);
+  if (settings) {
+    if (session.user.role === 'client') return fail(res, 403, 'FORBIDDEN');
+    const parsed = updateProjectSettingsRequest.safeParse(await readJson(req));
+    const p = FIXTURE.projects.find((x) => x.id === settings[1]);
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    if (!p || parsed.data.projectId !== p.id) return fail(res, 404, 'NOT_FOUND');
+    Object.assign(p, { timezone: parsed.data.timezone, businessHours: parsed.data.businessHours });
+    return ok(res, projectDetail, p);
   }
   const detail = /^GET \/projects\/([^/]+)$/.exec(route);
   if (detail) {

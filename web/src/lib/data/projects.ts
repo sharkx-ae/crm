@@ -3,8 +3,10 @@ import { cache } from 'react';
 import {
   type ProjectDetail,
   type ProjectOption,
+  type ProjectsHomeResponse,
   projectDetail,
   projectOptionsResponse,
+  projectsHomeResponse,
 } from '../../contracts/projects.ts';
 import { apiCall } from '../api/client.ts';
 import { ApiError } from '../api/error.ts';
@@ -14,6 +16,12 @@ export const getProjectOptions = cache(async (): Promise<ProjectOption[]> => {
   const res = await apiCall(projectOptionsResponse, '/projects/options');
   return res.options;
 });
+
+/** Clients home (staff): totals that ignore the search, and the matching rows. */
+export async function getProjectsHome(q?: string): Promise<ProjectsHomeResponse> {
+  const params = q ? `?${new URLSearchParams({ q })}` : '';
+  return apiCall(projectsHomeResponse, `/projects${params}`);
+}
 
 /** Null when the project does not exist or is not the caller's (the api answers 404 for both). */
 export const getProject = cache(async (projectId: string): Promise<ProjectDetail | null> => {

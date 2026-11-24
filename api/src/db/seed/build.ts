@@ -150,6 +150,10 @@ export function buildSeed(now: Date): SeedPlan {
   return { activeManagers, clients };
 }
 
+/** The calendar day of an instant in a time zone (YYYY-MM-DD), for "new today" in the client's own zone. */
+const localDay = (d: Date, timeZone: string) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+
 /** The numbers a person would check on screen, per client, for a given `now` (tests and expected.json). */
 export function summarise(plan: SeedPlan, now: Date) {
   const t = now.getTime();
@@ -161,6 +165,7 @@ export function summarise(plan: SeedPlan, now: Date) {
         {
           leads: leads.length,
           testLeads: leads.length - real.length,
+          newToday: real.filter((l) => localDay(l.createdAt, client.timezone) === localDay(now, client.timezone)).length,
           byStatus: Object.fromEntries(
             (['new', 'mql', 'sql', 'not_qualified'] as const).map((s) => [
               s,

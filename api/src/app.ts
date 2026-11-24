@@ -27,7 +27,7 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
   await app.register(healthRoutes, { env });
   await app.register(authRoutes, { env });
   await app.register(auditRoutes);
-  await app.register(projectRoutes);
+  await app.register(projectRoutes, { env });
   await app.register(leadRoutes);
   return app;
 }

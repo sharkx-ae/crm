@@ -13,7 +13,8 @@ export function Table({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto">
+    // relative: absolutely positioned content (sr-only labels) stays inside the scroll box, never widening the page.
+    <div className="relative overflow-x-auto">
       <table
         aria-label={ariaLabel}
         className={cx(

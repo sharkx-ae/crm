@@ -1,0 +1,71 @@
+{
+  "home": {
+    "kpi": {
+      "newToday": "New today",
+      "unreplied": "Unreplied chats",
+      "overdue": "Overdue follow-ups",
+      "toFix": "Connections to fix"
+    },
+    "search": "Find a client",
+    "tableLabel": "Clients",
+    "col": {
+      "client": "Client",
+      "newToday": "New today",
+      "unreplied": "Unreplied",
+      "overdue": "Overdue",
+      "connections": "Connections",
+      "open": "Open"
+    },
+    "place": "{city}, {industry}",
+    "toFixChip": "{n} to fix",
+    "dotsLabel": "{connected} connected, {toFix} to fix",
+    "open": "Open {name}",
+    "emptyTitle": "No clients yet",
+    "emptyBody": "Add your first client to start.",
+    "noMatchTitle": "No client matches",
+    "noMatchBody": "Try another name or city."
+  },
+  "create": {
+    "button": "Add client",
+    "title": "Add a client",
+    "description": "Creates an isolated workspace with the default pipeline and invites the first client user.",
+    "name": "Client name",
+    "namePlaceholder": "e.g. Marina Dental Clinic",
+    "city": "City",
+    "industry": "Industry",
+    "industryPlaceholder": "Dental clinic",
+    "email": "Email",
+    "emailPlaceholder": "owner@client.ae",
+    "submit": "Create client",
+    "submitting": "Creating...",
+    "conflict": "A client with this name, or an account with this email, already exists.",
+    "created": "{name} created. Invite sent to {email}."
+  },
+  "city": {
+    "Dubai": "Dubai",
+    "Abu Dhabi": "Abu Dhabi",
+    "Morocco": "Morocco"
+  },
+  "settings": {
+    "tabsLabel": "Client settings",
+    "tab": {
+      "clientUsers": "Client users",
+      "hours": "Business hours"
+    }
+  },
+  "hours": {
+    "title": "Business hours",
+    "help": "Reply timers and the no-reply alert only count inside these hours. Changes apply to future timers.",
+    "timezone": "Time zone (IANA)",
+    "open": "Open",
+    "closed": "Closed",
+    "opens": "{day} opens",
+    "closes": "{day} closes",
+    "to": "to",
+    "openToggle": "{day} open",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Business hours saved",
+    "invalid": "On each open day, closing time must be after opening time."
+  }
+}

@@ -1,0 +1,124 @@
+import { getTranslations } from 'next-intl/server';
+import type { HealthState } from '../../contracts/common.ts';
+import type { ProjectsHomeResponse } from '../../contracts/projects.ts';
+import { Link } from '../../lib/i18n/navigation.ts';
+import { Avatar } from '../ui/avatar.tsx';
+import { UserText } from '../ui/bidi.tsx';
+import { Card } from '../ui/card.tsx';
+import { Chip } from '../ui/chip.tsx';
+import { ClickRow } from '../ui/click-row.tsx';
+import { type DotState, Dots } from '../ui/dots.tsx';
+import { EmptyState } from '../ui/empty-state.tsx';
+import { Icon } from '../ui/icons.tsx';
+import { Kpi, KpiStrip } from '../ui/kpi.tsx';
+import { Table, Td, Th } from '../ui/table.tsx';
+import { ClientsSearch } from './clients-search.tsx';
+
+const DOT: Record<HealthState, DotState> = {
+  connected: 'ok',
+  needs_attention: 'warn',
+  broken: 'bad',
+  not_connected: 'off',
+};
+
+/** Clients home (mockup viewClients): KPI strip on the canvas, then one flush card with the search and the table. */
+export async function ClientsHome({
+  data,
+  searching,
+  canCreate,
+}: {
+  data: ProjectsHomeResponse;
+  searching: boolean;
+  canCreate: boolean;
+}) {
+  const t = await getTranslations('projects.home');
+  const { totals, rows } = data;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <KpiStrip>
+        <Kpi label={t('kpi.newToday')} value={totals.newToday} />
+        <Kpi label={t('kpi.unreplied')} value={totals.unreplied} />
+        <Kpi label={t('kpi.overdue')} value={totals.overdue} />
+        <Kpi label={t('kpi.toFix')} value={totals.toFix} hot={totals.toFix > 0} />
+      </KpiStrip>
+
+      <Card flush>
+        <div className="ps-4 pe-4 pt-4 pb-3 rail:ps-6 rail:pe-6 rail:pt-5">
+          <ClientsSearch />
+        </div>
+        {rows.length === 0 ? (
+          searching ? (
+            <EmptyState title={t('noMatchTitle')} body={t('noMatchBody')} />
+          ) : (
+            <EmptyState title={t('emptyTitle')} body={canCreate ? t('emptyBody') : undefined} />
+          )
+        ) : (
+          <Table aria-label={t('tableLabel')}>
+            <thead>
+              <tr>
+                <Th>{t('col.client')}</Th>
+                <Th num>{t('col.newToday')}</Th>
+                <Th num>{t('col.unreplied')}</Th>
+                <Th num>{t('col.overdue')}</Th>
+                <Th>{t('col.connections')}</Th>
+                <Th>
+                  <span className="sr-only">{t('col.open')}</span>
+                </Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const href = `/p/${r.id}/overview`;
+                const toFix = r.integrations.filter(
+                  (i) => i.status === 'needs_attention' || i.status === 'broken',
+                );
+                const connected = r.integrations.filter((i) => i.status === 'connected').length;
+                return (
+                  <ClickRow key={r.id} href={href}>
+                    <Td>
+                      <Link
+                        href={href}
+                        aria-label={t('open', { name: r.name })}
+                        className="flex min-w-0 items-center gap-2.5 text-sx-black no-underline"
+                      >
+                        <Avatar name={r.name} shape="square" color={r.color} />
+                        <span className="min-w-0 leading-tight">
+                          <span className="block truncate font-heading">
+                            <UserText>{r.name}</UserText>
+                          </span>
+                          <span className="block truncate text-label text-sx-muted">
+                            {t('place', { city: r.city ?? '', industry: r.industry ?? '' })}
+                          </span>
+                        </span>
+                      </Link>
+                    </Td>
+                    <Td num>{r.newToday}</Td>
+                    <Td num>{r.unreplied}</Td>
+                    <Td num>{r.overdue}</Td>
+                    <Td>
+                      <span className="inline-flex items-center gap-2.5 whitespace-nowrap">
+                        <Dots
+                          states={r.integrations.map((i) => DOT[i.status])}
+                          label={t('dotsLabel', { connected, toFix: toFix.length })}
+                        />
+                        {toFix.length > 0 ? (
+                          <Chip tone={toFix.some((i) => i.status === 'broken') ? 'bad' : 'warn'}>
+                            {t('toFixChip', { n: toFix.length })}
+                          </Chip>
+                        ) : null}
+                      </span>
+                    </Td>
+                    <Td num>
+                      <Icon name="right" size="sm" flip className="text-sx-muted" />
+                    </Td>
+                  </ClickRow>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+    </div>
+  );
+}

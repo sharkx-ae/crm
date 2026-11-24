@@ -38,3 +38,30 @@ for (const size of SIZES) {
     });
   }
 }
+
+// F2b screens for the design review: Clients home, Add client, Team, Business hours (super admin, EN and AR).
+for (const lang of ['en', 'ar'] as const) {
+  test(`workspace screens 1440 ${lang}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/en/login');
+    await page.locator('#email').fill('admin@example.test');
+    await page.locator('#password').fill(FIXTURE.password);
+    await page.locator('form button[type="submit"]').click();
+    await page.locator('input[inputmode="numeric"]').first().fill(FIXTURE.code);
+    await expect(page).toHaveURL(/\/en\/clients$/);
+    const shot = (name: string) =>
+      page.screenshot({ path: `test-results/screens/f2b-${name}-1440-${lang}.png` });
+    await page.goto(`/${lang}/clients`);
+    await expect(page.getByRole('table')).toBeVisible();
+    await shot('clients');
+    // ?new=1 opens Add client (the switcher's link to it), whatever the button is called in this language.
+    await page.goto(`/${lang}/clients?new=1`);
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await shot('add-client');
+    await page.keyboard.press('Escape');
+    await page.goto(`/${lang}/team`);
+    await shot('team');
+    await page.goto(`/${lang}/p/${FIXTURE.ids.lumiere}/settings/hours`);
+    await shot('hours');
+  });
+}

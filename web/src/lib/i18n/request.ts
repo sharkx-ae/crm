@@ -5,10 +5,28 @@ import { routing } from './routing.ts';
 
 // One catalog per module: messages/<locale>/<module>.json. Add the module name here when its file exists.
 // Messages are namespaced by module: t('common.hello') or getTranslations('common').
-export const MESSAGE_MODULES = ['common', 'ui', 'shell', 'auth', 'errors', 'leads'] as const;
+export const MESSAGE_MODULES = [
+  'common',
+  'ui',
+  'shell',
+  'auth',
+  'errors',
+  'leads',
+  'projects',
+  'team',
+] as const;
 
 // The modules the browser receives (NextIntlClientProvider). Add one when a client component starts using it.
-export const CLIENT_MODULES = ['common', 'ui', 'shell', 'auth', 'errors', 'leads'] as const;
+export const CLIENT_MODULES = [
+  'common',
+  'ui',
+  'shell',
+  'auth',
+  'errors',
+  'leads',
+  'projects',
+  'team',
+] as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;

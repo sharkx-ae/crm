@@ -7,6 +7,7 @@ import { getContext } from '../../src/lib/context/index.ts';
 import { AppError } from '../../src/lib/errors/index.ts';
 import { httpPlugin, serverOptions } from '../../src/lib/http/plugin.ts';
 import {
+  type AuditDeclaration,
   defineRoute,
   type ResolvedSession,
   type RouteSpec,
@@ -354,7 +355,7 @@ describe('audit assertion (test mode)', () => {
   const routes = (app: FastifyInstance) => {
     const spec = (
       url: string,
-      audit: 'one' | 'none',
+      audit: AuditDeclaration,
     ): RouteSpec<'anon', undefined, undefined, undefined, typeof ok> => ({
       method: 'POST',
       url,
@@ -372,6 +373,14 @@ describe('audit assertion (test mode)', () => {
       return { ok: true as const };
     });
     defineRoute(app, spec('/none', 'none'), async () => ({ ok: true as const }));
+    defineRoute(app, spec('/pair', { count: 2 }), async () => {
+      getContext().auditCount += 2;
+      return { ok: true as const };
+    });
+    defineRoute(app, spec('/pair-short', { count: 2 }), async () => {
+      getContext().auditCount += 1;
+      return { ok: true as const };
+    });
   };
 
   it('fails a 2xx audited mutation that wrote zero or two rows, passes exactly one', async () => {
@@ -382,6 +391,26 @@ describe('audit assertion (test mode)', () => {
     expect((await post('/none')).statusCode).toBe(200);
     expect((await post('/forgets')).statusCode).toBe(500);
     expect((await post('/twice')).statusCode).toBe(500);
+  });
+
+  it('a route that declares { count: 2 } must write exactly two rows', async () => {
+    const app = await appWith(routes);
+    const post = (url: string) =>
+      app.inject({ method: 'POST', url, headers: withToken(), payload: {} });
+    expect((await post('/pair')).statusCode).toBe(200);
+    expect((await post('/pair-short')).statusCode).toBe(500);
+  });
+
+  it('refuses a count below 2 at registration', async () => {
+    await expect(
+      appWith((app) =>
+        defineRoute(
+          app,
+          { method: 'POST', url: '/bad', access: 'anon', response: ok, audit: { count: 1 } },
+          async () => ({ ok: true as const }),
+        ),
+      ),
+    ).rejects.toThrow(/at least 2/);
   });
 });
 
@@ -394,7 +423,11 @@ describe('every route of the real app (structure)', () => {
     for (const [label, spec] of routeSpecs) {
       expect(['public', 'anon', 'pending', 'session'], label).toContain(spec.access);
       if (spec.access === 'session') expect(spec.action, label).toBeTruthy();
-      if (spec.method !== 'GET') expect(['one', 'none'], label).toContain(spec.audit);
+      if (spec.method !== 'GET') {
+        const a = spec.audit;
+        const ok = a === 'one' || a === 'none' || (typeof a === 'object' && a.count >= 2);
+        expect(ok, `${label}: audit declaration`).toBe(true);
+      }
     }
   });
 });

@@ -73,7 +73,7 @@ beforeEach(() => {
 describe('AppShell', () => {
   it('super admin in the agency: the ready agency items, the current one marked', () => {
     renderShell(SUPER);
-    expect(railLinks()).toEqual(['Clients']);
+    expect(railLinks()).toEqual(['Clients', 'Team']);
     expect(screen.getByRole('link', { name: 'Clients' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('main')?.textContent).toContain('page body');
   });
@@ -81,7 +81,7 @@ describe('AppShell', () => {
   it('inside a client the rail switches to the client screens', () => {
     nav.pathname = `/p/${A}/overview`;
     renderShell(SUPER);
-    expect(railLinks()).toEqual(['Overview']);
+    expect(railLinks()).toEqual(['Overview', 'Settings']);
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe(
       `/p/${A}/overview`,
     );

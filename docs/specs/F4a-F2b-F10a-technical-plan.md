@@ -140,17 +140,18 @@ web/messages/en/leads.json            leads.mapping.* (register module in reques
 api/src/modules/projects/
   home.ts           projectsHome(session, q) → projectsHomeResponse   (one aggregate query)
   create.ts         createProject(session, input)                      (transaction + inviteUserTx)
-  settings.ts       updateProjectSettings(session, id, input)
+                    updateProjectSettings(session, id, input)
   routes.ts         + GET /projects, POST /projects, PATCH /projects/:id/settings
-  *.test.ts
+  workspace.test.ts (home, create, settings)
 web/src/lib/data/projects.ts            + getProjectsHome(q)
 web/src/lib/actions/projects.ts         createProject, updateProjectSettings (defineAction)
 web/src/app/[locale]/(app)/clients/page.tsx          real page (replaces the placeholder)
 web/src/app/[locale]/(app)/team/page.tsx
 web/src/app/[locale]/(app)/p/[projectId]/settings/{layout,page}.tsx, hours/page.tsx
-web/src/components/clients/{clients-table,add-client-modal}.tsx
-web/src/components/users/{users-table,invite-modal}.tsx   (shared by Team and F10a client users)
+web/src/components/clients/{clients-home,clients-search,add-client}.tsx
+web/src/components/users/{users-table,invite-user}.tsx    (shared by Team and F10a client users)
 web/src/components/settings/{settings-tabs,hours-form}.tsx
+web/src/lib/settings/tabs.ts            SETTINGS_TABS (shared by the /settings redirect and the tab bar)
 web/src/lib/nav/config.ts               READY += team, settings
 web/messages/en/{projects,team}.json    (register in request.ts; CLIENT_MODULES where used client-side)
 ```
@@ -162,16 +163,16 @@ web/messages/en/{projects,team}.json    (register in request.ts; CLIENT_MODULES 
   - `overdue` = tasks with `done_at is null and due_at < now()` on non-test leads.
   - `integrations` in a fixed order (whatsapp, meta, google, tiktok, linkedin, snapchat, website); "to fix" = `needs_attention` or `broken`.
   - Zero, never an error, for a client without data. Sorted by `newToday`, then `unreplied`. Search on name, city, industry.
-- **S1 page:** KPI strip (4 tiles, red when > 0), one flush card with the search and the table (initials square + name + "city, industry"; New today; Unreplied; Overdue; connection dots + "N to fix" chip). Row → `/p/<id>/overview`. "Add client" primary button (super admin only). Empty and no-match copy from the F2 plan §4.2.
-- **S2 `POST /projects`** (`project.create`, super admin): `createProjectRequest` = name, city, industry, `firstUser.email` (D3: the modal shows Client name, City, Industry, **Email**, as in the mockup; the invite name is derived from the email). The service pre-generates the id and, in one `withSystem(id)` transaction, inserts the project (zone from the city: Dubai/Abu Dhabi → `Asia/Dubai`, Morocco → `Africa/Casablanca`; default hours Mon–Fri 09:00–18:00; a token colour), the 6 default stages, then `inviteUserTx(tx, session, { kind: 'client', projectId, … })`. After commit: `deliver()` sends the invite. Any failure leaves nothing. Errors: name taken (case-insensitive index) or email in use → `CONFLICT`; manager → `FORBIDDEN`. Audit: `project.created` + `user.invited` (D2). The web then redirects to `/p/<id>/overview`.
+- **S1 page:** KPI strip (4 tiles; only "connections to fix" turns red, and only when > 0), one flush card with the search and the table (initials square + name + "city, industry"; New today; Unreplied; Overdue; connection dots + "N to fix" chip). Row → `/p/<id>/overview`. "Add client" primary button (super admin only). Empty and no-match copy from the F2 plan §4.2.
+- **S2 `POST /projects`** (`project.create`, super admin): `createProjectRequest` = name, city, industry, `firstUser.email` (D3: the modal shows Client name, City, Industry, **Email**, as in the mockup; the invite name is derived from the email). The service pre-generates the id and, in one `withSystem(id)` transaction, inserts the project (zone from the city: Dubai/Abu Dhabi → `Asia/Dubai`, Morocco → `Africa/Casablanca`; default hours Mon–Fri 09:00–18:00; a token colour), the 6 default stages, then `inviteUserTx(tx, session, { kind: 'client', projectId, … })`. After commit: `deliver()` sends the invite. Any failure leaves nothing; a failed send after the commit is reported to `error_log` and the create still succeeds (inviting the same email again reissues the link). Errors: name taken (case-insensitive index) or email in use → `CONFLICT`; manager → `FORBIDDEN`. Audit: `project.created` + `user.invited` (D2). The web then redirects to `/p/<id>/overview`.
 - **S3 `/team`** (`guardRoute('team')`, super admin): card "Managers" with the shared `UsersTable` (name + avatar, email, status Active/Invited/Disabled, Disable/Enable) and an "Invite manager" modal (name, email). Uses Alex's actions; nothing new in the api. A disabled manager drops out of round-robin (P1.4 filters `status = 'active'`) and is signed out (Alex's `setUserStatus`).
 - **S4 `/p/<id>/settings/hours`** (`guardRoute('settings')`, staff): settings link-tabs (`settings/layout.tsx`; `/settings` redirects to the first ready tab: Client users from Phase 3, Business hours now). Zone `Select` (Asia/Dubai, Africa/Casablanca), seven rows (day, `Switch`, from/to time inputs disabled when closed), Save. `PATCH /projects/:id/settings` (`project.update`, body has `projectId`) → `projectDetail`; `to > from` per open day; audit `project.updated`; applies to future timers only.
 
 ### 3.4 Tests (checkpoints)
-- `home.test.ts`: totals and rows equal the hand-checked seed numbers in `expected.json`; a client with no data → zeros; search; test leads excluded; Dubai vs Casablanca midnight; client role → 403 (the page shows not-found first).
-- `create.test.ts`: success creates the project, 6 stages, the invited user and two audit rows; the invite mail is captured; **rollback**: a duplicate email leaves no project and no stages; duplicate name → 409; manager → 403.
-- `settings.test.ts`: validation (closed days, `to <= from`, bad zone), persistence, permission, audit.
-- Web: `structure.test.ts` covers the new pages automatically (each must call `guardRoute` with its key); component tests for `AddClientModal`, `UsersTable`, `HoursForm`.
+- `workspace.test.ts`, home: totals and rows equal the hand-checked seed numbers in `expected.json`; a client with no data → zeros; search; test leads excluded; Dubai vs Casablanca midnight; client role → 403 (the page shows not-found first).
+- `workspace.test.ts`, create: success creates the project, 6 stages, the invited user and two audit rows; the invite mail is captured; **rollback**: a duplicate email leaves no project and no stages; duplicate name → 409; manager → 403.
+- `workspace.test.ts`, settings: validation (closed days, `to <= from`, bad zone), persistence, permission, audit.
+- Web: `structure.test.ts` covers the new pages automatically (each must call `guardRoute` with its key). The modal, users table and hours form are covered by Playwright `stubbed/workspace.spec.ts`, not by component tests.
 - Playwright `stubbed`: super admin creates a client → lands on its overview; a manager doesn't see "Add client".
 
 ### 3.5 Tasks and commits
@@ -183,6 +184,8 @@ web/messages/en/{projects,team}.json    (register in request.ts; CLIENT_MODULES 
 | P2.4 | `UsersTable`, invite modal, `/team`, `team.json` | 1.5 | `F2b: team` |
 | P2.5 | Settings layout and tabs, hours form, `PATCH /projects/:id/settings` | 2 | `F2b: settings tabs and business hours` |
 | | **Total** | **10.5 h** | |
+
+**Status 2026-11-25: P2.1–P2.5 built and tested, not committed** (api 790, web 591, Playwright 22). Built as planned, plus: D2 `audit: { count: n }` in `lib/http/route.ts` (+ guard tests); D3 contract change (`firstUser.name` optional) synced and logged in CONTRACTS.md; `expected.json` gained `newToday` per client zone; the shared table scroll box is `relative` (a hidden header label was widening the page at 360 px); `signInSuperAdmin` (test helper) clears the shared account's code-send counter, which the growing suite was hitting.
 
 **Done when:** the F2b "Done when" lines hold (numbers match the seed, a client with no data shows zeros, create is atomic, a manager can't see or call create, invite/disable audited, hours persist); verify passes; screenshots of Clients home, Add client, Team and Hours at 1440/360 EN/AR. **Tracker:** F2.3, F2.4, F2.5 → done.
 
