@@ -2,12 +2,15 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useTransition } from 'react';
+import type { Me } from '../../contracts/auth.ts';
 import type { LeadDetail, LeadsPage } from '../../contracts/leads.ts';
 import { usePathname, useRouter } from '../../lib/i18n/navigation.ts';
 import { type LeadFilters, leadsSearch } from '../../lib/leads-url.ts';
 import { useAutoRefresh } from '../../lib/use-auto-refresh.ts';
+import { PageActions } from '../ui/page-actions.tsx';
 import { useToast } from '../ui/toast.tsx';
 import { ClientMarkCell } from './client-mark-cell.tsx';
+import { ExportButton } from './export-button.tsx';
 import { LeadDrawer } from './lead-drawer.tsx';
 import { LeadsScreen } from './leads-screen.tsx';
 import { RefreshPauseProvider, useRefreshPaused } from './refresh-pause.tsx';
@@ -19,6 +22,7 @@ const REFRESH_MS = 5000;
  * the server, and the data refreshes itself every 5 s (F4b D2). The server page passes everything in as props.
  */
 export function LeadsWorkspace(props: {
+  me: Me;
   projectId: string;
   data: LeadsPage;
   filters: LeadFilters;
@@ -36,6 +40,7 @@ export function LeadsWorkspace(props: {
 }
 
 function Workspace({
+  me,
   projectId,
   data,
   filters,
@@ -43,6 +48,7 @@ function Workspace({
   leadMissing,
   leadId,
 }: {
+  me: Me;
   projectId: string;
   data: LeadsPage;
   filters: LeadFilters;
@@ -80,11 +86,16 @@ function Workspace({
 
   return (
     <>
-      {client ? (
-        <p className="text-sx-muted">
-          {t('waitingLine', { n: data.counts.unreviewed, total: data.counts.all })}
-        </p>
-      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        {client ? (
+          <p className="text-sx-muted">
+            {t('waitingLine', { n: data.counts.unreviewed, total: data.counts.all })}
+          </p>
+        ) : null}
+        <PageActions>
+          <ExportButton me={me} projectId={projectId} filters={filters} />
+        </PageActions>
+      </div>
       <LeadsScreen
         data={data}
         filters={filters}

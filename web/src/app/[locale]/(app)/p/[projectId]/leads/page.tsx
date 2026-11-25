@@ -30,6 +30,7 @@ export default async function LeadsPage({
   return (
     <div className="flex flex-col gap-6">
       <LeadsWorkspace
+        me={me}
         projectId={projectId}
         data={data}
         filters={filters}
