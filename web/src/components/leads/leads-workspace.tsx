@@ -7,6 +7,7 @@ import { usePathname, useRouter } from '../../lib/i18n/navigation.ts';
 import { type LeadFilters, leadsSearch } from '../../lib/leads-url.ts';
 import { useAutoRefresh } from '../../lib/use-auto-refresh.ts';
 import { useToast } from '../ui/toast.tsx';
+import { ClientMarkCell } from './client-mark-cell.tsx';
 import { LeadDrawer } from './lead-drawer.tsx';
 import { LeadsScreen } from './leads-screen.tsx';
 import { RefreshPauseProvider, useRefreshPaused } from './refresh-pause.tsx';
@@ -75,13 +76,24 @@ function Workspace({
     router.replace(`${pathname}${leadsSearch(filters, { lead: null }, leadId)}`, { scroll: false });
   }, [leadMissing, leadId]);
 
+  const client = data.view === 'client';
+
   return (
     <>
+      {client ? (
+        <p className="text-sx-muted">
+          {t('waitingLine', { n: data.counts.unreviewed, total: data.counts.all })}
+        </p>
+      ) : null}
       <LeadsScreen
         data={data}
         filters={filters}
         onChange={go}
         hrefFor={(id) => `${pathname}${leadsSearch(filters, { lead: id }, leadId)}`}
+        // A client marks from the table (mockup `markInline`): only a lead still waiting shows the buttons.
+        renderMark={
+          client ? (row) => <ClientMarkCell row={row} projectId={projectId} /> : undefined
+        }
       />
       {detail ? (
         <LeadDrawer

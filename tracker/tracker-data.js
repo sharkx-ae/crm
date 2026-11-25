@@ -1,6 +1,6 @@
 window.TRACKER = {
 "now":"F10a built, awaiting review; Phase 3 complete",
-"lastActivity":{"time":"2026-11-25T15:51:10.916Z","file":"api/src/modules/leads/export.test.ts"},
+"lastActivity":{"time":"2026-11-25T16:32:10.296Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
@@ -36,7 +36,7 @@ window.TRACKER = {
 {"id":"F4.2","name":"Per-form field mapping model and UI","status":"done","pct":100,"note":"saveFormMapping route, action, MappingStep component","updated":"2026-11-24T18:40:29.049Z"},
 {"id":"F4.3","name":"Round-robin assignment","status":"done","pct":100,"note":"Round-robin cursor per client, active managers only","updated":"2026-11-24T18:29:29.587Z"},
 {"id":"F4.4","name":"Leads screen (tabs, filters, export)","status":"doing","pct":40,"note":"Leads api done: list, status, assign, export","updated":"2026-11-25T15:57:45.444Z"},
-{"id":"F4.5","name":"Lead drawer and timeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F4.5","name":"Lead drawer and timeline","status":"done","pct":100,"note":"Drawer, marking, owner, timeline, client view done","updated":"2026-11-25T16:55:29.739Z"},
 {"id":"F4.6","name":"Contacts list and profile","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F4.7","name":"Test-lead flag","status":"done","pct":100,"note":"Flag stored; exclusion is checked in F4b, F13, F11a","updated":"2026-11-24T18:51:35.217Z"}
 ]},
@@ -117,7 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-22T17:13:00.618Z","m":"F1.1 blocked 0% Railway admin pending (unconfirmed); skipped for now"},
 {"t":"2026-11-23T12:15:49.864Z","m":"F2.1 doing 15% Tokens done; shell, nav, switcher next"},
 {"t":"2026-11-23T12:15:49.952Z","m":"F2.2 doing 60% Lint checks, formatters, catalogs done; RTL pending"},
 {"t":"2026-11-24T13:40:48.978Z","m":"F2.1 doing 45% Tokens, base components, overlays done; shell next"},
@@ -146,6 +145,7 @@ window.TRACKER = {
 {"t":"2026-11-25T13:04:35.935Z","m":"F10.1 done 100% Client users tab: invite, disable, enable"},
 {"t":"2026-11-25T13:04:36.016Z","m":"F10.3 done 100% Lead and overview projections, allowlist tests"},
 {"t":"2026-11-25T15:28:47.665Z","m":"F4.4 doing 10% Building leads list api"},
-{"t":"2026-11-25T15:57:45.444Z","m":"F4.4 doing 40% Leads api done: list, status, assign, export"}
+{"t":"2026-11-25T15:57:45.444Z","m":"F4.4 doing 40% Leads api done: list, status, assign, export"},
+{"t":"2026-11-25T16:55:29.739Z","m":"F4.5 done 100% Drawer, marking, owner, timeline, client view done"}
 ]
 };
