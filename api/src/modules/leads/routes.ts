@@ -2,6 +2,8 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { okResponse } from '../../contracts/auth.ts';
 import {
+  assignLeadRequest,
+  assignLeadResponse,
   leadDetail,
   leadsPage,
   leadsQuery,
@@ -11,6 +13,7 @@ import {
   saveFormMappingRequest,
 } from '../../contracts/leads.ts';
 import { defineRoute } from '../../lib/http/route.ts';
+import { assignLead } from './assign.ts';
 import { getLead } from './detail.ts';
 import { saveFormMapping } from './forms.ts';
 import { listLeads } from './list.ts';
@@ -60,6 +63,22 @@ export const leadRoutes: FastifyPluginAsync = async (app) => {
       audit: 'one',
     },
     async ({ params, body, session }) => markLead(session, params.id, body),
+  );
+
+  // Owner (assign or unassign): staff only (lead.assign). A no-op still writes one audit row.
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/leads/:id/assign',
+      access: 'session',
+      params: z.object({ id: z.uuid() }),
+      body: assignLeadRequest,
+      action: ({ body }) => ({ action: 'lead.assign', projectId: body.projectId }),
+      response: assignLeadResponse,
+      audit: 'one',
+    },
+    async ({ params, body, session }) => assignLead(session, params.id, body),
   );
 
   defineRoute(
