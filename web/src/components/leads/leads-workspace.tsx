@@ -2,11 +2,12 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useTransition } from 'react';
-import type { LeadsPage } from '../../contracts/leads.ts';
+import type { LeadDetail, LeadsPage } from '../../contracts/leads.ts';
 import { usePathname, useRouter } from '../../lib/i18n/navigation.ts';
 import { type LeadFilters, leadsSearch } from '../../lib/leads-url.ts';
 import { useAutoRefresh } from '../../lib/use-auto-refresh.ts';
 import { useToast } from '../ui/toast.tsx';
+import { LeadDrawer } from './lead-drawer.tsx';
 import { LeadsScreen } from './leads-screen.tsx';
 import { RefreshPauseProvider, useRefreshPaused } from './refresh-pause.tsx';
 
@@ -17,8 +18,11 @@ const REFRESH_MS = 5000;
  * the server, and the data refreshes itself every 5 s (F4b D2). The server page passes everything in as props.
  */
 export function LeadsWorkspace(props: {
+  projectId: string;
   data: LeadsPage;
   filters: LeadFilters;
+  /** The lead the address names, when it exists; the drawer shows it. */
+  detail: LeadDetail | null;
   /** The address named a lead that is gone: say so once and drop it from the address. */
   leadMissing: boolean;
   leadId: string | null;
@@ -31,13 +35,17 @@ export function LeadsWorkspace(props: {
 }
 
 function Workspace({
+  projectId,
   data,
   filters,
+  detail,
   leadMissing,
   leadId,
 }: {
+  projectId: string;
   data: LeadsPage;
   filters: LeadFilters;
+  detail: LeadDetail | null;
   leadMissing: boolean;
   leadId: string | null;
 }) {
@@ -68,11 +76,21 @@ function Workspace({
   }, [leadMissing, leadId]);
 
   return (
-    <LeadsScreen
-      data={data}
-      filters={filters}
-      onChange={go}
-      hrefFor={(id) => `${pathname}${leadsSearch(filters, { lead: id }, leadId)}`}
-    />
+    <>
+      <LeadsScreen
+        data={data}
+        filters={filters}
+        onChange={go}
+        hrefFor={(id) => `${pathname}${leadsSearch(filters, { lead: id }, leadId)}`}
+      />
+      {detail ? (
+        <LeadDrawer
+          key={detail.lead.id}
+          detail={detail}
+          projectId={projectId}
+          onClose={() => go({ lead: null })}
+        />
+      ) : null}
+    </>
   );
 }
