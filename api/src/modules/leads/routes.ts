@@ -1,8 +1,15 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { okResponse } from '../../contracts/auth.ts';
-import { leadsPage, leadsQuery, saveFormMappingRequest } from '../../contracts/leads.ts';
+import {
+  leadDetail,
+  leadsPage,
+  leadsQuery,
+  projectScope,
+  saveFormMappingRequest,
+} from '../../contracts/leads.ts';
 import { defineRoute } from '../../lib/http/route.ts';
+import { getLead } from './detail.ts';
 import { saveFormMapping } from './forms.ts';
 import { listLeads } from './list.ts';
 
@@ -20,6 +27,20 @@ export const leadRoutes: FastifyPluginAsync = async (app) => {
       response: leadsPage,
     },
     async ({ query, session }) => listLeads(session, query),
+  );
+
+  defineRoute(
+    app,
+    {
+      method: 'GET',
+      url: '/leads/:id',
+      access: 'session',
+      params: z.object({ id: z.uuid() }),
+      query: projectScope,
+      action: ({ query }) => ({ action: 'lead.read', projectId: query.projectId }),
+      response: leadDetail,
+    },
+    async ({ params, query, session }) => getLead(session, params.id, query.projectId),
   );
 
   defineRoute(
