@@ -7,6 +7,9 @@ import { actorKind, e164, email, iso, leadStatus, source } from './common.ts';
 export const leadTab = z.enum(['all', 'unreviewed', 'mql', 'sql', 'not_qualified']);
 const owner = z.union([z.uuid(), z.literal('unassigned')]);
 
+// The query of a read by id (GET /leads/:id, GET /contacts/:id): can() runs on the client before the row is read.
+export const projectScope = z.object({ projectId: z.uuid() });
+
 // GET /leads. `limit` pages by "Show 20 more", up to 200.
 export const leadsQuery = z.object({
   projectId: z.uuid(),
@@ -47,8 +50,15 @@ const counts = z.object({
   not_qualified: z.number().int().nonnegative(),
 });
 const pageBase = { counts, total: z.number().int().nonnegative(), sources: z.array(source) };
+// The owner filter (staff): active managers, plus anyone else who still owns a lead of this client.
+const ownerChoice = z.object({ id: z.uuid(), name: z.string(), active: z.boolean() });
 export const leadsPage = z.discriminatedUnion('view', [
-  z.object({ view: z.literal('staff'), ...pageBase, rows: z.array(staffLeadRow) }),
+  z.object({
+    view: z.literal('staff'),
+    ...pageBase,
+    rows: z.array(staffLeadRow),
+    owners: z.array(ownerChoice),
+  }),
   z.object({ view: z.literal('client'), ...pageBase, rows: z.array(clientLeadRow) }),
 ]);
 
@@ -132,6 +142,7 @@ export const leadExportRows = z.discriminatedUnion('view', [
 ]);
 
 export type LeadTab = z.infer<typeof leadTab>;
+export type ProjectScope = z.infer<typeof projectScope>;
 export type LeadsQuery = z.infer<typeof leadsQuery>;
 export type ClientLeadRow = z.infer<typeof clientLeadRow>;
 export type StaffLeadRow = z.infer<typeof staffLeadRow>;

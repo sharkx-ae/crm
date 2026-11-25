@@ -4,6 +4,13 @@ import { e164, email, iso, leadStatus } from './common.ts';
 import { staffLeadRow } from './leads.ts';
 
 // F4b S3 (web plan §4.4). Staff only: the client role gets 403 from every route here.
+
+// GET /contacts. `q` searches name, phone and email; `limit` pages by "Show 20 more", up to 200.
+export const contactsQuery = z.object({
+  projectId: z.uuid(),
+  q: z.string().trim().max(120).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(20),
+});
 export const contactRow = z.object({
   id: z.uuid(),
   name: z.string().nullable(),
@@ -52,6 +59,7 @@ export const contactProfile = z.object({
   ),
 });
 
+export type ContactsQuery = z.infer<typeof contactsQuery>;
 export type ContactRow = z.infer<typeof contactRow>;
 export type ContactsPage = z.infer<typeof contactsPage>;
 export type ContactProfile = z.infer<typeof contactProfile>;

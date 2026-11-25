@@ -6,10 +6,12 @@ import {
   clientChangeKinds,
   clientLeadKeys,
   clientLeadRow,
+  contactsQuery,
   knownAuditActions,
   leadsPage,
   leadsQuery,
   overviewResponse,
+  projectScope,
   staffLeadRow,
   updateProjectSettingsRequest,
 } from './index.ts';
@@ -66,6 +68,37 @@ describe('leadsQuery', () => {
     expect(leadsQuery.parse({ projectId: ID })).toMatchObject({ tab: 'all', limit: 20 });
     expect(leadsQuery.safeParse({ projectId: ID, limit: '201' }).success).toBe(false);
     expect(leadsQuery.parse({ projectId: ID, limit: '40', owner: 'unassigned' }).limit).toBe(40);
+  });
+});
+
+describe('F4b additions', () => {
+  it('the staff page carries the owner choices; a client page drops them', () => {
+    const staffRow = { ...clientRow, ownerId: null, ownerName: null };
+    const staff = { view: 'staff', counts, total: 1, sources: [], rows: [staffRow] };
+    expect(leadsPage.safeParse(staff).success).toBe(false);
+    const owners = [{ id: ID, name: 'Aisha Rahman', active: true }];
+    expect(leadsPage.safeParse({ ...staff, owners }).success).toBe(true);
+    const client = leadsPage.parse({
+      view: 'client',
+      counts,
+      total: 1,
+      sources: [],
+      rows: [clientRow],
+      owners,
+    });
+    expect(client).not.toHaveProperty('owners');
+  });
+
+  it('projectScope needs a client id; contactsQuery pages like the leads list', () => {
+    expect(projectScope.safeParse({}).success).toBe(false);
+    expect(projectScope.parse({ projectId: ID })).toEqual({ projectId: ID });
+    expect(contactsQuery.parse({ projectId: ID })).toEqual({ projectId: ID, limit: 20 });
+    expect(contactsQuery.parse({ projectId: ID, q: '  sara ', limit: '40' })).toEqual({
+      projectId: ID,
+      q: 'sara',
+      limit: 40,
+    });
+    expect(contactsQuery.safeParse({ projectId: ID, limit: '201' }).success).toBe(false);
   });
 });
 
