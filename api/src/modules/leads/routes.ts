@@ -5,6 +5,8 @@ import {
   assignLeadRequest,
   assignLeadResponse,
   leadDetail,
+  leadExportRequest,
+  leadExportRows,
   leadsPage,
   leadsQuery,
   markLeadRequest,
@@ -15,6 +17,7 @@ import {
 import { defineRoute } from '../../lib/http/route.ts';
 import { assignLead } from './assign.ts';
 import { getLead } from './detail.ts';
+import { exportLeads } from './export.ts';
 import { saveFormMapping } from './forms.ts';
 import { listLeads } from './list.ts';
 import { markLead } from './status.ts';
@@ -63,6 +66,21 @@ export const leadRoutes: FastifyPluginAsync = async (app) => {
       audit: 'one',
     },
     async ({ params, body, session }) => markLead(session, params.id, body),
+  );
+
+  // CSV export rows for the current filter (lead.export, every role). One audit row: the filter and the row count.
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/leads/export',
+      access: 'session',
+      body: leadExportRequest,
+      action: ({ body }) => ({ action: 'lead.export', projectId: body.projectId }),
+      response: leadExportRows,
+      audit: 'one',
+    },
+    async ({ body, session }) => exportLeads(session, body),
   );
 
   // Owner (assign or unassign): staff only (lead.assign). A no-op still writes one audit row.
