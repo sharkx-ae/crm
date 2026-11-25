@@ -19,6 +19,19 @@ import {
   userSummary,
 } from '../../../src/contracts/auth.ts';
 import type { Locale } from '../../../src/contracts/common.ts';
+import { contactProfile, contactsPage, contactsQuery } from '../../../src/contracts/contacts.ts';
+import {
+  assignLeadRequest,
+  assignLeadResponse,
+  leadDetail,
+  leadExportRequest,
+  leadExportRows,
+  leadsPage,
+  leadsQuery,
+  markLeadRequest,
+  markLeadResponse,
+  projectScope,
+} from '../../../src/contracts/leads.ts';
 import {
   createProjectRequest,
   createProjectResponse,
@@ -27,7 +40,7 @@ import {
   projectsHomeResponse,
   updateProjectSettingsRequest,
 } from '../../../src/contracts/projects.ts';
-import { FIXTURE } from './fixtures.ts';
+import { FIXTURE, type FixtureLead } from './fixtures.ts';
 
 const port = Number(process.argv[2] ?? 4200);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -262,6 +275,278 @@ const server = createServer(async (req, res) => {
     Object.assign(p, { timezone: parsed.data.timezone, businessHours: parsed.data.businessHours });
     return ok(res, projectDetail, p);
   }
+  // Leads and contacts (F4b). Every success body is parsed with its contract before it is sent.
+  const QUALIFICATION = {
+    mqlDefinition: 'A lead who asked for a consultation.',
+    sqlDefinition: 'A lead who booked a visit.',
+    reasons: ['Budget', 'Wrong service', 'Duplicate'],
+  };
+  const seeProject = (projectId: string) => {
+    if (!FIXTURE.projects.some((p) => p.id === projectId)) return fail(res, 404, 'NOT_FOUND');
+    if (session.user.role === 'client' && !session.user.projectIds.includes(projectId))
+      return fail(res, 404, 'NOT_FOUND');
+    return null;
+  };
+  const staffRow = (lead: FixtureLead) => {
+    const { projectId: _projectId, ...row } = lead;
+    return row;
+  };
+  const clientRow = (lead: FixtureLead) => {
+    const { ownerId: _ownerId, ownerName: _ownerName, ...row } = staffRow(lead);
+    return row;
+  };
+  const rowFor = (lead: FixtureLead) =>
+    session.user.role === 'client' ? clientRow(lead) : staffRow(lead);
+  const byNewest = (a: FixtureLead, b: FixtureLead) =>
+    b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id);
+  const narrowed = (
+    projectId: string,
+    f: { q?: string | undefined; source?: string | undefined; owner?: string | undefined },
+  ) =>
+    FIXTURE.leads.filter((lead) => {
+      if (lead.projectId !== projectId) return false;
+      if (f.source && lead.source !== f.source) return false;
+      if (f.owner === 'unassigned' && lead.ownerId !== null) return false;
+      if (f.owner && f.owner !== 'unassigned' && lead.ownerId !== f.owner) return false;
+      if (f.q) {
+        const q = f.q.toLowerCase();
+        const blob = `${lead.name ?? ''} ${lead.campaign ?? ''} ${lead.phone ?? ''}`.toLowerCase();
+        if (!blob.includes(q)) return false;
+      }
+      return true;
+    });
+
+  if (route === 'GET /leads') {
+    const parsed = leadsQuery.safeParse(Object.fromEntries(url.searchParams));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    if (session.user.role === 'client' && parsed.data.owner) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const base = narrowed(parsed.data.projectId, parsed.data);
+    const tabbed =
+      parsed.data.tab === 'all'
+        ? base
+        : base.filter((lead) =>
+            parsed.data.tab === 'unreviewed'
+              ? lead.status === 'new'
+              : lead.status === parsed.data.tab,
+          );
+    const rows = [...tabbed].sort(byNewest).slice(0, parsed.data.limit).map(rowFor);
+    const counts = {
+      all: base.length,
+      unreviewed: base.filter((lead) => lead.status === 'new').length,
+      mql: base.filter((lead) => lead.status === 'mql').length,
+      sql: base.filter((lead) => lead.status === 'sql').length,
+      not_qualified: base.filter((lead) => lead.status === 'not_qualified').length,
+    };
+    const sources = [
+      ...new Set(
+        FIXTURE.leads.filter((l) => l.projectId === parsed.data.projectId).map((l) => l.source),
+      ),
+    ];
+    if (session.user.role === 'client') {
+      return ok(res, leadsPage, { view: 'client', counts, total: tabbed.length, sources, rows });
+    }
+    return ok(res, leadsPage, {
+      view: 'staff',
+      counts,
+      total: tabbed.length,
+      sources,
+      rows,
+      owners: [{ id: FIXTURE.ids.rami, name: 'Rami Haddad', active: true }],
+    });
+  }
+
+  if (route === 'POST /leads/export') {
+    const parsed = leadExportRequest.safeParse(await readJson(req));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    if (session.user.role === 'client' && parsed.data.owner) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const base = narrowed(parsed.data.projectId, parsed.data);
+    const tabbed =
+      parsed.data.tab === 'all'
+        ? base
+        : base.filter((lead) =>
+            parsed.data.tab === 'unreviewed'
+              ? lead.status === 'new'
+              : lead.status === parsed.data.tab,
+          );
+    const rows = [...tabbed].sort(byNewest).map((lead) => {
+      const common = {
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        source: lead.source,
+        campaign: lead.campaign,
+        status: lead.status,
+        reason: lead.reason,
+        receivedAt: lead.createdAt,
+      };
+      return session.user.role === 'client' ? common : { ...common, ownerName: lead.ownerName };
+    });
+    return ok(res, leadExportRows, {
+      view: session.user.role === 'client' ? 'client' : 'staff',
+      rows,
+    });
+  }
+
+  const marked = /^POST \/leads\/([^/]+)\/status$/.exec(route);
+  if (marked) {
+    if (!UUID.test(marked[1] ?? '')) return fail(res, 422, 'VALIDATION');
+    const parsed = markLeadRequest.safeParse(await readJson(req));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const lead = FIXTURE.leads.find(
+      (l) => l.id === marked[1] && l.projectId === parsed.data.projectId,
+    );
+    if (!lead) return fail(res, 404, 'NOT_FOUND');
+    if (
+      parsed.data.to === 'not_qualified' &&
+      (!parsed.data.reason || !QUALIFICATION.reasons.includes(parsed.data.reason))
+    ) {
+      return fail(res, 422, 'VALIDATION');
+    }
+    lead.status = parsed.data.to;
+    lead.reason = parsed.data.to === 'not_qualified' ? (parsed.data.reason ?? null) : null;
+    return ok(res, markLeadResponse, {
+      view: session.user.role === 'client' ? 'client' : 'staff',
+      lead: rowFor(lead),
+      // Staff fixture always queues one outbox row, so the toast says it was sent to the ad platform.
+      outboxQueued: session.user.role === 'client' ? 0 : 1,
+    });
+  }
+
+  const assigned = /^POST \/leads\/([^/]+)\/assign$/.exec(route);
+  if (assigned) {
+    if (session.user.role === 'client') return fail(res, 403, 'FORBIDDEN');
+    if (!UUID.test(assigned[1] ?? '')) return fail(res, 422, 'VALIDATION');
+    const parsed = assignLeadRequest.safeParse(await readJson(req));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const lead = FIXTURE.leads.find(
+      (l) => l.id === assigned[1] && l.projectId === parsed.data.projectId,
+    );
+    if (!lead) return fail(res, 404, 'NOT_FOUND');
+    if (parsed.data.ownerId && parsed.data.ownerId !== FIXTURE.ids.rami)
+      return fail(res, 422, 'VALIDATION');
+    lead.ownerId = parsed.data.ownerId;
+    lead.ownerName = parsed.data.ownerId ? 'Rami Haddad' : null;
+    return ok(res, assignLeadResponse, { lead: staffRow(lead) });
+  }
+
+  const oneLead = /^GET \/leads\/([^/]+)$/.exec(route);
+  if (oneLead) {
+    if (!UUID.test(oneLead[1] ?? '')) return fail(res, 422, 'VALIDATION');
+    const parsed = projectScope.safeParse(Object.fromEntries(url.searchParams));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const lead = FIXTURE.leads.find(
+      (l) => l.id === oneLead[1] && l.projectId === parsed.data.projectId,
+    );
+    if (!lead) return fail(res, 404, 'NOT_FOUND');
+    if (session.user.role === 'client') {
+      return ok(res, leadDetail, {
+        view: 'client',
+        lead: clientRow(lead),
+        qualification: QUALIFICATION,
+      });
+    }
+    return ok(res, leadDetail, {
+      view: 'staff',
+      lead: staffRow(lead),
+      qualification: QUALIFICATION,
+      whatsappState: 'none',
+      owners: [{ id: FIXTURE.ids.rami, name: 'Rami Haddad' }],
+      timeline: [
+        {
+          id: `b${lead.id.slice(1)}`,
+          kind: 'created',
+          data: { source: lead.source },
+          actorKind: 'system',
+          actorName: null,
+          at: lead.createdAt,
+        },
+      ],
+    });
+  }
+
+  if (route === 'GET /contacts' || route.startsWith('GET /contacts/')) {
+    if (session.user.role === 'client') return fail(res, 403, 'FORBIDDEN');
+  }
+  if (route === 'GET /contacts') {
+    const parsed = contactsQuery.safeParse(Object.fromEntries(url.searchParams));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const q = parsed.data.q?.toLowerCase();
+    const rows = FIXTURE.contacts
+      .filter((c) => c.projectId === parsed.data.projectId)
+      .map((c) => {
+        const own = FIXTURE.leads
+          .filter((l) => c.leadIds.includes(l.id) && l.projectId === c.projectId)
+          .sort(byNewest);
+        const latest = own[0];
+        return {
+          id: c.id,
+          name: c.name,
+          phone: c.phone,
+          phoneDisplay: c.phoneDisplay,
+          email: c.email,
+          leadCount: own.length,
+          latestStatus: latest?.status ?? null,
+          lastActivityAt: latest?.createdAt ?? null,
+        };
+      })
+      .filter((row) => row.leadCount > 0)
+      .filter((row) => {
+        if (!q) return true;
+        const blob = `${row.name ?? ''} ${row.email ?? ''} ${row.phone ?? ''}`.toLowerCase();
+        return blob.includes(q);
+      })
+      .sort(
+        (a, b) =>
+          (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? '') ||
+          b.id.localeCompare(a.id),
+      );
+    return ok(res, contactsPage, {
+      rows: rows.slice(0, parsed.data.limit),
+      total: rows.length,
+    });
+  }
+  const oneContact = /^GET \/contacts\/([^/]+)$/.exec(route);
+  if (oneContact) {
+    if (!UUID.test(oneContact[1] ?? '')) return fail(res, 422, 'VALIDATION');
+    const parsed = projectScope.safeParse(Object.fromEntries(url.searchParams));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const contact = FIXTURE.contacts.find(
+      (c) => c.id === oneContact[1] && c.projectId === parsed.data.projectId,
+    );
+    const own = FIXTURE.leads
+      .filter((l) => contact?.leadIds.includes(l.id) && l.projectId === parsed.data.projectId)
+      .sort(byNewest);
+    if (!contact || own.length === 0) return fail(res, 404, 'NOT_FOUND');
+    return ok(res, contactProfile, {
+      contact: {
+        id: contact.id,
+        name: contact.name,
+        phone: contact.phone,
+        phoneDisplay: contact.phoneDisplay,
+        email: contact.email,
+        createdAt: contact.createdAt,
+      },
+      leads: own.map(staffRow),
+      chats: [],
+      notes: [],
+      statusChanges: [],
+    });
+  }
+
   const detail = /^GET \/projects\/([^/]+)$/.exec(route);
   if (detail) {
     // The real api validates the id before access: a malformed one is 422 for every role.

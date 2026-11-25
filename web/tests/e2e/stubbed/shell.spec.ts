@@ -25,7 +25,8 @@ test('client user: lands on its overview, sees only its own areas, gets not-foun
   await signIn(page, 'client@example.test');
   await expect(page).toHaveURL(new RegExp(`/en/p/${lumiere}/overview$`));
   const rail = page.getByRole('navigation', { name: 'Main' });
-  await expect(rail.getByRole('link')).toHaveText(['Overview']);
+  // Leads is ready (F4b). Contacts stays staff-only, so it is not in this rail.
+  await expect(rail.getByRole('link')).toHaveText(['Overview', 'Leads']);
   await expect(page.getByText('Client dashboard')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Overview' })).toHaveAttribute(
     'aria-current',

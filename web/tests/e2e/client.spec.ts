@@ -43,7 +43,8 @@ test('client user: lands on its own client; foreign and staff-only URLs are not 
   await expect(page.getByText('Lumière Aesthetics').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Agency workspace/ })).toHaveCount(0);
   const rail = page.getByRole('navigation', { name: 'Main' });
-  await expect(rail.getByRole('link')).toHaveText(['Overview']);
+  // Leads is the client's own list (F4b). Contacts is staff-only and stays off this rail.
+  await expect(rail.getByRole('link')).toHaveText(['Overview', 'Leads']);
 
   // Design check: no staff-only label anywhere on the client's page.
   // biome-ignore lint/performance/useDomNodeTextContent: rendered text only; textContent would also read the inline RSC scripts (message catalogs).

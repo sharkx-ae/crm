@@ -35,7 +35,7 @@ window.TRACKER = {
 {"id":"F4.1","name":"ingestLead, phone normalisation, dedupe","status":"done","pct":100,"note":"ingestLead: E.164, dedupe, merge, idempotent, 24 tests","updated":"2026-11-24T18:29:29.386Z"},
 {"id":"F4.2","name":"Per-form field mapping model and UI","status":"done","pct":100,"note":"saveFormMapping route, action, MappingStep component","updated":"2026-11-24T18:40:29.049Z"},
 {"id":"F4.3","name":"Round-robin assignment","status":"done","pct":100,"note":"Round-robin cursor per client, active managers only","updated":"2026-11-24T18:29:29.587Z"},
-{"id":"F4.4","name":"Leads screen (tabs, filters, export)","status":"doing","pct":40,"note":"Leads api done: list, status, assign, export","updated":"2026-11-25T15:57:45.444Z"},
+{"id":"F4.4","name":"Leads screen (tabs, filters, export)","status":"done","pct":100,"note":"Leads screen, filters, export done","updated":"2026-11-25T17:45:17.175Z"},
 {"id":"F4.5","name":"Lead drawer and timeline","status":"done","pct":100,"note":"Drawer, marking, owner, timeline, client view done","updated":"2026-11-25T16:55:29.739Z"},
 {"id":"F4.6","name":"Contacts list and profile","status":"done","pct":100,"note":"Contacts list and profile done","updated":"2026-11-25T17:21:03.957Z"},
 {"id":"F4.7","name":"Test-lead flag","status":"done","pct":100,"note":"Flag stored; exclusion is checked in F4b, F13, F11a","updated":"2026-11-24T18:51:35.217Z"}
@@ -117,7 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-23T12:15:49.952Z","m":"F2.2 doing 60% Lint checks, formatters, catalogs done; RTL pending"},
 {"t":"2026-11-24T13:40:48.978Z","m":"F2.1 doing 45% Tokens, base components, overlays done; shell next"},
 {"t":"2026-11-24T13:40:49.256Z","m":"F2.2 doing 70% RTL-safe components, direction provider done; AR strings later"},
 {"t":"2026-11-24T15:14:38.261Z","m":"F2.1 doing 85% Shell, nav guard, switcher, projects api done; auth restyle next"},
@@ -146,6 +145,7 @@ window.TRACKER = {
 {"t":"2026-11-25T15:28:47.665Z","m":"F4.4 doing 10% Building leads list api"},
 {"t":"2026-11-25T15:57:45.444Z","m":"F4.4 doing 40% Leads api done: list, status, assign, export"},
 {"t":"2026-11-25T16:55:29.739Z","m":"F4.5 done 100% Drawer, marking, owner, timeline, client view done"},
-{"t":"2026-11-25T17:21:03.957Z","m":"F4.6 done 100% Contacts list and profile done"}
+{"t":"2026-11-25T17:21:03.957Z","m":"F4.6 done 100% Contacts list and profile done"},
+{"t":"2026-11-25T17:45:17.175Z","m":"F4.4 done 100% Leads screen, filters, export done"}
 ]
 };
