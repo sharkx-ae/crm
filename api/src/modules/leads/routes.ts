@@ -5,6 +5,8 @@ import {
   leadDetail,
   leadsPage,
   leadsQuery,
+  markLeadRequest,
+  markLeadResponse,
   projectScope,
   saveFormMappingRequest,
 } from '../../contracts/leads.ts';
@@ -12,6 +14,7 @@ import { defineRoute } from '../../lib/http/route.ts';
 import { getLead } from './detail.ts';
 import { saveFormMapping } from './forms.ts';
 import { listLeads } from './list.ts';
+import { markLead } from './status.ts';
 
 // F4a S2 and F4b. Every route carries projectId (the tenant rule): can() checks the client before anything is read.
 // The service picks the client or staff projection from the session role; routes never choose.
@@ -41,6 +44,22 @@ export const leadRoutes: FastifyPluginAsync = async (app) => {
       response: leadDetail,
     },
     async ({ params, query, session }) => getLead(session, params.id, query.projectId),
+  );
+
+  // Status MQL / SQL / Not qualified: staff and the client's own users (lead.mark). One audit row, a no-op included.
+  defineRoute(
+    app,
+    {
+      method: 'POST',
+      url: '/leads/:id/status',
+      access: 'session',
+      params: z.object({ id: z.uuid() }),
+      body: markLeadRequest,
+      action: ({ body }) => ({ action: 'lead.mark', projectId: body.projectId }),
+      response: markLeadResponse,
+      audit: 'one',
+    },
+    async ({ params, body, session }) => markLead(session, params.id, body),
   );
 
   defineRoute(

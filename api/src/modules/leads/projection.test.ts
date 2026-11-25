@@ -99,10 +99,11 @@ describe('toClientLead', () => {
     expect(clientLeadRow.safeParse({ ...toClientLead(row()), stage: 'x' }).success).toBe(false);
   });
 
-  it('a stored value the contract words differently never breaks the client view (names checked, not formats)', () => {
+  it('a stored email the contract would refuse is dropped, so one odd lead never fails a whole page', () => {
     const one = projectLead(client, row({ email: 'a@b' }));
-    expect(one?.lead.email).toBe('a@b');
-    expect(() => projectLeadsPage(client, base, [row({ email: 'a@b' })])).not.toThrow();
+    expect(one?.lead.email).toBeNull();
+    const page = projectLeadsPage(client, base, [row({ email: 'a@b' })]);
+    expect(leadsPage.safeParse(page).success).toBe(true);
   });
 
   it('formats the phone for display and keeps E.164', () => {
@@ -151,10 +152,28 @@ describe('projectLeadsPage: the service picks the shape from the role', () => {
     } as typeof base;
     for (const s of [client, manager]) {
       const page = projectLeadsPage(s, widened, [row({ ownerName: null })]);
-      expect(Object.keys(page).sort()).toEqual(['counts', 'rows', 'sources', 'total', 'view']);
+      const keys = ['counts', 'rows', 'sources', 'total', 'view'];
+      expect(Object.keys(page).sort()).toEqual(s === client ? keys : [...keys, 'owners'].sort());
       expect(Object.keys(page.counts)).not.toContain('byOwner');
       expect(JSON.stringify(page)).not.toContain('Aisha');
     }
+  });
+
+  it('owner choices reach the staff view only, field by field', () => {
+    const owners = [
+      { id: '1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e', name: 'Aisha Rahman', active: true },
+    ];
+    const widened = owners.map((o) => ({
+      ...o,
+      email: 'aisha@sharkx.test',
+    })) as unknown as typeof owners;
+    const staff = projectLeadsPage(manager, base, [row()], widened);
+    if (staff.view !== 'staff') throw new Error('staff view expected');
+    expect(staff.owners).toEqual(owners);
+    expect(leadsPage.parse(staff)).toEqual(staff);
+    const forClient = projectLeadsPage(client, base, [row()], owners);
+    expect(forClient).not.toHaveProperty('owners');
+    expect(JSON.stringify(forClient)).not.toContain('Aisha');
   });
 
   it('a client-view page with a staff row fails the contract', () => {

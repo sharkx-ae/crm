@@ -1,6 +1,6 @@
 import { eq, type SQL } from 'drizzle-orm';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import type { Role } from '../../contracts/common.ts';
+import { email, type Role } from '../../contracts/common.ts';
 import {
   type ClientLeadRow,
   clientLeadKeys,
@@ -8,6 +8,8 @@ import {
   type LeadsPage,
   type StaffLeadRow,
 } from '../../contracts/leads.ts';
+import { users } from '../auth/schema.ts';
+import { contacts } from '../contacts/schema.ts';
 import { leads } from './schema.ts';
 
 // Client-safe projections for leads (F10a S3, web plan §3.4). One rule: the service picks the shape from the
@@ -36,6 +38,26 @@ export type LeadRow = Pick<
   ownerName: string | null;
 };
 
+/** What a lead query selects into a `LeadRow` (F4b). Join with `leadContactJoin` and `leadOwnerJoin`. */
+export const leadRowColumns = {
+  id: leads.id,
+  source: leads.source,
+  campaign: leads.campaign,
+  status: leads.status,
+  reason: leads.reason,
+  answers: leads.answers,
+  createdAt: leads.createdAt,
+  ownerId: leads.ownerId,
+  stageId: leads.stageId,
+  isTest: leads.isTest,
+  name: contacts.name,
+  phoneE164: contacts.phoneE164,
+  email: contacts.email,
+  ownerName: users.name,
+};
+export const leadContactJoin = eq(contacts.id, leads.contactId);
+export const leadOwnerJoin = eq(users.id, leads.ownerId);
+
 export type LeadView = 'staff' | 'client';
 
 /** The response shape a role gets. A client user is always 'client'; super admins and managers are 'staff'. */
@@ -63,6 +85,11 @@ export function phoneDisplay(e164: string | null): string | null {
   return parsePhoneNumberFromString(e164)?.formatInternational() ?? e164;
 }
 
+/** ingestLead keeps any text with an "@"; one the contract would refuse must not fail a whole page. */
+function safeEmail(raw: string | null): string | null {
+  return raw && email.safeParse(raw).success ? raw : null;
+}
+
 const ALLOWED = new Set<string>(clientLeadKeys);
 
 /**
@@ -84,7 +111,7 @@ export function toClientLead(row: LeadRow): ClientLeadRow {
     name: row.name,
     phone: row.phoneE164,
     phoneDisplay: phoneDisplay(row.phoneE164),
-    email: row.email,
+    email: safeEmail(row.email),
     source: row.source,
     campaign: row.campaign,
     status: row.status,
@@ -99,7 +126,8 @@ export function toStaffLead(row: LeadRow): StaffLeadRow {
   return { ...toClientLead(row), ownerId: row.ownerId, ownerName: row.ownerName };
 }
 
-type PageBase = Omit<LeadsPage, 'view' | 'rows'>;
+type PageBase = Omit<LeadsPage, 'view' | 'rows' | 'owners'>;
+export type OwnerChoice = { id: string; name: string; active: boolean };
 
 /** The page numbers, field by field: an extra count a query adds (per owner, say) never reaches a response. */
 function pageBase(b: PageBase): PageBase {
@@ -125,12 +153,19 @@ export function projectLeadsPage(
   session: { role: Role },
   base: PageBase,
   rows: LeadRow[],
+  owners: OwnerChoice[] = [],
 ): LeadsPage {
   const view = leadViewFor(session);
   const shown = rows.filter((r) => visibleTo(view, r));
   return view === 'client'
     ? { view, ...pageBase(base), rows: shown.map(toClientLead) }
-    : { view, ...pageBase(base), rows: shown.map(toStaffLead) };
+    : {
+        view,
+        ...pageBase(base),
+        rows: shown.map(toStaffLead),
+        // Only the staff view has owner choices; copied field by field like everything else.
+        owners: owners.map((o) => ({ id: o.id, name: o.name, active: o.active })),
+      };
 }
 
 /** One lead for this session: `{ view, lead }`, or null when the role may not see it (a test lead for a client). */

@@ -6,6 +6,7 @@ import * as s from '../../src/db/schema/index.ts';
 import { seed } from '../../src/db/seed.ts';
 import { setEmailTransport } from '../../src/lib/email/index.ts';
 import { withTenant } from '../../src/lib/tenant/index.ts';
+import { expectClientSafe } from '../helpers/client-safe.ts';
 import { rawClient } from '../helpers/db.ts';
 import {
   asSession,
@@ -228,5 +229,49 @@ describe('client users of a seeded client (F10a S2, against the real F1c routes)
       ]),
     );
     expect(rows.filter((r) => r.action === 'user.status_changed')).toHaveLength(2);
+  });
+});
+
+describe('F4b leads routes: a client user of A', () => {
+  const leadOf = async (projectId: string) =>
+    (
+      await db.query('select id from leads where project_id = $1 and not is_test limit 1', [
+        projectId,
+      ])
+    ).rows[0].id as string;
+
+  it('lists and opens its own leads, client-safe', async () => {
+    const list = await call('GET', `/leads?projectId=${lumiere}`, lina.token);
+    expect(list.statusCode).toBe(200);
+    expectClientSafe(list.body);
+    const one = await call(
+      'GET',
+      `/leads/${await leadOf(lumiere)}?projectId=${lumiere}`,
+      lina.token,
+    );
+    expect(one.statusCode).toBe(200);
+    expectClientSafe(one.body);
+  });
+
+  it("gets 404 for B's list, and for B's lead under B's id or A's", async () => {
+    const theirs = await leadOf(pearl);
+    expect((await call('GET', `/leads?projectId=${pearl}`, lina.token)).statusCode).toBe(404);
+    for (const projectId of [pearl, lumiere]) {
+      const res = await call('GET', `/leads/${theirs}?projectId=${projectId}`, lina.token);
+      expect(res.statusCode, projectId).toBe(404);
+      const mark = await call('POST', `/leads/${theirs}/status`, lina.token, {
+        projectId,
+        to: 'mql',
+      });
+      expect(mark.statusCode, projectId).toBe(404);
+    }
+  });
+
+  it('staff reach every client', async () => {
+    for (const projectId of [lumiere, pearl]) {
+      expect((await call('GET', `/leads?projectId=${projectId}`, managerToken)).statusCode).toBe(
+        200,
+      );
+    }
   });
 });

@@ -20,3 +20,4 @@ export {
   visibleTo,
 } from './projection.ts';
 export { leadRoutes } from './routes.ts';
+export { type By, changeStatus } from './status.ts';

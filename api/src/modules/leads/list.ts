@@ -9,9 +9,9 @@ import { leadFilterSql, tabSql } from './filters.ts';
 import {
   leadContactJoin,
   leadOwnerJoin,
-  leadRecordColumns,
-  toClientLead,
-  toStaffLead,
+  leadRowColumns,
+  type OwnerChoice,
+  projectLeadsPage,
 } from './projection.ts';
 import { leads } from './schema.ts';
 
@@ -40,7 +40,7 @@ export async function listLeads(session: ResolvedSession, q: LeadsQuery): Promis
     const counts = row ?? { all: 0, unreviewed: 0, mql: 0, sql: 0, not_qualified: 0 };
 
     const records = await tx
-      .select(leadRecordColumns)
+      .select(leadRowColumns)
       .from(leads)
       .innerJoin(contacts, leadContactJoin)
       .leftJoin(users, leadOwnerJoin)
@@ -55,21 +55,14 @@ export async function listLeads(session: ResolvedSession, q: LeadsQuery): Promis
       .where(and(eq(leads.projectId, q.projectId), eq(leads.isTest, false)))
       .orderBy(asc(leads.source));
 
-    const page = { counts, total: counts[q.tab], sources: sources.map((s) => s.source) };
-    if (session.role === 'client') {
-      return { view: 'client' as const, ...page, rows: records.map(toClientLead) };
-    }
-    return {
-      view: 'staff' as const,
-      ...page,
-      rows: records.map(toStaffLead),
-      owners: await ownerChoices(tx, q.projectId),
-    };
+    const base = { counts, total: counts[q.tab], sources: sources.map((s) => s.source) };
+    const owners = session.role === 'client' ? [] : await ownerChoices(tx, q.projectId);
+    return projectLeadsPage(session, base, records, owners);
   });
 }
 
 /** For the owner filter: every active manager, plus a disabled or invited one who still owns a lead here. */
-function ownerChoices(tx: Tx, projectId: string) {
+function ownerChoices(tx: Tx, projectId: string): Promise<OwnerChoice[]> {
   return tx
     .select({
       id: users.id,

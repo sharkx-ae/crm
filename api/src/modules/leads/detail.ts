@@ -7,13 +7,7 @@ import { users } from '../auth/schema.ts';
 import { contacts } from '../contacts/schema.ts';
 import { waConversations, waMessages } from '../whatsapp/schema.ts';
 import { assertCan } from './access.ts';
-import {
-  leadContactJoin,
-  leadOwnerJoin,
-  leadRecordColumns,
-  toClientLead,
-  toStaffLead,
-} from './projection.ts';
+import { leadContactJoin, leadOwnerJoin, leadRowColumns, projectLead } from './projection.ts';
 import { qualificationOf } from './qualification.ts';
 import { leadEvents, leads } from './schema.ts';
 
@@ -25,7 +19,7 @@ const TIMELINE_CAP = 100;
 /** One lead of this client with its contact and owner, or null. A test lead is never found. */
 export async function findLeadRecord(tx: Tx, projectId: string, id: string) {
   const [record] = await tx
-    .select({ ...leadRecordColumns, contactId: leads.contactId })
+    .select({ ...leadRowColumns, contactId: leads.contactId })
     .from(leads)
     .innerJoin(contacts, leadContactJoin)
     .leftJoin(users, leadOwnerJoin)
@@ -45,12 +39,12 @@ export async function getLead(
     if (!record) throw new AppError('NOT_FOUND');
     const qualification = await qualificationOf(tx, projectId);
 
-    if (session.role === 'client') {
-      return { view: 'client' as const, lead: toClientLead(record), qualification };
-    }
+    const one = projectLead(session, record);
+    if (!one) throw new AppError('NOT_FOUND');
+    if (one.view === 'client') return { view: 'client' as const, lead: one.lead, qualification };
     return {
       view: 'staff' as const,
-      lead: toStaffLead(record),
+      lead: one.lead,
       qualification,
       whatsappState: await whatsappState(tx, projectId, record.contactId),
       owners: await tx
