@@ -13,5 +13,120 @@
       "notes": "Note",
       "ignore": "Ignore"
     }
+  },
+  "table": "Leads",
+  "unnamed": "Unnamed lead",
+  "open": "Open {name}",
+  "statusBar": "Leads by status",
+  "waitingLine": "{n} of {total} leads waiting for your review",
+  "tabs": {
+    "label": "Lead status",
+    "all": "All",
+    "unreviewed": "Unreviewed",
+    "waiting": "Waiting for review",
+    "mql": "MQL",
+    "sql": "SQL",
+    "not_qualified": "Not qualified"
+  },
+  "toolbar": {
+    "searchLabel": "Search leads",
+    "search": "Search name, phone, campaign",
+    "source": "Source",
+    "allSources": "All sources",
+    "owner": "Owner",
+    "allOwners": "All owners",
+    "unassigned": "Unassigned",
+    "inactiveOwner": "{name} (inactive)"
+  },
+  "columns": {
+    "lead": "Lead",
+    "source": "Source",
+    "campaign": "Campaign",
+    "status": "Status",
+    "owner": "Owner",
+    "received": "Received",
+    "markAs": "Mark as"
+  },
+  "empty": {
+    "noneTitle": "No leads yet",
+    "noneBody": "They appear here the moment a form is submitted or a chat starts.",
+    "matchTitle": "No leads match",
+    "matchBody": "Try another tab or clear the search.",
+    "clear": "Clear filters"
+  },
+  "more": "Show {n} more",
+  "cap": "Showing the newest {n}. Use search or filters, or export.",
+  "drawer": {
+    "received": "{client} · received {ago}",
+    "qualification": "Qualification",
+    "contact": "Contact",
+    "answers": "Form answers",
+    "owner": "Owner",
+    "timeline": "Timeline",
+    "mqlMeans": "MQL means",
+    "sqlMeans": "SQL means",
+    "reason": "Reason: {reason}",
+    "noAnswers": "No form answers.",
+    "noDefinition": "Not set yet.",
+    "field": {
+      "phone": "Phone",
+      "email": "Email",
+      "source": "Source",
+      "campaign": "Campaign",
+      "whatsapp": "WhatsApp"
+    },
+    "whatsapp": {
+      "none": "No chat",
+      "replied": "Replied",
+      "unreplied": "Awaiting reply"
+    }
+  },
+  "mark": {
+    "group": "Qualification",
+    "markAs": "Mark {name} as {status}",
+    "openToChange": "Open to change"
+  },
+  "reason": {
+    "title": "Why is this lead not qualified?",
+    "label": "Reason",
+    "confirm": "Mark not qualified"
+  },
+  "owner": {
+    "label": "Owner",
+    "unassigned": "Unassigned"
+  },
+  "timeline": {
+    "created": "Lead received from {source}",
+    "merged": "New submission joined this lead ({source})",
+    "assigned": "Assigned to {name}",
+    "unassigned": "Unassigned",
+    "status_changed": "Marked {to} by {actor}",
+    "status_changedReason": "Marked {to} ({reason}) by {actor}",
+    "other": "Updated",
+    "byClient": "{name} (client)",
+    "bySystem": "the system"
+  },
+  "export": {
+    "button": "Export",
+    "tooLarge": "Too many leads to export. Narrow the filter.",
+    "failed": "The export did not work. Try again.",
+    "columns": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "source": "Source",
+      "campaign": "Campaign",
+      "status": "Status",
+      "reason": "Reason",
+      "owner": "Owner",
+      "received": "Received"
+    }
+  },
+  "toast": {
+    "marked": "Marked {name} as {status}.",
+    "sent": "Sent to the ad platform within 60 seconds.",
+    "assigned": "Assigned to {name}.",
+    "unassigned": "Unassigned.",
+    "gone": "That lead is no longer available."
   }
 }

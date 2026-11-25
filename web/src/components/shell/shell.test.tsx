@@ -81,7 +81,7 @@ describe('AppShell', () => {
   it('inside a client the rail switches to the client screens', () => {
     nav.pathname = `/p/${A}/overview`;
     renderShell(SUPER);
-    expect(railLinks()).toEqual(['Overview', 'Settings']);
+    expect(railLinks()).toEqual(['Overview', 'Leads', 'Settings']);
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe(
       `/p/${A}/overview`,
     );
@@ -115,7 +115,7 @@ describe('AppShell', () => {
     renderShell(CLIENT, [OPTIONS[0] as ProjectOption]);
     expect(screen.queryByRole('button', { name: /Lumière Aesthetics/ })).toBeNull();
     expect(screen.getByText('Client dashboard')).toBeTruthy();
-    expect(railLinks()).toEqual(['Overview']);
+    expect(railLinks()).toEqual(['Overview', 'Leads']);
   });
 
   it('the menu button opens and closes the rail; Escape closes it and returns focus', async () => {
