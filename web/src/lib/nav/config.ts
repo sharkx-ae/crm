@@ -20,6 +20,7 @@ const READY: ReadonlySet<RouteKey> = new Set<RouteKey>([
   'team',
   'overview',
   'leads',
+  'contacts',
   'settings',
 ]);
 

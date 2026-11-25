@@ -96,14 +96,14 @@ describe('nav config', () => {
     }
   });
 
-  it('shows ready items only (F2a: clients, overview; F2b: team, settings; F4b: leads)', () => {
+  it('shows ready items only (F2a: clients, overview; F2b: team, settings; F4b: leads, contacts)', () => {
     const keys = (role: Role, mode: 'agency' | 'project') =>
       visibleNav(role, mode).flatMap((g) => g.items.map((i) => i.key));
     expect(keys('super_admin', 'agency')).toEqual(['clients', 'team']);
     expect(keys('manager', 'agency')).toEqual(['clients']);
     expect(keys('client', 'agency')).toEqual([]);
-    expect(keys('super_admin', 'project')).toEqual(['overview', 'leads', 'settings']);
-    expect(keys('manager', 'project')).toEqual(['overview', 'leads', 'settings']);
+    expect(keys('super_admin', 'project')).toEqual(['overview', 'leads', 'contacts', 'settings']);
+    expect(keys('manager', 'project')).toEqual(['overview', 'leads', 'contacts', 'settings']);
     expect(keys('client', 'project')).toEqual(['overview', 'leads']);
   });
 

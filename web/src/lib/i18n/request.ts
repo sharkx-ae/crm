@@ -12,6 +12,7 @@ export const MESSAGE_MODULES = [
   'auth',
   'errors',
   'leads',
+  'contacts',
   'projects',
   'team',
 ] as const;
@@ -24,6 +25,7 @@ export const CLIENT_MODULES = [
   'auth',
   'errors',
   'leads',
+  'contacts',
   'projects',
   'team',
 ] as const;

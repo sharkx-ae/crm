@@ -81,7 +81,7 @@ describe('AppShell', () => {
   it('inside a client the rail switches to the client screens', () => {
     nav.pathname = `/p/${A}/overview`;
     renderShell(SUPER);
-    expect(railLinks()).toEqual(['Overview', 'Leads', 'Settings']);
+    expect(railLinks()).toEqual(['Overview', 'Leads', 'Contacts', 'Settings']);
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe(
       `/p/${A}/overview`,
     );
