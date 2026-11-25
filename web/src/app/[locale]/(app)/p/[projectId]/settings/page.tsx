@@ -1,9 +1,9 @@
 import { setRequestLocale } from 'next-intl/server';
-import { SETTINGS_TABS } from '../../../../../../lib/settings/tabs.ts';
 import { redirect } from '../../../../../../lib/i18n/navigation.ts';
 import { guardRoute } from '../../../../../../lib/nav/guard.ts';
+import { SETTINGS_TABS } from '../../../../../../lib/settings/tabs.ts';
 
-// /p/<id>/settings opens the first settings tab that exists (Client users once F10a lands, Business hours now).
+// /p/<id>/settings opens the first settings tab (Client users, F10a).
 export default async function SettingsPage({
   params,
 }: {

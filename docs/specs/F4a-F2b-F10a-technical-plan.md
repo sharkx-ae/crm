@@ -232,6 +232,8 @@ web/tests/e2e/client.spec.ts             real-api path on the seed (chromium pro
 | P3.3 | Projections, allowlists, isolation tests | 3 | `F10a: client-safe projections` |
 | | **Total** | **6.5 h** | |
 
+**Status 2026-11-25: P3.1–P3.3 built and tested, not committed** (api suite green incl. 10 isolation + 19 projection tests, web 592, Playwright 25 incl. 2 real-api). Built as planned, plus: `projectLead`, `projectLeadsPage`, `projectLeadExport` (F4b/F10b callers) and `projectOverview` (F13a) are the role pickers; they copy every number field by field and check client rows by key names (not formats). Callers put `hideTestLeads(leadViewFor(session))` in the `where` of every lead query (rows, counts, total, sources), and F13a passes the full `waitingCount` beside the short `waiting` list. Ingest now stores only emails that pass the contract `email` (else `emailInvalid`/`emailRaw` on the event, like the phone); the real-api e2e reads `SEED_PASSWORD` from `api/.env.local` and the code from `api/.mail` (skips if unset); the fake api gained `/users` invite/list/status. Conversation projections wait for Alex's F3 chat contracts (none exist yet).
+
 **Done when:** a client user of A opening B's URL, or any staff-only URL of A, sees not-found (proven on the real api); invite, accept, disable and re-enable work end to end and are audited; the allowlist test fails if a client response gains a field. **Tracker:** F10.1, F10.2, F10.3 → done.
 
 ---

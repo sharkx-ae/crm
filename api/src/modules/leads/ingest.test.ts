@@ -111,6 +111,22 @@ describe('ingestLead: dedupe and merge', () => {
     expect(b.created).toBe(true);
   });
 
+  it('an invalid email is not stored on the contact, kept raw on the event, never matched', async () => {
+    const p = await newProject();
+    const a = await ingestLead(base(p, { email: 'lina@clinic' }));
+    const b = await ingestLead(base(p, { email: 'lina@clinic' }));
+    expect(a.contactId).not.toBe(b.contactId);
+    const c = await one<{ email: string | null }>('select email from contacts where id = $1', [
+      a.contactId,
+    ]);
+    expect(c.email).toBeNull();
+    const ev = await one<{ data: { emailInvalid: boolean; emailRaw: string } }>(
+      "select data from lead_events where lead_id = $1 and kind = 'created'",
+      [a.leadId],
+    );
+    expect(ev.data).toMatchObject({ emailInvalid: true, emailRaw: 'lina@clinic' });
+  });
+
   it('an invalid phone is kept raw on the event, never matched', async () => {
     const p = await newProject();
     const a = await ingestLead(base(p, { phone: 'call me later' }));

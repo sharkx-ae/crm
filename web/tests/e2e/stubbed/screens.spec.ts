@@ -63,5 +63,9 @@ for (const lang of ['en', 'ar'] as const) {
     await shot('team');
     await page.goto(`/${lang}/p/${FIXTURE.ids.lumiere}/settings/hours`);
     await shot('hours');
+    // F10a S2: a client's users.
+    await page.goto(`/${lang}/p/${FIXTURE.ids.lumiere}/settings/client-users`);
+    await expect(page.getByRole('table')).toBeVisible();
+    await page.screenshot({ path: `test-results/screens/f10a-client-users-1440-${lang}.png` });
   });
 }

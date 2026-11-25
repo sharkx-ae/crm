@@ -1,6 +1,6 @@
 window.TRACKER = {
-"now":"F2b built, awaiting review; next F10a client users",
-"lastActivity":{"time":"2026-11-24T19:56:38.049Z","file":"docs/specs/F4a-F2b-F10a-technical-plan.md"},
+"now":"F10a built, awaiting review; Phase 3 complete",
+"lastActivity":{"time":"2026-11-25T13:20:17.080Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},
@@ -70,9 +70,9 @@ window.TRACKER = {
 {"id":"F9.4","name":"Snapchat adapter","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"}
 ]},
 {"id":"F10","name":"Client lead link","spec":"docs/PRD.md#f10","owner":"B","subs":[
-{"id":"F10.1","name":"Token issue, revoke, regenerate","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F10.2","name":"Lead-link domain routing and middleware","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
-{"id":"F10.3","name":"Portal view","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F10.1","name":"Token issue, revoke, regenerate","status":"done","pct":100,"note":"Client users tab: invite, disable, enable","updated":"2026-11-25T13:04:35.935Z"},
+{"id":"F10.2","name":"Lead-link domain routing and middleware","status":"done","pct":100,"note":"Full guard matrix, real-api client e2e","updated":"2026-11-25T13:04:35.866Z"},
+{"id":"F10.3","name":"Portal view","status":"done","pct":100,"note":"Lead and overview projections, allowlist tests","updated":"2026-11-25T13:04:36.016Z"},
 {"id":"F10.4","name":"Marking with reasons","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F10.5","name":"Export and permission toggles","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F10.6","name":"Link and qualification settings","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"}
@@ -117,10 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-22T17:06:38.396Z","m":"F1.4 done 100% Independent review passed; 2 bugs fixed"},
-{"t":"2026-11-22T17:06:38.472Z","m":"F1.5 done 100% Independent review passed; 2 bugs fixed"},
-{"t":"2026-11-22T17:06:38.547Z","m":"F1.7 done 100% Independent review passed; 2 bugs fixed"},
-{"t":"2026-11-22T17:06:38.618Z","m":"F1.8 done 100% Independent review passed; 2 bugs fixed"},
 {"t":"2026-11-22T17:06:38.697Z","m":"F1.6 doing 60% Review passed; audit writes, GET /audit done; viewer F1e"},
 {"t":"2026-11-22T17:06:38.898Z","m":"F1 independent review: 2 bugs fixed, report in docs/specs"},
 {"t":"2026-11-22T17:13:00.618Z","m":"F1.1 blocked 0% Railway admin pending (unconfirmed); skipped for now"},
@@ -146,6 +142,10 @@ window.TRACKER = {
 {"t":"2026-11-24T19:14:40.587Z","m":"F2.4 doing 50% Create client api: atomic, 2 audit rows"},
 {"t":"2026-11-24T19:32:49.404Z","m":"F2.3 done 100% Clients home: KPI strip, table, search, matches seed"},
 {"t":"2026-11-24T19:32:49.482Z","m":"F2.4 done 100% Add client: 4 fields, atomic create, 2 audit rows"},
-{"t":"2026-11-24T19:32:49.566Z","m":"F2.5 done 100% Team page, settings tabs, business hours"}
+{"t":"2026-11-24T19:32:49.566Z","m":"F2.5 done 100% Team page, settings tabs, business hours"},
+{"t":"2026-11-25T12:54:39.043Z","m":"F10.2 doing 10% Phase 3 started: guard matrix"},
+{"t":"2026-11-25T13:04:35.866Z","m":"F10.2 done 100% Full guard matrix, real-api client e2e"},
+{"t":"2026-11-25T13:04:35.935Z","m":"F10.1 done 100% Client users tab: invite, disable, enable"},
+{"t":"2026-11-25T13:04:36.016Z","m":"F10.3 done 100% Lead and overview projections, allowlist tests"}
 ]
 };

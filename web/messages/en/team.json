@@ -7,6 +7,14 @@
     "inviteDescription": "Managers work on every client.",
     "empty": "No managers yet. Invite the first one."
   },
+  "clientUsers": {
+    "title": "Client users",
+    "help": "One client per user, one role. They sign in with password and an emailed code.",
+    "invite": "Invite client user",
+    "inviteTitle": "Invite a client user",
+    "inviteDescription": "Joins {name} with the client role.",
+    "empty": "No client users yet. Invite the first one."
+  },
   "table": {
     "label": "Users",
     "name": "Name",

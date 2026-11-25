@@ -1,4 +1,5 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
+import { email as emailSchema } from '../../contracts/common.ts';
 import type { Tx } from '../../lib/tenant/index.ts';
 import { contacts } from './schema.ts';
 
@@ -8,10 +9,13 @@ import { contacts } from './schema.ts';
 
 export type ContactKeys = { e164?: string; email?: string; name?: string };
 
-/** Lower-cased and trimmed; empty → undefined. Emails are stored this way, so equality is enough to match. */
+/**
+ * Lower-cased and trimmed; empty or not a valid address (the contract's `email`) → undefined. Emails are stored this
+ * way, so equality is enough to match, and every stored email passes the response contracts (F10a S3).
+ */
 export function normaliseEmail(raw: string | null | undefined): string | undefined {
   const v = (raw ?? '').trim().toLowerCase();
-  return v.includes('@') ? v : undefined;
+  return v && emailSchema.safeParse(v).success ? v : undefined;
 }
 
 export async function findOrCreateContact(

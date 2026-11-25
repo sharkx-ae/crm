@@ -7,11 +7,16 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import type { z } from 'zod';
 import {
   activeSessionResponse,
+  inviteRequest,
+  listUsersQuery,
   listUsersResponse,
   meResponse,
   okResponse,
   pendingSessionResponse,
+  setUserStatusRequest,
+  type UserSummary,
   updateMeRequest,
+  userSummary,
 } from '../../../src/contracts/auth.ts';
 import type { Locale } from '../../../src/contracts/common.ts';
 import {
@@ -30,6 +35,23 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type User = (typeof FIXTURE.users)[number];
 type Session = { user: User; stage: 'pending_2fa' | 'active'; locale: Locale };
 const sessions = new Map<string, Session>();
+
+// Everyone the Team and Client users screens list: the fixture's managers and client users, then invites.
+const people: UserSummary[] = FIXTURE.users
+  .filter((u) => u.role !== 'super_admin')
+  .map((u) => ({
+    id: u.userId,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    status: 'active' as const,
+    projectId: u.role === 'client' ? (u.projectIds[0] ?? null) : null,
+    createdAt: '2026-11-20T08:00:00.000Z',
+  }));
+/** Invited during the run: no password yet (the fake has no accept flow). */
+const noPassword = new Set<string>();
+const staffOnly = (s: Session, targetRole: 'manager' | 'client') =>
+  targetRole === 'manager' ? s.user.role === 'super_admin' : s.user.role !== 'client';
 
 const token = () => randomBytes(32).toString('base64url');
 const inMinutes = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
@@ -173,22 +195,61 @@ const server = createServer(async (req, res) => {
     });
     return ok(res, createProjectResponse, { projectId: id });
   }
-  // Team (super admin): the fixture's staff managers.
-  if (route === 'GET /users' && url.searchParams.get('kind') === 'manager') {
-    if (session.user.role !== 'super_admin') return fail(res, 403, 'FORBIDDEN');
+  // People (F2b Team: managers, super admin only; F10a Client users: one client's users, staff only).
+  if (route === 'GET /users') {
+    const query = listUsersQuery.safeParse(Object.fromEntries(url.searchParams));
+    if (!query.success) return fail(res, 422, 'VALIDATION');
+    if (!staffOnly(session, query.data.kind)) return fail(res, 403, 'FORBIDDEN');
+    const q = query.data;
     return ok(res, listUsersResponse, {
-      users: FIXTURE.users
-        .filter((u) => u.role === 'manager')
-        .map((u) => ({
-          id: u.userId,
-          name: u.name,
-          email: u.email,
-          role: u.role,
-          status: 'active',
-          projectId: null,
-          createdAt: '2026-11-20T08:00:00.000Z',
-        })),
+      users: people.filter((u) =>
+        q.kind === 'manager'
+          ? u.role === 'manager'
+          : u.role === 'client' && u.projectId === q.projectId,
+      ),
     });
+  }
+  if (route === 'POST /users/invite') {
+    const parsed = inviteRequest.safeParse(await readJson(req));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const body = parsed.data;
+    if (!staffOnly(session, body.kind)) return fail(res, 403, 'FORBIDDEN');
+    if (body.kind === 'client' && !FIXTURE.projects.some((p) => p.id === body.projectId))
+      return fail(res, 404, 'NOT_FOUND');
+    const email = body.email.toLowerCase();
+    if (people.some((u) => u.email === email) || FIXTURE.users.some((u) => u.email === email))
+      return fail(res, 409, 'CONFLICT');
+    const user: UserSummary = {
+      id: randomUUID(),
+      name: body.name,
+      email,
+      role: body.kind,
+      status: 'invited',
+      projectId: body.kind === 'client' ? body.projectId : null,
+      createdAt: new Date().toISOString(),
+    };
+    people.push(user);
+    noPassword.add(user.id);
+    return ok(res, userSummary, user);
+  }
+  const status = /^POST \/users\/([^/]+)\/status$/.exec(route);
+  if (status) {
+    const parsed = setUserStatusRequest.safeParse(await readJson(req));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const user = people.find((u) => u.id === status[1]);
+    if (!user) return fail(res, 404, 'NOT_FOUND');
+    if (!staffOnly(session, user.role === 'manager' ? 'manager' : 'client'))
+      return fail(res, 403, 'FORBIDDEN');
+    // Like the real api: enabling someone who never set a password puts them back to Invited, not Active.
+    const next =
+      parsed.data.status === 'disabled'
+        ? 'disabled'
+        : noPassword.has(user.id)
+          ? 'invited'
+          : 'active';
+    if (user.status === next) return fail(res, 409, 'CONFLICT');
+    user.status = next;
+    return ok(res, userSummary, user);
   }
   // Business hours (staff): validated with the contract, echoed back as the detail.
   const settings = /^PATCH \/projects\/([^/]+)\/settings$/.exec(route);

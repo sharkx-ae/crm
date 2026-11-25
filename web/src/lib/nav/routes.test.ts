@@ -11,37 +11,57 @@ const who = (role: Role, stage: 'active' | 'pending_2fa' = 'active') => ({
   projectIds: role === 'client' ? [A] : [],
 });
 
-// Web plan §7 route-guard matrix: 'page' or 'not found' for each role. A = the client user's own project.
-type Row = [RouteKey, string | undefined, superAdmin: boolean, manager: boolean, client: boolean];
-const MATRIX: Row[] = [
-  ['clients', undefined, true, true, false],
-  ['team', undefined, true, false, false],
-  ['audit', undefined, true, false, false],
-  ['overview', A, true, true, true],
-  ['leads', A, true, true, true],
-  ['reports', A, true, true, true],
-  ['inbox', A, true, true, true],
-  ['integrations', A, true, true, true],
-  ['overview', B, true, true, false],
-  ['leads', B, true, true, false],
-  ['contacts', A, true, true, false],
-  ['pipeline', A, true, true, false],
-  ['tasks', A, true, true, false],
-  ['settings', A, true, true, false],
-];
+// Web plan §7 / F10a S1 route-guard matrix, complete: every route key × every role, and for project routes both
+// the client user's own project (A) and a foreign one (B). true = the page, false = the not-found page.
+// Agency routes take no project. Staff see every project (RLS and the api still apply).
+type Expect = { superAdmin: boolean; manager: boolean; clientOwn: boolean };
+const MATRIX: Record<RouteKey, Expect> = {
+  clients: { superAdmin: true, manager: true, clientOwn: false },
+  team: { superAdmin: true, manager: false, clientOwn: false },
+  audit: { superAdmin: true, manager: false, clientOwn: false },
+  overview: { superAdmin: true, manager: true, clientOwn: true },
+  leads: { superAdmin: true, manager: true, clientOwn: true },
+  inbox: { superAdmin: true, manager: true, clientOwn: true },
+  reports: { superAdmin: true, manager: true, clientOwn: true },
+  integrations: { superAdmin: true, manager: true, clientOwn: true },
+  contacts: { superAdmin: true, manager: true, clientOwn: false },
+  pipeline: { superAdmin: true, manager: true, clientOwn: false },
+  tasks: { superAdmin: true, manager: true, clientOwn: false },
+  settings: { superAdmin: true, manager: true, clientOwn: false },
+};
+const isProject = (key: RouteKey) => !['clients', 'team', 'audit'].includes(key);
 
 describe('canViewRoute', () => {
-  it.each(MATRIX)('%s (project %s): super %s, manager %s, client %s', (key, p, sa, m, c) => {
-    expect(canViewRoute(who('super_admin'), key, p)).toBe(sa);
-    expect(canViewRoute(who('manager'), key, p)).toBe(m);
-    expect(canViewRoute(who('client'), key, p)).toBe(c);
+  it('the matrix covers every route key', () => {
+    expect(Object.keys(MATRIX).sort()).toEqual([...ROUTE_KEYS].sort());
+  });
+
+  it.each(ROUTE_KEYS)('%s: each role, own and foreign project', (key) => {
+    const e = MATRIX[key];
+    const p = isProject(key) ? A : undefined;
+    expect(canViewRoute(who('super_admin'), key, p), 'super admin').toBe(e.superAdmin);
+    expect(canViewRoute(who('manager'), key, p), 'manager').toBe(e.manager);
+    expect(canViewRoute(who('client'), key, p), 'client, own').toBe(e.clientOwn);
+    if (isProject(key)) {
+      // A foreign project: staff unchanged, a client user always not-found (even on its own five areas).
+      expect(canViewRoute(who('super_admin'), key, B), 'super admin, B').toBe(e.superAdmin);
+      expect(canViewRoute(who('manager'), key, B), 'manager, B').toBe(e.manager);
+      expect(canViewRoute(who('client'), key, B), 'client, foreign').toBe(false);
+    }
+  });
+
+  it('a client user with no project sees nothing', () => {
+    const orphan = { role: 'client' as const, stage: 'active' as const, projectIds: [] };
+    for (const key of ROUTE_KEYS)
+      expect(canViewRoute(orphan, key, isProject(key) ? A : undefined), key).toBe(false);
   });
 
   it('a pending (code step) session sees nothing', () => {
-    for (const key of ROUTE_KEYS) {
-      const p = key === 'clients' || key === 'team' || key === 'audit' ? undefined : A;
-      expect(canViewRoute(who('super_admin', 'pending_2fa'), key, p)).toBe(false);
-    }
+    for (const role of ['super_admin', 'manager', 'client'] as const)
+      for (const key of ROUTE_KEYS) {
+        const p = isProject(key) ? A : undefined;
+        expect(canViewRoute(who(role, 'pending_2fa'), key, p), `${role} ${key}`).toBe(false);
+      }
   });
 
   it('a project route needs a project and an agency route refuses one', () => {

@@ -110,9 +110,10 @@ export async function ingestLeadTx(tx: Tx, raw: IngestLeadInput): Promise<Ingest
   const mapped = applyMapping(input.answers, mapping);
   const name = (input.name ?? mapped.name)?.trim() || undefined;
   const phone = normalisePhone(input.phone ?? mapped.phone, project.city);
-  const email = normaliseEmail(input.email ?? mapped.email);
+  const emailRaw = (input.email ?? mapped.email)?.trim() || undefined;
+  const email = normaliseEmail(emailRaw);
 
-  // 3. Contact: E.164 phone, else email; an invalid phone never matches.
+  // 3. Contact: E.164 phone, else email; an invalid phone or email never matches (kept raw on the event).
   const contact = await findOrCreateContact(tx, projectId, {
     e164: phone?.valid ? phone.e164 : undefined,
     email,
@@ -143,6 +144,7 @@ export async function ingestLeadTx(tx: Tx, raw: IngestLeadInput): Promise<Ingest
     ...(input.campaign ? { campaign: input.campaign } : {}),
     ...(input.formId ? { formId: input.formId } : {}),
     ...(phone && !phone.valid ? { phoneInvalid: true, phoneRaw: phone.raw } : {}),
+    ...(emailRaw && !email ? { emailInvalid: true, emailRaw } : {}),
     ...(input.isTest ? { isTest: true } : {}),
   };
 

@@ -75,11 +75,53 @@ test('team lists the managers with an invite button', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Invite manager' })).toBeVisible();
 });
 
-test('business hours: settings opens on the hours tab, a closing time before opening blocks Save', async ({
+test('client users: settings opens on its tab; invite, disable and enable a client user', async ({
   page,
 }) => {
+  // A fresh email each run: the fake api keeps who it invited.
+  const email = `reception-${Date.now().toString(36)}@lumiere.test`;
+  await signIn(page, 'manager-fr@example.test');
+  await page.goto(`/en/p/${lumiere}/settings`);
+  await expect(page).toHaveURL(new RegExp(`/en/p/${lumiere}/settings/client-users$`));
+  await expect(page.getByRole('link', { name: 'Client users' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  const table = page.getByRole('table', { name: 'Users' });
+  await expect(table.getByText('Lina Haddad')).toBeVisible();
+
+  // An email that already has an account is refused in the modal.
+  await page.getByRole('button', { name: 'Invite client user' }).click();
+  let dialog = page.getByRole('dialog', { name: 'Invite a client user' });
+  await expect(dialog.getByText('Joins Lumière Aesthetics with the client role.')).toBeVisible();
+  await dialog.getByLabel('Full name').fill('Someone Else');
+  await dialog.getByLabel('Email').fill('client@example.test');
+  await dialog.getByRole('button', { name: 'Send invite' }).click();
+  await expect(dialog.getByText('That email already has an account.')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+  await page.getByRole('button', { name: 'Invite client user' }).click();
+  dialog = page.getByRole('dialog', { name: 'Invite a client user' });
+  await dialog.getByLabel('Full name').fill('Front Desk');
+  await dialog.getByLabel('Email').fill(email);
+  await dialog.getByRole('button', { name: 'Send invite' }).click();
+  await expect(page.getByText(`Invite sent to ${email}`).first()).toBeVisible();
+  const row = table.getByRole('row').filter({ hasText: email });
+  await expect(row).toContainText('Invited');
+
+  await row.getByRole('button', { name: 'Disable Front Desk' }).click();
+  await expect(row).toContainText('Disabled');
+  // They never set a password, so enabling puts them back to Invited (as the real api does).
+  await row.getByRole('button', { name: 'Enable Front Desk' }).click();
+  await expect(row).toContainText('Invited');
+  expect(await noSideScroll(page)).toBe(true);
+});
+
+test('business hours: a closing time before opening blocks Save', async ({ page }) => {
   await signIn(page, 'admin@example.test');
   await page.goto(`/en/p/${lumiere}/settings`);
+  await expect(page).toHaveURL(new RegExp(`/en/p/${lumiere}/settings/client-users$`));
+  await page.getByRole('link', { name: 'Business hours' }).click();
   await expect(page).toHaveURL(new RegExp(`/en/p/${lumiere}/settings/hours$`));
   await expect(page.getByRole('link', { name: 'Business hours' })).toHaveAttribute(
     'aria-current',
