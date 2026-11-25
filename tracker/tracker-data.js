@@ -35,7 +35,7 @@ window.TRACKER = {
 {"id":"F4.1","name":"ingestLead, phone normalisation, dedupe","status":"done","pct":100,"note":"ingestLead: E.164, dedupe, merge, idempotent, 24 tests","updated":"2026-11-24T18:29:29.386Z"},
 {"id":"F4.2","name":"Per-form field mapping model and UI","status":"done","pct":100,"note":"saveFormMapping route, action, MappingStep component","updated":"2026-11-24T18:40:29.049Z"},
 {"id":"F4.3","name":"Round-robin assignment","status":"done","pct":100,"note":"Round-robin cursor per client, active managers only","updated":"2026-11-24T18:29:29.587Z"},
-{"id":"F4.4","name":"Leads screen (tabs, filters, export)","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
+{"id":"F4.4","name":"Leads screen (tabs, filters, export)","status":"doing","pct":10,"note":"Building leads list api","updated":"2026-11-25T15:28:47.665Z"},
 {"id":"F4.5","name":"Lead drawer and timeline","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F4.6","name":"Contacts list and profile","status":"todo","pct":0,"note":"","updated":"2026-11-19T07:55:47.276Z"},
 {"id":"F4.7","name":"Test-lead flag","status":"done","pct":100,"note":"Flag stored; exclusion is checked in F4b, F13, F11a","updated":"2026-11-24T18:51:35.217Z"}
@@ -117,7 +117,6 @@ window.TRACKER = {
 ]}
 ],
 "log":[
-{"t":"2026-11-22T17:06:38.697Z","m":"F1.6 doing 60% Review passed; audit writes, GET /audit done; viewer F1e"},
 {"t":"2026-11-22T17:06:38.898Z","m":"F1 independent review: 2 bugs fixed, report in docs/specs"},
 {"t":"2026-11-22T17:13:00.618Z","m":"F1.1 blocked 0% Railway admin pending (unconfirmed); skipped for now"},
 {"t":"2026-11-23T12:15:49.864Z","m":"F2.1 doing 15% Tokens done; shell, nav, switcher next"},
@@ -146,6 +145,7 @@ window.TRACKER = {
 {"t":"2026-11-25T12:54:39.043Z","m":"F10.2 doing 10% Phase 3 started: guard matrix"},
 {"t":"2026-11-25T13:04:35.866Z","m":"F10.2 done 100% Full guard matrix, real-api client e2e"},
 {"t":"2026-11-25T13:04:35.935Z","m":"F10.1 done 100% Client users tab: invite, disable, enable"},
-{"t":"2026-11-25T13:04:36.016Z","m":"F10.3 done 100% Lead and overview projections, allowlist tests"}
+{"t":"2026-11-25T13:04:36.016Z","m":"F10.3 done 100% Lead and overview projections, allowlist tests"},
+{"t":"2026-11-25T15:28:47.665Z","m":"F4.4 doing 10% Building leads list api"}
 ]
 };
