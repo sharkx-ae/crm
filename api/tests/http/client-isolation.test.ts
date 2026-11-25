@@ -267,6 +267,18 @@ describe('F4b leads routes: a client user of A', () => {
     }
   });
 
+  it('contacts are staff only: 403 on the list and on a profile', async () => {
+    const contactId = (
+      await db.query<{ id: string }>('select id from contacts where project_id = $1 limit 1', [
+        lumiere,
+      ])
+    ).rows[0]?.id as string;
+    expect((await call('GET', `/contacts?projectId=${lumiere}`, lina.token)).statusCode).toBe(403);
+    expect(
+      (await call('GET', `/contacts/${contactId}?projectId=${lumiere}`, lina.token)).statusCode,
+    ).toBe(403);
+  });
+
   it('staff reach every client', async () => {
     for (const projectId of [lumiere, pearl]) {
       expect((await call('GET', `/leads?projectId=${projectId}`, managerToken)).statusCode).toBe(
