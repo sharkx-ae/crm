@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, like, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, like, or, type SQL, sql } from 'drizzle-orm';
 import { email, leadStatus } from '../../contracts/common.ts';
 import type { ContactRow, ContactsPage, ContactsQuery } from '../../contracts/contacts.ts';
 import { AppError } from '../../lib/errors/index.ts';
@@ -35,6 +35,25 @@ function searchSql(q: string | undefined) {
     ilike(contacts.email, likePattern(text)),
     digits ? like(contacts.phoneE164, `%${digits}%`) : undefined,
   );
+}
+
+/** The requested column and direction, then newest activity first, then id (a stable order for paging). */
+function contactOrder(
+  q: ContactsQuery,
+  c: {
+    lastActivity: SQL<Date>;
+    stats: { leadCount: SQL.Aliased<number>; latestStatus: SQL.Aliased<string> };
+  },
+) {
+  const columns = {
+    contact: sql`lower(coalesce(${contacts.name}, ${contacts.phoneE164}, ''))`,
+    email: sql`lower(coalesce(${contacts.email}, ''))`,
+    leads: c.stats.leadCount,
+    status: c.stats.latestStatus,
+    activity: c.lastActivity,
+  };
+  const by = q.sort ? (q.dir === 'asc' ? asc : desc)(columns[q.sort]) : undefined;
+  return [...(by ? [by] : []), desc(c.lastActivity), desc(contacts.id)];
 }
 
 export async function listContacts(
@@ -95,7 +114,7 @@ export async function listContacts(
       .innerJoin(stats, eq(stats.contactId, contacts.id))
       .leftJoin(chats, eq(chats.contactId, contacts.id))
       .where(where)
-      .orderBy(desc(lastActivity), desc(contacts.id))
+      .orderBy(...contactOrder(q, { lastActivity, stats }))
       .limit(q.limit)
       .offset((q.page - 1) * q.limit);
 

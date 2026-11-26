@@ -19,6 +19,22 @@ import { leads } from './schema.ts';
 // (`limit` rows from `(page - 1) * limit`). Counts and `total` ignore the page, and the counts ignore the tab, so the
 // tabs always add up and stay right under any filter. A page past the end is empty with the true total. Nothing is cached.
 
+const LEAD_SORT_COLUMNS = {
+  lead: sql`lower(coalesce(${contacts.name}, ${contacts.phoneE164}, ''))`,
+  source: leads.source,
+  campaign: sql`lower(coalesce(${leads.campaign}, ''))`,
+  status: leads.status,
+  owner: sql`lower(coalesce(${users.name}, ''))`,
+  received: leads.createdAt,
+};
+
+/** The requested column and direction, then newest first, then id: a stable order, so a page never repeats a row. A client cannot sort by owner. */
+function leadOrder(session: ResolvedSession, q: LeadsQuery) {
+  const sort = q.sort === 'owner' && session.role === 'client' ? undefined : q.sort;
+  const by = sort ? (q.dir === 'asc' ? asc : desc)(LEAD_SORT_COLUMNS[sort]) : undefined;
+  return [...(by ? [by] : []), desc(leads.createdAt), desc(leads.id)];
+}
+
 const countWhere = (status: string) =>
   sql<number>`count(*) filter (where ${leads.status} = ${status})::int`;
 
@@ -46,7 +62,7 @@ export async function listLeads(session: ResolvedSession, q: LeadsQuery): Promis
       .innerJoin(contacts, leadContactJoin)
       .leftJoin(users, leadOwnerJoin)
       .where(and(filter, tabSql(q.tab)))
-      .orderBy(desc(leads.createdAt), desc(leads.id))
+      .orderBy(...leadOrder(session, q))
       .limit(q.limit)
       .offset((q.page - 1) * q.limit);
 
