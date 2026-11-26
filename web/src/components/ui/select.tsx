@@ -16,7 +16,7 @@ const EMPTY = '__all__';
 /**
  * The list is a Radix Select: the same surface and rows as the other menus, keyboard and typeahead, and correct in RTL
  * (the locale layout gives Radix its direction). Full width by default (forms); `fit` is the toolbar width (150px
- * and up, as wide as its text). The props are the old native select's: `options`, `value`, `onValueChange`, `size`.
+ * and up, as wide as its text, two to a row on a phone). The props are the old native select's: `options`, `value`, `onValueChange`, `size`.
  */
 export function Select({
   options,
@@ -72,7 +72,8 @@ export function Select({
           CONTROL_BASE,
           CONTROL_HEIGHT[size],
           'flex cursor-pointer items-center justify-between gap-2 text-start transition-colors duration-150 hover:border-sx-black disabled:hover:border-sx-line',
-          fit ? 'w-auto min-w-[150px]' : 'w-full min-w-0',
+          // `fit`: 150px and up; where two would not fit a row (a 360px toolbar) each takes half of it instead.
+          fit ? 'w-auto min-w-[min(150px,calc(50%-6px))]' : 'w-full min-w-0',
           className,
         )}
       >

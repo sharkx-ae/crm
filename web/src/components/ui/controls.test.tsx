@@ -344,7 +344,7 @@ describe('Select', () => {
     expect(screen.getByRole('combobox', { name: 'Wide' }).className).toContain('w-full');
     const fit = screen.getByRole('combobox', { name: 'Fit' }).className;
     expect(fit).toContain('w-auto');
-    expect(fit).toContain('min-w-[150px]');
+    expect(fit).toContain('min-w-[min(150px,calc(50%-6px))]');
     expect(fit).not.toContain('w-full');
     const off = screen.getByRole('combobox', { name: 'Off' });
     off.focus();
