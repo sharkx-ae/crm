@@ -83,6 +83,7 @@ describe('rate limits', () => {
       login: { limit: 5, windowSec: 900 },
       codeSend: { limit: 3, windowSec: 600 },
       reset: { limit: 3, windowSec: 3600 },
+      tokenUse: { limit: 10, windowSec: 900 },
       alert: { limit: 1, windowSec: 3600 },
     });
   });

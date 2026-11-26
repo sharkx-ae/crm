@@ -8,12 +8,14 @@ import { rateLimits } from './schema.ts';
 export type Rule = { limit: number; windowSec: number };
 
 export const rules = {
-  /** Counted on failures, and checked before the password is verified. Key: email + ip. */
+  /** Failures, checked before verify. Two keys: the account (email) and the address (email + ip). */
   login: { limit: 5, windowSec: 15 * 60 },
   /** Every code issued: login, invite accept, resend. Key: user. */
   codeSend: { limit: 3, windowSec: 10 * 60 },
   /** Every reset request, whether the account exists or not. Key: email. */
   reset: { limit: 3, windowSec: 60 * 60 },
+  /** Reset confirm and invite accept. Every attempt counts, including a bad token. Key: ip. */
+  tokenUse: { limit: 10, windowSec: 15 * 60 },
   /** Alert emails: one per fingerprint per hour. */
   alert: { limit: 1, windowSec: 60 * 60 },
 } as const satisfies Record<string, Rule>;

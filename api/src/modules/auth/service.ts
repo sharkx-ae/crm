@@ -23,6 +23,7 @@ import {
   consumeToken,
   issueCode,
   issueToken,
+  peekToken,
   RESET_TTL_MS,
   revokeLiveTokens,
 } from './tokens.ts';
@@ -59,20 +60,24 @@ export async function login(
   ctx: { ip: string; forwardedSessionToken?: string },
   now: Date = new Date(),
 ): Promise<PendingSessionResponse> {
-  const key = rateKey('login', input.email, ctx.ip);
+  // Account bucket ignores a rotated x-client-ip. Address bucket is the existing per-IP cap.
+  const emailKey = rateKey('login', input.email);
+  const ipKey = rateKey('login', input.email, ctx.ip);
 
-  // 1. rate limit and user lookup, one short tx. The attempt is reserved with an atomic `hit` BEFORE the ~100 ms
-  // password check: a peek here would let a parallel burst all read "0 so far" and every guess through. A correct
-  // password gives the reservation back (step 3), so the limit still counts failures only.
+  // 1. rate limit and user lookup, one short tx. Both attempts are reserved with an atomic `hit` BEFORE the
+  // ~100 ms password check: a peek here would let a parallel burst all read "0 so far" and every guess through.
+  // A correct password gives exactly those two reservations back (step 3), so the limit still counts failures only.
   const first = await withSystem(null, async (tx) => {
-    const limit = await hit(tx, key, rules.login, now);
-    if (!limit.allowed) {
+    const emailLimit = await hit(tx, emailKey, rules.login, now);
+    const ipLimit = await hit(tx, ipKey, rules.login, now);
+    if (!emailLimit.allowed || !ipLimit.allowed) {
       await audit(tx, {
         actor: { kind: 'system' },
         action: 'auth.login_failed',
         meta: { reason: 'rate_limited' },
       });
-      return { limited: limit.retryAfterSec } as const;
+      const retryAfterSec = emailLimit.allowed ? ipLimit.retryAfterSec : emailLimit.retryAfterSec;
+      return { limited: retryAfterSec } as const;
     }
     const [user] = await tx.select().from(users).where(eq(users.email, input.email));
     return { user } as const;
@@ -108,7 +113,8 @@ export async function login(
 
   // 3. success: one transaction creates the pending session and the code.
   const out = await withSystem(null, async (tx) => {
-    await release(tx, key, rules.login, now);
+    await release(tx, emailKey, rules.login, now);
+    await release(tx, ipKey, rules.login, now);
     const sendLimit = await hit(tx, rateKey('code_send', user.id), rules.codeSend, now);
     if (!sendLimit.allowed) return { limited: sendLimit.retryAfterSec } as const;
 
@@ -268,12 +274,37 @@ export async function requestReset(
   };
 }
 
+/**
+ * Counts the attempt (when the route passes an address), then resolves the token by its sha256.
+ * Missing, used or expired is 404. The caller hashes only after this returns.
+ */
+export async function allowPasswordSet(
+  raw: string,
+  kind: 'invite' | 'reset',
+  now: Date,
+  ip?: string,
+): Promise<void> {
+  const gate = await withSystem(null, async (tx) => {
+    if (ip !== undefined) {
+      const limit = await hit(tx, rateKey('token_use', ip), rules.tokenUse, now);
+      if (!limit.allowed) return { limited: limit.retryAfterSec } as const;
+    }
+    const live = await peekToken(tx, raw, kind, now);
+    if (!live) return { missing: true } as const;
+    return { ok: true } as const;
+  });
+  if ('limited' in gate) throw new AppError('RATE_LIMITED', { retryAfterSec: gate.limited });
+  if ('missing' in gate) throw new AppError('NOT_FOUND');
+}
+
 /** Single use. Success signs the person out everywhere and voids every other open link or code. */
 export async function confirmReset(
   input: { token: string; password: string },
   now: Date = new Date(),
+  ip?: string,
 ): Promise<void> {
-  const pwHash = await hashNewPassword(input.password); // before the transaction
+  await allowPasswordSet(input.token, 'reset', now, ip);
+  const pwHash = await hashNewPassword(input.password); // after the token is live, outside the transaction
 
   await withSystem(null, async (tx) => {
     const consumed = await consumeToken(tx, input.token, 'reset', now);

@@ -37,7 +37,7 @@ afterAll(async () => {
 const NEW_PASSWORD = 'Another-pass-5678';
 const request = (email: string) => post(app, '/auth/reset/request', { email }, internal());
 const confirm = (token: string, password = NEW_PASSWORD) =>
-  post(app, '/auth/reset/confirm', { token, password }, internal());
+  post(app, '/auth/reset/confirm', { token, password }, internal({ 'x-client-ip': freshIp() }));
 const login = (email: string, password: string) =>
   post(app, '/auth/login', { email, password }, internal({ 'x-client-ip': freshIp() }));
 // The reset mail is sent after the reply, so give it a moment.

@@ -1,6 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildTestApp, internal, PASSWORD, post, seedUser } from '../../../tests/helpers/http.ts';
+import {
+  buildTestApp,
+  freshIp,
+  internal,
+  PASSWORD,
+  post,
+  seedUser,
+} from '../../../tests/helpers/http.ts';
 import { getPool } from '../../db/index.ts';
 import { setEmailTransport } from '../../lib/email/index.ts';
 import { withSystem } from '../../lib/tenant/index.ts';
@@ -34,10 +41,20 @@ describe('password length is judged after NFKC normalisation', () => {
       const token = await withSystem(null, (tx) =>
         issueToken(tx, u.id, 'invite', INVITE_TTL_MS, new Date()),
       );
-      const bad = await post(app, '/auth/invite/accept', { token, password: pw }, internal());
+      const bad = await post(
+        app,
+        '/auth/invite/accept',
+        { token, password: pw },
+        internal({ 'x-client-ip': freshIp() }),
+      );
       expect(bad.statusCode).toBe(422);
       expect(bad.json().error.code).toBe('VALIDATION');
-      const ok = await post(app, '/auth/invite/accept', { token, password: PASSWORD }, internal());
+      const ok = await post(
+        app,
+        '/auth/invite/accept',
+        { token, password: PASSWORD },
+        internal({ 'x-client-ip': freshIp() }),
+      );
       expect(ok.statusCode).toBe(200);
     },
   );
@@ -52,13 +69,18 @@ describe('password length is judged after NFKC normalisation', () => {
       const token = await withSystem(null, (tx) =>
         issueToken(tx, u.id, 'reset', RESET_TTL_MS, new Date()),
       );
-      const bad = await post(app, '/auth/reset/confirm', { token, password: pw }, internal());
+      const bad = await post(
+        app,
+        '/auth/reset/confirm',
+        { token, password: pw },
+        internal({ 'x-client-ip': freshIp() }),
+      );
       expect(bad.statusCode).toBe(422);
       const ok = await post(
         app,
         '/auth/reset/confirm',
         { token, password: 'Another-pass-5678' },
-        internal(),
+        internal({ 'x-client-ip': freshIp() }),
       );
       expect(ok.statusCode).toBe(200);
     },

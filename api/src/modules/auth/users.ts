@@ -19,6 +19,7 @@ import { projects } from '../projects/schema.ts';
 import { actorOf, maskEmail } from './actor.ts';
 import { hashNewPassword } from './password.ts';
 import { users } from './schema.ts';
+import { allowPasswordSet } from './service.ts';
 import { createSession, revokeAllSessions } from './sessions.ts';
 import {
   CODE_TTL_MS,
@@ -273,8 +274,10 @@ export async function inspectInvite(
 export async function acceptInvite(
   input: { token: string; password: string },
   now: Date = new Date(),
+  ip?: string,
 ): Promise<PendingSessionResponse> {
-  const pwHash = await hashNewPassword(input.password); // before the transaction: ~100 ms and 32 MiB
+  await allowPasswordSet(input.token, 'invite', now, ip);
+  const pwHash = await hashNewPassword(input.password); // after the token is live, outside the transaction
 
   const out = await withSystem(null, async (tx) => {
     const consumed = await consumeToken(tx, input.token, 'invite', now);
