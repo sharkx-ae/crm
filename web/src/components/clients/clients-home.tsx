@@ -1,7 +1,9 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import type { HealthState } from '../../contracts/common.ts';
 import type { ProjectsHomeResponse } from '../../contracts/projects.ts';
+import { zoneLabel } from '../../lib/i18n/format.ts';
 import { Link } from '../../lib/i18n/navigation.ts';
+import type { Locale } from '../../lib/i18n/routing.ts';
 import { Avatar } from '../ui/avatar.tsx';
 import { UserText } from '../ui/bidi.tsx';
 import { Card } from '../ui/card.tsx';
@@ -32,6 +34,9 @@ export async function ClientsHome({
   canCreate: boolean;
 }) {
   const t = await getTranslations('projects.home');
+  // Each client's own time zone, labelled (F13a): its numbers count "today" from its own midnight.
+  const locale = (await getLocale()) as Locale;
+  const now = new Date();
   const { totals, rows } = data;
 
   return (
@@ -88,7 +93,11 @@ export async function ClientsHome({
                             <UserText>{r.name}</UserText>
                           </span>
                           <span className="block truncate text-label text-sx-muted">
-                            {t('place', { city: r.city ?? '', industry: r.industry ?? '' })}
+                            {t('place', {
+                              city: r.city ?? '',
+                              industry: r.industry ?? '',
+                              zone: zoneLabel(r.timezone, locale, now),
+                            })}
                           </span>
                         </span>
                       </Link>

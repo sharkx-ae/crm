@@ -160,3 +160,17 @@ describe('zoneLabel', () => {
     expect(zoneLabel(CASA, 'en', NOV)).toMatch(/^(GMT(\+1)?|WET|WEST)$/);
   });
 });
+
+describe('plainDay (F13a buckets)', () => {
+  it('shows a calendar day as it is, in any project zone', () => {
+    expect(at('en', DUBAI).plainDay('2026-11-25')).toBe('25 Nov');
+    expect(at('en', 'Pacific/Kiritimati').plainDay('2026-11-25')).toBe('25 Nov');
+    expect(at('en', 'Pacific/Pago_Pago').plainDay('2026-10-01')).toBe('1 Oct');
+    expect(at('fr').plainDay('2026-11-25')).toMatch(/^25 nov/);
+  });
+
+  it('answers the empty mark for anything that is not a day', () => {
+    expect(at('en').plainDay('2026-11-25T10:00:00Z')).toBe(EMPTY);
+    expect(at('en').plainDay('nope')).toBe(EMPTY);
+  });
+});

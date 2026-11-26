@@ -37,24 +37,30 @@ export function LeadsTable({
   staff,
   hrefFor,
   renderMark,
+  showStatus = true,
+  label,
 }: {
   rows: readonly LeadTableRow[];
   staff: boolean;
   hrefFor: (id: string) => string;
   renderMark?: (row: ClientLeadRow) => ReactNode;
+  /** The Overview's waiting list leaves it out: every row there is still new (mockup waitCard). */
+  showStatus?: boolean;
+  /** The table's accessible name; the Leads screen's by default. */
+  label?: string;
 }) {
   const t = useTranslations('leads');
   const tSource = useTranslations('common.source');
   const format = useProjectFormat();
 
   return (
-    <Table aria-label={t('table')}>
+    <Table aria-label={label ?? t('table')}>
       <thead>
         <tr>
           <Th>{t('columns.lead')}</Th>
           <Th>{t('columns.source')}</Th>
           <Th>{t('columns.campaign')}</Th>
-          <Th>{t('columns.status')}</Th>
+          {showStatus ? <Th>{t('columns.status')}</Th> : null}
           {staff ? <Th>{t('columns.owner')}</Th> : null}
           <Th num>{t('columns.received')}</Th>
           {renderMark ? <Th>{t('columns.markAs')}</Th> : null}
@@ -90,9 +96,11 @@ export function LeadsTable({
                 <SourceBadge source={r.source} label={tSource(r.source)} />
               </Td>
               <Td>{r.campaign ? <UserText>{r.campaign}</UserText> : null}</Td>
-              <Td>
-                <StatusChip status={r.status} />
-              </Td>
+              {showStatus ? (
+                <Td>
+                  <StatusChip status={r.status} />
+                </Td>
+              ) : null}
               {staff ? (
                 <Td>
                   {'ownerName' in r && r.ownerName ? (

@@ -16,7 +16,7 @@
       "connections": "Connections",
       "open": "Open"
     },
-    "place": "{city}, {industry}",
+    "place": "{city}, {industry} · {zone}",
     "toFixChip": "{n} to fix",
     "dotsLabel": "{connected} connected, {toFix} to fix",
     "open": "Open {name}",

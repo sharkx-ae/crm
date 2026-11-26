@@ -1,0 +1,35 @@
+{
+  "overview": {
+    "kpi": {
+      "leads30": "Leads (30 days)",
+      "newToday": "New today",
+      "medianReply": "Median first reply",
+      "mqlRate": "MQL rate",
+      "sqlRate": "SQL rate",
+      "waiting": "Waiting for review"
+    },
+    "noData": "No data yet",
+    "underMinute": "<1 min",
+    "perDay": {
+      "title": "Leads per day",
+      "label": "Leads per day, last 30 days, days in {zone}",
+      "peak": "Peak {n} on {day}",
+      "last30": "Last 30 days",
+      "bar": "{day}: {n, plural, one {# lead} other {# leads}}",
+      "tableDay": "Day",
+      "tableLeads": "Leads"
+    },
+    "bySource": {
+      "title": "Leads by source",
+      "caption": "Last 30 days",
+      "other": "Other ({n} sources)",
+      "empty": "No leads in the last 30 days."
+    },
+    "waiting": {
+      "table": "Leads waiting for your review",
+      "review": "Review leads",
+      "emptyTitle": "All caught up",
+      "emptyBody": "Nothing is waiting."
+    }
+  }
+}
