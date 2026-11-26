@@ -109,3 +109,8 @@ export type ErrorCode = keyof typeof errorStatus;
 export type ErrorBody = z.infer<typeof errorBody>;
 export type UserStatus = z.infer<typeof userStatus>;
 export type SessionStage = z.infer<typeof sessionStage>;
+
+// Sort direction of a sortable list column (leads, contacts). The column name is per list; an absent sort keeps the
+// list's natural order (newest first).
+export const sortDir = z.enum(['asc', 'desc']);
+export type SortDir = z.infer<typeof sortDir>;
