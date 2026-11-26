@@ -70,7 +70,7 @@ export function ContactsScreen({
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs when a missing contact appears, not on every search change
   useEffect(() => {
     if (!contactMissing) return;
-    toast(t('toast.gone'));
+    toast(t('toast.gone'), { tone: 'error' });
     router.replace(`${pathname}${contactsSearch(filters, { contact: null }, contactId)}`, {
       scroll: false,
     });

@@ -36,7 +36,7 @@ export function Drawer({
           onCloseAutoFocus={focusReturn.restore}
           className="fixed inset-y-0 end-0 z-95 flex w-[min(520px,100%)] animate-sx-slide flex-col bg-sx-paper shadow-sx-md rtl:animate-sx-slide-rtl"
         >
-          <header className="flex items-start justify-between gap-3 border-sx-border border-b px-6 pt-5 pb-4">
+          <header className="flex items-start justify-between gap-3 border-sx-border border-b px-4 pt-4 pb-4 rail:px-6 rail:pt-5">
             <div className="min-w-0">
               <Dialog.Title className="mb-0.5 font-heading text-xl">{title}</Dialog.Title>
               {subtitle}
@@ -45,7 +45,7 @@ export function Drawer({
               <IconButton label={t('close')} icon="x" />
             </Dialog.Close>
           </header>
-          <div className="flex flex-1 flex-col gap-6 overflow-auto p-6">{children}</div>
+          <div className="flex flex-1 flex-col gap-6 overflow-auto p-4 rail:p-6">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

@@ -68,9 +68,9 @@ const RING =
   'focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-sx-red cursor-pointer';
 const TRIGGER: Record<TabsVariant, string> = {
   underline:
-    '-mb-px flex items-baseline gap-1.5 whitespace-nowrap border-transparent border-b-2 py-2.5 font-label text-sx-muted hover:text-sx-black data-[state=active]:border-sx-red data-[state=active]:font-heading data-[state=active]:text-sx-black',
+    '-mb-px flex items-baseline gap-1.5 whitespace-nowrap border-transparent border-b-2 py-2.5 font-label text-sx-muted transition-colors duration-150 hover:text-sx-black data-[state=active]:border-sx-red data-[state=active]:font-heading data-[state=active]:text-sx-black',
   ribbon:
-    'group -mb-px flex min-w-[96px] shrink-0 grow flex-col border-transparent border-b-[3px] px-4 pt-3.5 pb-3 text-start hover:bg-sx-page data-[state=active]:border-sx-red not-first:border-s not-first:border-s-sx-border rail:min-w-[116px] rail:px-6',
+    'group -mb-px flex min-w-[96px] shrink-0 grow flex-col border-transparent border-b-[3px] px-4 pt-3.5 pb-3 text-start transition-colors duration-150 hover:bg-sx-page data-[state=active]:border-sx-red not-first:border-s not-first:border-s-sx-border rail:min-w-[116px] rail:px-6',
 };
 
 // The colour key of a ribbon tab: the same four states as the chips and the state bar.

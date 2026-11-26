@@ -88,7 +88,7 @@ export function Rail({
                     <Link
                       href={href}
                       aria-current={current ? 'page' : undefined}
-                      className="focus-ring flex h-10 items-center gap-3 rounded-field ps-3 pe-3 font-label whitespace-nowrap text-sx-black no-underline hover:bg-sx-shell aria-[current=page]:bg-sx-red-soft aria-[current=page]:*:[svg]:text-sx-red"
+                      className="focus-ring flex h-10 items-center gap-3 rounded-field ps-3 pe-3 font-label whitespace-nowrap text-sx-black no-underline transition-colors duration-150 hover:bg-sx-shell aria-[current=page]:bg-sx-red-soft aria-[current=page]:*:[svg]:text-sx-red"
                     >
                       <Icon name={item.icon} className="flex-none" />
                       <span className={REVEAL}>{t(item.labelKey)}</span>

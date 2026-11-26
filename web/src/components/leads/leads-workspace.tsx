@@ -82,7 +82,7 @@ function Workspace({
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs when a missing lead appears, not on every filter change
   useEffect(() => {
     if (!leadMissing) return;
-    toast(t('toast.gone'));
+    toast(t('toast.gone'), { tone: 'error' });
     router.replace(`${pathname}${leadsSearch(filters, { lead: null }, leadId)}`, { scroll: false });
   }, [leadMissing, leadId]);
 

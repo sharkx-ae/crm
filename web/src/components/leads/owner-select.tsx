@@ -51,6 +51,7 @@ export function OwnerSelect({
           tErr(res.error.code, {
             minutes: Math.max(1, Math.ceil((res.error.retryAfterSec ?? 60) / 60)),
           }),
+          { tone: 'error' },
         );
         return;
       }

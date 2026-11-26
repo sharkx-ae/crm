@@ -55,7 +55,7 @@ export function Modal({
               wide ? 'max-w-[720px]' : 'max-w-[520px]',
             )}
           >
-            <header className="flex items-start justify-between gap-3 px-6 pt-5 pb-3">
+            <header className="flex items-start justify-between gap-3 px-4 pt-4 pb-3 rail:px-6 rail:pt-5">
               <div className="min-w-0">
                 <Dialog.Title className="font-heading text-section">{title}</Dialog.Title>
                 {description ? (
@@ -68,11 +68,11 @@ export function Modal({
                 <IconButton label={t('close')} icon="x" />
               </Dialog.Close>
             </header>
-            <div ref={body} className="flex flex-col gap-4 overflow-auto px-6 pt-1 pb-5">
+            <div ref={body} className="flex flex-col gap-4 overflow-auto px-4 pt-1 pb-4 rail:px-6 rail:pb-5">
               {children}
             </div>
             {footer ? (
-              <footer className="flex flex-wrap justify-end gap-2 border-sx-border border-t px-6 py-4">
+              <footer className="flex flex-wrap justify-end gap-2 border-sx-border border-t px-4 py-3 rail:px-6 rail:py-4">
                 {footer}
               </footer>
             ) : null}

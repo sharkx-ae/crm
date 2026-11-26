@@ -78,7 +78,10 @@ export function Select({
         )}
       >
         <span className="min-w-0 flex-1 truncate">
-          <RadixSelect.Value placeholder={placeholder} />
+          {/* The label is passed in, so the server renders it too (Radix fills the value in only after mounting). */}
+          <RadixSelect.Value placeholder={placeholder}>
+            {options.find((o) => o.value === value)?.label}
+          </RadixSelect.Value>
         </span>
         <RadixSelect.Icon asChild>
           <Icon name="down" size="sm" className="text-sx-muted" />

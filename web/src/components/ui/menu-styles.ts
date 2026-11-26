@@ -8,4 +8,4 @@ export const MENU_SURFACE =
 export const MENU_SIZE = 'max-h-[70dvh] min-w-[240px] max-w-[360px] overflow-auto';
 
 export const MENU_ITEM =
-  'focus-ring flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-start font-label text-sx-black no-underline outline-none transition-colors duration-150 data-disabled:cursor-default data-disabled:opacity-45 data-highlighted:bg-sx-shell';
+  'flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-start font-label text-sx-black no-underline outline-none transition-colors duration-150 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-sx-red data-disabled:cursor-default data-disabled:opacity-45 data-highlighted:bg-sx-shell';

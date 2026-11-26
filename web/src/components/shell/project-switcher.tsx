@@ -21,7 +21,7 @@ export function ProjectSwitcher({ projectId }: { projectId: string | null }) {
       trigger={
         <button
           type="button"
-          className="focus-ring flex h-10 min-w-0 cursor-pointer items-center gap-2.5 rounded-field ps-2 pe-2 text-start hover:bg-sx-shell"
+          className="focus-ring flex h-10 max-w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-field ps-2 pe-2 text-start transition-colors duration-150 hover:bg-sx-shell"
         >
           {current ? (
             <Avatar name={current.name} shape="square" color={current.color} />

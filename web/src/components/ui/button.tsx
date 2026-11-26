@@ -9,7 +9,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'md' | 'sm';
 
 const BASE =
-  'focus-ring inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap border font-label no-underline disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45';
+  'focus-ring inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap border font-label no-underline transition-colors duration-150 disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45';
 const VARIANT: Record<ButtonVariant, string> = {
   primary: 'border-sx-red bg-sx-red text-white hover:brightness-90',
   secondary: 'border-sx-black bg-sx-paper text-sx-black hover:bg-sx-shell',
@@ -97,7 +97,7 @@ export function IconButton({
       type={type ?? 'button'}
       aria-label={label}
       className={cx(
-        'focus-ring relative grid size-10 cursor-pointer place-items-center rounded-field text-sx-black hover:bg-sx-shell disabled:cursor-default disabled:opacity-30',
+        'focus-ring relative grid size-10 cursor-pointer place-items-center rounded-field text-sx-black transition-colors duration-150 hover:bg-sx-shell disabled:cursor-default disabled:opacity-30',
         className,
       )}
       {...rest}

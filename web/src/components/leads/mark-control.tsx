@@ -51,7 +51,9 @@ export function MarkControl({
   usePauseRefresh(pending);
 
   const fail = (error: ActionError) =>
-    toast(tErr(error.code, { minutes: Math.max(1, Math.ceil((error.retryAfterSec ?? 60) / 60)) }));
+    toast(tErr(error.code, { minutes: Math.max(1, Math.ceil((error.retryAfterSec ?? 60) / 60)) }), {
+      tone: 'error',
+    });
 
   const submit = (to: Mark, reason?: string) =>
     start(async () => {

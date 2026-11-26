@@ -78,7 +78,7 @@ export function LeadsTable({
                   aria-label={t('open', { name })}
                   className="flex min-w-0 flex-col leading-snug text-sx-black no-underline"
                 >
-                  <span className="font-heading text-section">
+                  <span title={name} className="block max-w-[32ch] truncate font-heading text-section">
                     {r.name ? (
                       <UserText>{r.name}</UserText>
                     ) : r.phoneDisplay ? (
@@ -95,7 +95,9 @@ export function LeadsTable({
               <Td>
                 <SourceBadge source={r.source} label={tSource(r.source)} />
               </Td>
-              <Td>{r.campaign ? <UserText>{r.campaign}</UserText> : null}</Td>
+              <Td className="max-w-[28ch] truncate" title={r.campaign ?? undefined}>
+                {r.campaign ? <UserText>{r.campaign}</UserText> : null}
+              </Td>
               {showStatus ? (
                 <Td>
                   <StatusChip status={r.status} />

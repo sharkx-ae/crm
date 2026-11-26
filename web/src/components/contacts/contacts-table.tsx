@@ -46,7 +46,7 @@ export function ContactsTable({
                   aria-label={t('open', { name })}
                   className="flex min-w-0 flex-col leading-snug text-sx-black no-underline"
                 >
-                  <span className="font-heading text-section">
+                  <span title={name} className="block max-w-[32ch] truncate font-heading text-section">
                     {row.name ? (
                       <UserText>{row.name}</UserText>
                     ) : row.phoneDisplay ? (
@@ -60,7 +60,9 @@ export function ContactsTable({
                   ) : null}
                 </Link>
               </Td>
-              <Td>{row.email ? <UserText>{row.email}</UserText> : null}</Td>
+              <Td className="max-w-[28ch] truncate" title={row.email ?? undefined}>
+                {row.email ? <UserText>{row.email}</UserText> : null}
+              </Td>
               <Td num>{format.number(row.leadCount)}</Td>
               <Td>{row.latestStatus ? <StatusChip status={row.latestStatus} /> : null}</Td>
               <Td num>{format.ago(row.lastActivityAt)}</Td>

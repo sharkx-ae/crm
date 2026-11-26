@@ -33,12 +33,12 @@ export function ExportButton({
     try {
       res = await fetch(href);
     } catch {
-      toast(t('export.failed'));
+      toast(t('export.failed'), { tone: 'error' });
       return;
     }
     if (!res.ok) {
       const message = (await res.text()).trim();
-      toast(message || t('export.failed'));
+      toast(message || t('export.failed'), { tone: 'error' });
       return;
     }
     const blob = await res.blob();

@@ -34,7 +34,7 @@ export function ClickRow({
         if ((e.target as HTMLElement).closest(INTERACTIVE)) return;
         router.push(href);
       }}
-      className={cx('cursor-pointer hover:bg-sx-page', fresh && FRESH_ROW, className)}
+      className={cx('cursor-pointer transition-colors duration-150 hover:bg-sx-page', fresh && FRESH_ROW, className)}
     />
   );
 }

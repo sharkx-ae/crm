@@ -31,7 +31,7 @@ export function LanguageMenu() {
       if (locale === active) return;
       const res = await updateMe({ locale });
       if (!res.ok) {
-        toast(tErr(res.error.code));
+        toast(tErr(res.error.code), { tone: 'error' });
         return;
       }
       router.replace(`${pathname}${window.location.search}`, { locale });
