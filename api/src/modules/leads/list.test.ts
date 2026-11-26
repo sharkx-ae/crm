@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { expectClientSafe } from '../../../tests/helpers/client-safe.ts';
 import { rawClient } from '../../../tests/helpers/db.ts';
+import { allPages } from '../../../tests/helpers/paging.ts';
 import { asSession, buildTestApp, seedUser, signIn } from '../../../tests/helpers/http.ts';
 import { clientLeadRow, type LeadsPage, leadsPage } from '../../contracts/leads.ts';
 import { getPool } from '../../db/index.ts';
@@ -72,6 +73,10 @@ async function page(params: Record<string, string>, token = managerToken): Promi
   expect(res.statusCode, res.body).toBe(200);
   return leadsPage.parse(res.json());
 }
+
+/** Every row of the filtered list, read page by page. */
+const everyLead = (params: Record<string, string>, token = managerToken) =>
+  allPages((n) => page({ ...params, limit: '100', page: String(n) }, token));
 
 const phones = (p: LeadsPage) => p.rows.map((r) => r.phone).sort();
 const phonesOf = (ls: SeedLead[]) => ls.map((l) => l.phoneE164).sort();
@@ -219,7 +224,7 @@ describe('test leads', () => {
     );
     expect(rows).toHaveLength(1);
     for (const token of [managerToken, clientToken]) {
-      const all = await page({ projectId: project.lum as string, limit: '200' }, token);
+      const all = await everyLead({ projectId: project.lum as string }, token);
       expect(all.rows.map((r) => r.id)).not.toContain(rows[0]?.id);
       expect(all.rows).toHaveLength(all.counts.all);
       const search = await page({ projectId: project.lum as string, q: 'Test lead' }, token);
@@ -247,27 +252,86 @@ describe('order and paging', () => {
     );
   });
 
+  const ids = async (params: Record<string, string>) =>
+    (await page({ projectId: bulk, ...params })).rows.map((r) => r.id);
+  const newest = async () =>
+    (
+      await db.query<{ id: string }>(
+        'select id from leads where project_id = $1 order by created_at desc, id desc',
+        [bulk],
+      )
+    ).rows.map((r) => r.id);
+
   it('newest first, ties by id', async () => {
-    const p = await page({ projectId: bulk, limit: '40' });
-    const { rows } = await db.query<{ id: string }>(
-      'select id from leads where project_id = $1 order by created_at desc, id desc limit 40',
-      [bulk],
-    );
-    expect(p.rows.map((r) => r.id)).toEqual(rows.map((r) => r.id));
+    expect(await ids({ limit: '50' })).toEqual((await newest()).slice(0, 50));
   });
 
-  it('20 by default, grows with limit, stops at 200; counts and total stay the full numbers', async () => {
+  it('20 by default; 10, 50 and 100 are the other sizes; counts and total stay the full numbers', async () => {
     for (const [limit, n] of [
       [undefined, 20],
-      ['40', 40],
-      ['200', 200],
+      ['10', 10],
+      ['20', 20],
+      ['50', 50],
+      ['100', 100],
     ] as const) {
       const p = await page({ projectId: bulk, ...(limit ? { limit } : {}) });
       expect(p.rows, String(limit)).toHaveLength(n);
       expect(p.total).toBe(230);
       expect(p.counts.all).toBe(230);
     }
-    expect((await get({ projectId: bulk, limit: '201' })).statusCode).toBe(422);
+  });
+
+  it('page 1 and 2 meet at the boundary, with no row twice and none skipped', async () => {
+    const want = await newest();
+    expect(await ids({ limit: '20', page: '1' })).toEqual(want.slice(0, 20));
+    expect(await ids({ limit: '20', page: '2' })).toEqual(want.slice(20, 40));
+    expect(await ids({ limit: '50', page: '3' })).toEqual(want.slice(100, 150));
+  });
+
+  it('the last page is partial; a page past the end is empty with the true total', async () => {
+    const want = await newest();
+    const last = await page({ projectId: bulk, limit: '100', page: '3' });
+    expect(last.rows.map((r) => r.id)).toEqual(want.slice(200));
+    expect(last.rows).toHaveLength(30);
+    expect(last.total).toBe(230);
+    const past = await page({ projectId: bulk, limit: '100', page: '4' });
+    expect(past.rows).toEqual([]);
+    expect(past.total).toBe(230);
+    expect(past.counts.all).toBe(230);
+    const far = await page({ projectId: bulk, limit: '10', page: '9999' });
+    expect(far.rows).toEqual([]);
+    expect(far.total).toBe(230);
+  });
+
+  it('a filter and a page together page the filtered set; the counts ignore the page', async () => {
+    // "Person 1" matches Person 1, 10 to 19 and 100 to 199: 111 of the 230.
+    const filtered = await allPages((n) =>
+      page({ projectId: bulk, q: 'Person 1', limit: '100', page: String(n) }),
+    );
+    expect(filtered.total).toBe(111);
+    expect(filtered.rows).toHaveLength(111);
+    const second = await page({ projectId: bulk, q: 'Person 1', limit: '10', page: '2' });
+    expect(second.rows.map((r) => r.id)).toEqual(filtered.rows.slice(10, 20).map((r) => r.id));
+    expect(second.total).toBe(111);
+    expect(second.counts.all).toBe(111);
+    const past = await page({ projectId: bulk, q: 'Person 1', limit: '100', page: '3' });
+    expect(past.rows).toEqual([]);
+    expect(past.total).toBe(111);
+  });
+
+  it('a page size outside 10, 20, 50, 100 and a page below 1 are refused', async () => {
+    const bads: Record<string, string>[] = [
+      { limit: '5' },
+      { limit: '40' },
+      { limit: '200' },
+      { limit: '0' },
+      { page: '0' },
+      { page: '-1' },
+      { page: 'x' },
+    ];
+    for (const bad of bads) {
+      expect((await get({ projectId: bulk, ...bad })).statusCode, JSON.stringify(bad)).toBe(422);
+    }
   });
 });
 
@@ -295,13 +359,13 @@ describe('staff view', () => {
 
 describe('client view', () => {
   it('only the strict client fields, no owner names or choices', async () => {
-    const res = await get({ projectId: project.lum as string, limit: '200' }, clientToken);
+    const res = await get({ projectId: project.lum as string, limit: '100' }, clientToken);
     expect(res.statusCode).toBe(200);
     expectClientSafe(res.body);
     expect(res.body).not.toContain('Aisha Rahman');
     const body = res.json();
     expect(body.view).toBe('client');
-    expect(body.rows).toHaveLength(realOf('lum').length);
+    expect(body.rows).toHaveLength(Math.min(100, realOf('lum').length));
     for (const row of body.rows) expect(clientLeadRow.safeParse(row).success).toBe(true);
   });
 

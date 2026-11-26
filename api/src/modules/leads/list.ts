@@ -15,8 +15,9 @@ import {
 } from './projection.ts';
 import { leads } from './schema.ts';
 
-// GET /leads (F4b S1, S2). Paging is server-side: the api applies the tab, the filters, the search and the limit.
-// Counts ignore the tab, so the tabs always add up and stay right under any filter. Nothing is cached.
+// GET /leads (F4b S1, S2). Paging is server-side: the api applies the tab, the filters, the search and the page
+// (`limit` rows from `(page - 1) * limit`). Counts and `total` ignore the page, and the counts ignore the tab, so the
+// tabs always add up and stay right under any filter. A page past the end is empty with the true total. Nothing is cached.
 
 const countWhere = (status: string) =>
   sql<number>`count(*) filter (where ${leads.status} = ${status})::int`;
@@ -46,7 +47,8 @@ export async function listLeads(session: ResolvedSession, q: LeadsQuery): Promis
       .leftJoin(users, leadOwnerJoin)
       .where(and(filter, tabSql(q.tab)))
       .orderBy(desc(leads.createdAt), desc(leads.id))
-      .limit(q.limit);
+      .limit(q.limit)
+      .offset((q.page - 1) * q.limit);
 
     // Every source this client has, whatever is filtered: the select must not shrink as you use it.
     const sources = await tx

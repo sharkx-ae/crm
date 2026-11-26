@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { expectClientSafe } from '../../../tests/helpers/client-safe.ts';
 import { rawClient } from '../../../tests/helpers/db.ts';
+import { allPages } from '../../../tests/helpers/paging.ts';
 import { asSession, buildTestApp, seedUser, signIn } from '../../../tests/helpers/http.ts';
 import { leadExportRows, leadsPage } from '../../contracts/leads.ts';
 import { getPool } from '../../db/index.ts';
@@ -60,15 +61,16 @@ const exportOf = (filter: Filter, token = managerToken, projectId = project.lum)
     headers: asSession(token),
     payload: { projectId, ...filter },
   });
-const listOf = async (filter: Filter, token = managerToken) => {
-  const res = await app.inject({
-    method: 'GET',
-    url: `/leads?${new URLSearchParams({ projectId: project.lum as string, limit: '200', ...filter })}`,
-    headers: asSession(token),
+const listOf = (filter: Filter, token = managerToken) =>
+  allPages(async (page) => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/leads?${new URLSearchParams({ projectId: project.lum as string, limit: '100', page: String(page), ...filter })}`,
+      headers: asSession(token),
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return leadsPage.parse(res.json());
   });
-  expect(res.statusCode, res.body).toBe(200);
-  return leadsPage.parse(res.json());
-};
 
 const COMBOS: [string, Filter][] = [
   ['everything', {}],

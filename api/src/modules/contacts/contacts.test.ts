@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { rawClient } from '../../../tests/helpers/db.ts';
+import { allPages } from '../../../tests/helpers/paging.ts';
 import { asSession, buildTestApp, seedUser, signIn } from '../../../tests/helpers/http.ts';
 import {
   type ContactProfile,
@@ -84,11 +85,15 @@ async function page(params: Record<string, string>, token = managerToken): Promi
   return contactsPage.parse(res.json());
 }
 
+/** Every row of the filtered list, read page by page. */
+const everyContact = (params: Record<string, string>) =>
+  allPages((n) => page({ ...params, limit: '100', page: String(n) }));
+
 describe('contacts list', () => {
   it('counts and latest status match the seed, test-only contacts are hidden, newest activity first', async () => {
     for (const c of CLIENTS) {
       const want = expectedContacts(realOf(c.key));
-      const p = await page({ projectId: project[c.key] as string, limit: '200' });
+      const p = await everyContact({ projectId: project[c.key] as string });
       expect(p.total, c.name).toBe(want.length);
       expect(p.rows, c.name).toHaveLength(want.length);
       const byPhone = new Map(want.map((row) => [row.phone, row]));
@@ -109,7 +114,7 @@ describe('contacts list', () => {
     }
     const hidden = plan.clients.find((c) => c.client.key === 'lum')?.leads.find((l) => l.isTest)
       ?.phoneE164 as string;
-    const lum = await page({ projectId: project.lum as string, limit: '200' });
+    const lum = await everyContact({ projectId: project.lum as string });
     expect(lum.rows.map((row) => row.phone)).not.toContain(hidden);
   });
 
@@ -135,16 +140,66 @@ describe('contacts list', () => {
     expect((await page({ projectId: project.lum as string, q: testPhone })).rows).toEqual([]);
   });
 
-  it('limit grows by the requested page and never past the cap', async () => {
-    const all = await page({ projectId: project.lum as string, limit: '200' });
-    const first = await page({ projectId: project.lum as string, limit: '5' });
+  it('pages: size, boundaries, the last partial page, past the end, a search with a page', async () => {
+    const all = await everyContact({ projectId: project.lum as string });
+    const ids = (p: ContactsPage) => p.rows.map((row) => row.id);
+    const first = await page({ projectId: project.lum as string, limit: '10' });
     expect(first.total).toBe(all.total);
-    expect(first.rows).toHaveLength(5);
-    expect(first.rows.map((row) => row.id)).toEqual(all.rows.slice(0, 5).map((row) => row.id));
-    const over = await get(
-      `/contacts?${new URLSearchParams({ projectId: project.lum as string, limit: '500' })}`,
-    );
-    expect(over.statusCode).toBe(422);
+    expect(first.rows).toHaveLength(10);
+    expect(ids(first)).toEqual(ids(all).slice(0, 10));
+    // The default page is the first 20 rows.
+    expect(ids(await page({ projectId: project.lum as string }))).toEqual(ids(all).slice(0, 20));
+
+    // Page 2 starts exactly where page 1 ends: no row twice, none skipped.
+    const second = await page({ projectId: project.lum as string, limit: '10', page: '2' });
+    expect(ids(second)).toEqual(ids(all).slice(10, 20));
+    expect(second.total).toBe(all.total);
+
+    // The last page holds the remainder and is not padded.
+    const lastPage = Math.ceil(all.total / 10);
+    const last = await page({
+      projectId: project.lum as string,
+      limit: '10',
+      page: String(lastPage),
+    });
+    expect(ids(last)).toEqual(ids(all).slice((lastPage - 1) * 10));
+
+    // Past the end: no rows, the true total.
+    const past = await page({
+      projectId: project.lum as string,
+      limit: '10',
+      page: String(lastPage + 1),
+    });
+    expect(past.rows).toEqual([]);
+    expect(past.total).toBe(all.total);
+
+    // A search and a page together: the page is within the filtered set.
+    const q = 'a';
+    const filtered = await everyContact({ projectId: project.lum as string, q });
+    const filteredSecond = await page({
+      projectId: project.lum as string,
+      q,
+      limit: '10',
+      page: '2',
+    });
+    expect(filteredSecond.total).toBe(filtered.total);
+    expect(ids(filteredSecond)).toEqual(ids(filtered).slice(10, 20));
+  });
+
+  it('a page size outside 10, 20, 50, 100 and a page below 1 are refused', async () => {
+    const bads: Record<string, string>[] = [
+      { limit: '5' },
+      { limit: '200' },
+      { limit: '0' },
+      { page: '0' },
+      { page: 'x' },
+    ];
+    for (const bad of bads) {
+      const res = await get(
+        `/contacts?${new URLSearchParams({ projectId: project.lum as string, ...bad })}`,
+      );
+      expect(res.statusCode, JSON.stringify(bad)).toBe(422);
+    }
   });
 
   it('a client is forbidden on its own client', async () => {

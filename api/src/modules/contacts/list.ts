@@ -12,7 +12,8 @@ import { waConversations, waMessages } from '../whatsapp/schema.ts';
 import { contacts } from './schema.ts';
 
 // GET /contacts (F4b S8). Staff only. Counts, latest status and last activity are over non-test leads, so a
-// person who only exists as a test lead is not in the list. Newest activity first. The api applies the limit.
+// person who only exists as a test lead is not in the list. Newest activity first. The api applies the page (`limit` rows
+// from `(page - 1) * limit`); `total` is the whole filtered set.
 
 /** A stored address the contract would refuse must not fail the whole page. */
 function safeEmail(raw: string | null): string | null {
@@ -95,7 +96,8 @@ export async function listContacts(
       .leftJoin(chats, eq(chats.contactId, contacts.id))
       .where(where)
       .orderBy(desc(lastActivity), desc(contacts.id))
-      .limit(q.limit);
+      .limit(q.limit)
+      .offset((q.page - 1) * q.limit);
 
     const rows: ContactRow[] = records.map((row) => {
       const status = leadStatus.safeParse(row.latestStatus);
