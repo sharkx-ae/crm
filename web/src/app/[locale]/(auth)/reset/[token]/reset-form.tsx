@@ -2,10 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
+import { AuthHeading } from '../../../../../components/auth/auth-heading.tsx';
 import { FormError } from '../../../../../components/auth/form-error.tsx';
 import { PasswordField } from '../../../../../components/auth/password-field.tsx';
 import { PasswordRules, passwordOk } from '../../../../../components/auth/password-rules.tsx';
-import { cardClass, primaryButtonClass } from '../../../../../components/auth/ui.ts';
+import { authFormClass, primaryButtonClass } from '../../../../../components/auth/ui.ts';
 import type { ActionError } from '../../../../../lib/action.ts';
 import { resetPassword } from '../../../../../lib/actions/auth.ts';
 
@@ -30,11 +31,10 @@ export function ResetForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={submit} className={`${cardClass} space-y-5 text-start`} noValidate>
-      <div>
-        <h1 className="mb-2 text-2xl font-bold">{t('newTitle')}</h1>
-        <p className="text-base text-sx-muted">{t('newIntro')}</p>
-      </div>
+    <form onSubmit={submit} className={authFormClass} noValidate>
+      <AuthHeading title={t('newTitle')}>
+        <p>{t('newIntro')}</p>
+      </AuthHeading>
       <div>
         <PasswordField
           id="new-password"

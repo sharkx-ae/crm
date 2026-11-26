@@ -2,14 +2,18 @@
 
 import { useTranslations } from 'next-intl';
 import { useRef } from 'react';
-import { inputClass } from './ui.ts';
 
 export const CODE_LENGTH = 6;
 
 /** What a paste or a typed value turns into: digits only, at most six. */
 export const digitsOnly = (s: string): string => s.replace(/\D/g, '').slice(0, CODE_LENGTH);
 
-// Six boxes with auto-advance, backspace-to-previous and paste of the whole code. Digits keep their order in RTL (dir="ltr").
+// Six boxes of 52x56px (mockup `.codebox`; over the 44px tap-target minimum), 10px apart (8px under 400px), with
+// auto-advance, backspace-to-previous, arrows and paste of the whole code. The row is `dir="ltr"` so the digits keep
+// their order in Arabic, which also makes ArrowLeft/ArrowRight match what is on screen. In an RTL page the row sits at
+// the inline start (the right) like the text above it. They shrink (max 52px) when the column is narrower than 362px.
+const BOX =
+  'focus-ring block h-14 min-w-0 max-w-[52px] flex-1 rounded-btn border border-sx-line bg-sx-paper p-0 text-center text-[22px] font-heading tabular-nums text-sx-black focus-visible:border-sx-black aria-invalid:border-sx-bad disabled:cursor-not-allowed disabled:opacity-60';
 export function CodeInput({
   value,
   onChange,
@@ -40,7 +44,7 @@ export function CodeInput({
   }
 
   return (
-    <fieldset dir="ltr" className="m-0 flex min-w-0 justify-between gap-2 border-0 p-0">
+    <fieldset dir="ltr" className="m-0 flex min-w-0 gap-2 border-0 p-0 min-[400px]:gap-2.5 rtl:justify-end">
       <legend className="sr-only">{t('label')}</legend>
       {Array.from({ length: CODE_LENGTH }, (_, i) => (
         <input
@@ -66,7 +70,7 @@ export function CodeInput({
             else if (e.key === 'ArrowLeft') focus(i - 1);
             else if (e.key === 'ArrowRight') focus(i + 1);
           }}
-          className={`${inputClass} ps-0 pe-0 text-center text-xl font-bold tabular-nums`}
+          className={BOX}
         />
       ))}
     </fieldset>

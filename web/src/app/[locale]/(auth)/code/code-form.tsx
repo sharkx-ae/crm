@@ -1,17 +1,22 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { type ReactNode, useState, useTransition } from 'react';
+import { AuthHeading } from '../../../../components/auth/auth-heading.tsx';
 import { CODE_LENGTH, CodeInput } from '../../../../components/auth/code-input.tsx';
 import { FormError } from '../../../../components/auth/form-error.tsx';
-import { cardClass, linkClass, primaryButtonClass } from '../../../../components/auth/ui.ts';
+import { authFormClass, linkClass, primaryButtonClass } from '../../../../components/auth/ui.ts';
 import type { ActionError } from '../../../../lib/action.ts';
 import { logout, resendCode, verifyCode } from '../../../../lib/actions/auth.ts';
+
+// An email address is always left to right, so an Arabic sentence cannot pull its period to the front.
+const address = (chunks: ReactNode) => <bdi dir="ltr">{chunks}</bdi>;
 
 export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; loginHref: string }) {
   const t = useTranslations('auth.code');
   const [code, setCode] = useState('');
   const [error, setError] = useState<ActionError | null>(null);
+  // The masked address the new code went to, once it is sent.
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [resending, startResend] = useTransition();
@@ -46,7 +51,7 @@ export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; logi
       const res = await resendCode({});
       if (res.ok) {
         setCode('');
-        setNotice(t('resent', { email: res.data.maskedEmail }));
+        setNotice(res.data.maskedEmail);
       } else setError(res.error);
     });
   }
@@ -65,11 +70,10 @@ export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; logi
       : undefined;
 
   return (
-    <form onSubmit={submit} className={`${cardClass} space-y-5 text-start`} noValidate>
-      <div>
-        <h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
-        <p className="text-base text-sx-muted">{t('sent', { email: maskedEmail })}</p>
-      </div>
+    <form onSubmit={submit} className={authFormClass} noValidate>
+      <AuthHeading title={t('title')}>
+        <p>{t.rich('sent', { email: maskedEmail, e: address })}</p>
+      </AuthHeading>
       <CodeInput
         value={code}
         onChange={onChange}
@@ -79,8 +83,8 @@ export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; logi
       />
       <FormError id="code-error" error={codeMessage ? null : error} override={codeMessage} />
       {notice ? (
-        <p role="status" className="text-sm font-semibold text-sx-black">
-          {notice}
+        <p role="status" className="text-body font-label text-sx-black">
+          {t.rich('resent', { email: notice, e: address })}
         </p>
       ) : null}
       <button

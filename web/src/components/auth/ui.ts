@@ -20,6 +20,13 @@ export const errorTextClass = 'mt-1.5 font-label text-label text-sx-bad';
 /** An auth form or panel inside the split-screen layout's form column. */
 export const cardClass = 'w-full text-start';
 
+/**
+ * The auth form rhythm (mockup `.auth .box`): one flex column with a 20px gap between the heading block, the fields,
+ * the button and the links row. Use this instead of `space-y-*`: a child with its own margin (a fieldset has `m-0`)
+ * cancels a sibling-margin rhythm, and the code boxes ended up touching the button.
+ */
+export const authFormClass = 'flex w-full flex-col gap-5 text-start';
+
 /** A status panel shown on its own page (not-found outside the app): the brand card. */
 export const fullPageCardClass =
   'w-full rounded-card border border-sx-border bg-sx-paper p-6 shadow-sx sm:p-8';

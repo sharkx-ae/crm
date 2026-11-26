@@ -2,9 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
+import { AuthHeading } from '../../../../components/auth/auth-heading.tsx';
 import { FormError } from '../../../../components/auth/form-error.tsx';
 import {
-  cardClass,
+  authFormClass,
   inputClass,
   labelClass,
   linkClass,
@@ -33,24 +34,25 @@ export function RequestForm({ loginHref }: { loginHref: string }) {
   if (sent) {
     // The same message whether or not an account exists.
     return (
-      <section className={`${cardClass} space-y-5 text-start`}>
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <p role="status" className="text-base text-sx-black">
+      <section className={authFormClass}>
+        <AuthHeading title={t('title')} />
+        <p role="status" className="text-body text-sx-black">
           {t('sent')}
         </p>
-        <a href={loginHref} className={linkClass}>
-          {t('back')}
-        </a>
+        <div className="flex flex-wrap items-center justify-between gap-x-4">
+          <a href={loginHref} className={linkClass}>
+            {t('back')}
+          </a>
+        </div>
       </section>
     );
   }
 
   return (
-    <form onSubmit={submit} className={`${cardClass} space-y-5 text-start`} noValidate>
-      <div>
-        <h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
-        <p className="text-base text-sx-muted">{t('intro')}</p>
-      </div>
+    <form onSubmit={submit} className={authFormClass} noValidate>
+      <AuthHeading title={t('title')}>
+        <p>{t('intro')}</p>
+      </AuthHeading>
       <div>
         <label htmlFor="email" className={labelClass}>
           {t('email')}
@@ -74,9 +76,11 @@ export function RequestForm({ loginHref }: { loginHref: string }) {
       <button type="submit" disabled={pending || !email} className={primaryButtonClass}>
         {pending ? t('submitting') : t('submit')}
       </button>
-      <a href={loginHref} className={linkClass}>
-        {t('back')}
-      </a>
+      <div className="flex flex-wrap items-center justify-between gap-x-4">
+        <a href={loginHref} className={linkClass}>
+          {t('back')}
+        </a>
+      </div>
     </form>
   );
 }
