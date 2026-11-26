@@ -78,7 +78,10 @@ export function LeadsTable({
                   aria-label={t('open', { name })}
                   className="flex min-w-0 flex-col leading-snug text-sx-black no-underline"
                 >
-                  <span title={name} className="block max-w-[32ch] truncate font-heading text-section">
+                  <span
+                    title={name}
+                    className="block max-w-[32ch] truncate font-heading text-section"
+                  >
                     {r.name ? (
                       <UserText>{r.name}</UserText>
                     ) : r.phoneDisplay ? (

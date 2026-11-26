@@ -64,6 +64,15 @@ export function LeadsToolbar({
         options={[
           { value: '', label: t('allSources') },
           ...sources.map((s) => ({ value: s, label: tSource(s) })),
+          // A shared link can name a source this client has no leads from: keep it visible, never a blank box.
+          ...(filters.source && !sources.some((s) => s === filters.source)
+            ? [
+                {
+                  value: filters.source,
+                  label: tSource(filters.source as LeadsPage['sources'][number]),
+                },
+              ]
+            : []),
         ]}
       />
       {owners ? (
@@ -80,6 +89,11 @@ export function LeadsToolbar({
               value: o.id,
               label: o.active ? o.name : t('inactiveOwner', { name: o.name }),
             })),
+            ...(filters.owner &&
+            filters.owner !== 'unassigned' &&
+            !owners.some((o) => o.id === filters.owner)
+              ? [{ value: filters.owner, label: t('unknownOwner') }]
+              : []),
           ]}
         />
       ) : null}

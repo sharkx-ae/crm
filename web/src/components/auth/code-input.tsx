@@ -44,7 +44,10 @@ export function CodeInput({
   }
 
   return (
-    <fieldset dir="ltr" className="m-0 flex min-w-0 gap-2 border-0 p-0 min-[400px]:gap-2.5 rtl:justify-end">
+    <fieldset
+      dir="ltr"
+      className="m-0 flex min-w-0 gap-2 border-0 p-0 min-[400px]:gap-2.5 rtl:justify-end"
+    >
       <legend className="sr-only">{t('label')}</legend>
       {Array.from({ length: CODE_LENGTH }, (_, i) => (
         <input

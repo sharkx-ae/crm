@@ -36,6 +36,7 @@
     "owner": "Owner",
     "allOwners": "All owners",
     "unassigned": "Unassigned",
+    "unknownOwner": "Unknown owner",
     "inactiveOwner": "{name} (inactive)"
   },
   "columns": {

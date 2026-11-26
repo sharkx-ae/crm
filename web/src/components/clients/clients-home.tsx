@@ -58,7 +58,9 @@ export async function ClientsHome({
             <Kpi label={t('kpi.toFix')} value={totals.toFix} hot={totals.toFix > 0} />
           </KpiStrip>
         </div>
-        {action ? <div className="order-first flex-none self-end rail:order-none">{action}</div> : null}
+        {action ? (
+          <div className="order-first flex-none self-end rail:order-none">{action}</div>
+        ) : null}
       </div>
 
       <Card flush>

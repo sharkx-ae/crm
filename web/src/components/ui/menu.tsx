@@ -39,12 +39,7 @@ export function MenuItem({
   className,
   ...rest
 }: ComponentPropsWithoutRef<typeof DropdownMenu.Item>) {
-  return (
-    <DropdownMenu.Item
-      {...rest}
-      className={cx(MENU_ITEM, className)}
-    />
-  );
+  return <DropdownMenu.Item {...rest} className={cx(MENU_ITEM, className)} />;
 }
 
 /** A muted group heading ("Client", "Language"). */

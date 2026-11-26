@@ -68,7 +68,10 @@ export function Modal({
                 <IconButton label={t('close')} icon="x" />
               </Dialog.Close>
             </header>
-            <div ref={body} className="flex flex-col gap-4 overflow-auto px-4 pt-1 pb-4 rail:px-6 rail:pb-5">
+            <div
+              ref={body}
+              className="flex flex-col gap-4 overflow-auto px-4 pt-1 pb-4 rail:px-6 rail:pb-5"
+            >
               {children}
             </div>
             {footer ? (

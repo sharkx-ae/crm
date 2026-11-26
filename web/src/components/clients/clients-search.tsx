@@ -33,5 +33,7 @@ export function ClientsSearch() {
     }, 250);
   };
 
-  return <SearchField label={t('search')} placeholder={t('search')} value={value} onChange={update} />;
+  return (
+    <SearchField label={t('search')} placeholder={t('search')} value={value} onChange={update} />
+  );
 }
