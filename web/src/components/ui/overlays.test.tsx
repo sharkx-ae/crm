@@ -475,6 +475,23 @@ describe('Tabs', () => {
   });
 });
 
+// Each click toasts the next number, so a test can tell which of several messages is still showing.
+function Numbered() {
+  const { toast } = useToast();
+  const n = useRef(0);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        n.current += 1;
+        toast(`Message ${n.current}`);
+      }}
+    >
+      Mark
+    </button>
+  );
+}
+
 function Pusher({ text, tone }: { text: string; tone?: 'success' | 'error' }) {
   const { toast } = useToast();
   return (
@@ -544,15 +561,6 @@ describe('Toast', () => {
   });
 
   it('stacks several messages, three at most: the oldest leave first', async () => {
-    let n = 0;
-    function Numbered() {
-      const { toast } = useToast();
-      return (
-        <button type="button" onClick={() => toast(`Message ${++n}`)}>
-          Mark
-        </button>
-      );
-    }
     renderIntl(
       <ToastProvider>
         <Numbered />
