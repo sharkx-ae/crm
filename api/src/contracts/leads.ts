@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { actorKind, e164, email, iso, leadStatus, source } from './common.ts';
+import { actorKind, e164, email, iso, leadStatus, pageNumber, pageSize, source } from './common.ts';
 
 // F4a/F4b shapes (web plan §3.4, §4.1, §4.4). Responses carry a `view` so a client-role
 // shape is always the strict allowlist and a new endpoint cannot forget the projection.
@@ -9,14 +9,16 @@ const owner = z.union([z.uuid(), z.literal('unassigned')]);
 // The query of a read by id (GET /leads/:id, GET /contacts/:id): can() runs on the client before the row is read.
 export const projectScope = z.object({ projectId: z.uuid() });
 
-// GET /leads. `limit` pages by "Show 20 more", up to 200.
+// GET /leads. `page` (1-based) and `limit` (the page size: 10, 20, 50 or 100) page the list; `total` on the response
+// is the size of the tab's whole set, whatever the page.
 export const leadsQuery = z.object({
   projectId: z.uuid(),
   tab: leadTab.default('all'),
   q: z.string().trim().max(120).optional(),
   source: source.optional(),
   owner: owner.optional(),
-  limit: z.coerce.number().int().min(1).max(200).default(20),
+  page: pageNumber,
+  limit: pageSize,
 });
 
 // The client allowlist (CONTRACTS §1: never owner, stage, notes, events, tasks, isTest).

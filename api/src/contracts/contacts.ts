@@ -1,14 +1,16 @@
 import { z } from 'zod';
-import { e164, email, iso, leadStatus } from './common.ts';
+import { e164, email, iso, leadStatus, pageNumber, pageSize } from './common.ts';
 import { staffLeadRow } from './leads.ts';
 
 // F4b S3 (web plan §4.4). Staff only: the client role gets 403 from every route here.
 
-// GET /contacts. `q` searches name, phone and email; `limit` pages by "Show 20 more", up to 200.
+// GET /contacts. `q` searches name, phone and email; `page` (1-based) and `limit` (the page size: 10, 20, 50 or 100)
+// page the list; `total` is the size of the whole filtered set.
 export const contactsQuery = z.object({
   projectId: z.uuid(),
   q: z.string().trim().max(120).optional(),
-  limit: z.coerce.number().int().min(1).max(200).default(20),
+  page: pageNumber,
+  limit: pageSize,
 });
 export const contactRow = z.object({
   id: z.uuid(),
