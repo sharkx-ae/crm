@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { FIXTURE } from '../support/fixtures.ts';
+import { FIXTURE, LEAD_COUNT } from '../support/fixtures.ts';
 
 // F4b on the stubbed api: staff and client leads, the drawer, export, contacts, and the EN/AR screenshots.
 const { lumiere, sara } = FIXTURE.ids;
@@ -18,6 +18,14 @@ async function signIn(page: Page, email: string) {
   await expect(page).not.toHaveURL(/\/code$/);
 }
 
+/** Opens a Select by its name and picks an option by its label (the list is a Radix portal, not a native select). */
+async function choose(page: Page, name: string, option: string | RegExp) {
+  await page.getByRole('combobox', { name }).click();
+  await page.getByRole('option', { name: option, exact: true }).click();
+}
+const range = (page: Page, text: string) =>
+  expect(page.getByRole('navigation', { name: 'Pagination' })).toContainText(text);
+
 const noPageScroll = (page: Page) =>
   page.evaluate(
     () =>
@@ -32,28 +40,33 @@ test('staff: filters, drawer, mark, assign, export and contacts', async ({ page 
   await page.goto(`/en/p/${lumiere}/leads`);
   await expect(page.getByRole('table', { name: 'Leads' })).toBeVisible();
 
-  // Tabs carry the counts. All is first for staff, and 40 is the whole fixture.
+  // Tabs carry the counts. All is first for staff, and 64 is the whole fixture.
   await expect(page.getByRole('tab').first()).toHaveAccessibleName(/All/);
   for (const name of ['All', 'Unreviewed', 'MQL', 'SQL', 'Not qualified']) {
     await expect(page.getByRole('tab', { name: new RegExp(name) })).toContainText(/\d/);
   }
-  await expect(page.getByRole('tab', { name: /All/ })).toContainText('40');
+  await expect(page.getByRole('tab', { name: /All/ })).toContainText(String(LEAD_COUNT));
 
-  // The 21st lead is past the first page until "Show 20 more".
+  // The 21st lead is on page 2; the footer pages through the server, one real link per page.
+  await range(page, '1–20 of 64');
   await expect(page.getByRole('link', { name: 'Open Page Two Lead' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Show 20 more' }).click();
-  await expect(page).toHaveURL(/limit=40/);
+  await page.getByRole('link', { name: 'Next page' }).click();
+  await expect(page).toHaveURL(/page=2/);
   await expect(page.getByRole('link', { name: 'Open Page Two Lead' })).toBeVisible();
+  await range(page, '21–40 of 64');
+  await page.getByRole('link', { name: 'Previous page' }).click();
+  await expect(page).not.toHaveURL(/page=/);
+  await expect(page.getByRole('link', { name: 'Open Page Two Lead' })).toHaveCount(0);
 
   await page.getByRole('tab', { name: /Unreviewed/ }).click();
   await expect(page).toHaveURL(/tab=unreviewed/);
-  await expect(page).not.toHaveURL(/limit=/);
+  await expect(page).not.toHaveURL(/page=|size=/);
   await expect(page.getByRole('link', { name: 'Open Sara Al Noor' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open Noor SQL' })).toHaveCount(0);
 
   await page.getByRole('tab', { name: /All/ }).click();
   await expect(page).not.toHaveURL(/tab=/);
-  await page.getByLabel('Source').selectOption('google');
+  await choose(page, 'Source', 'Google Ads');
   await expect(page).toHaveURL(/source=google/);
   await expect(page).not.toHaveURL(/tab=/);
   await expect(page.getByRole('link', { name: 'Open Google Only' })).toBeVisible();
@@ -61,16 +74,18 @@ test('staff: filters, drawer, mark, assign, export and contacts', async ({ page 
   const href = await page.getByRole('link', { name: 'Export' }).getAttribute('href');
   expect(href).toContain('source=google');
   expect(href).toContain(`projectId=${lumiere}`);
+  // The export is the whole filtered set: no paging in it.
   expect(href).not.toContain('limit=');
+  expect(href).not.toContain('page=');
 
-  await page.getByLabel('Source').selectOption('');
+  await choose(page, 'Source', 'All sources');
   await expect(page).not.toHaveURL(/source=/);
-  await page.getByLabel('Owner').selectOption('unassigned');
+  await choose(page, 'Owner', 'Unassigned');
   await expect(page).toHaveURL(/owner=unassigned/);
   await expect(page.getByRole('link', { name: 'Open Sara Al Noor' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open Hadi New' })).toHaveCount(0);
 
-  await page.getByLabel('Owner').selectOption('');
+  await choose(page, 'Owner', 'All owners');
   await expect(page).not.toHaveURL(/owner=/);
   await page.getByRole('searchbox', { name: 'Search leads' }).fill('Sara');
   await expect(page).toHaveURL(/q=Sara/);
@@ -92,7 +107,8 @@ test('staff: filters, drawer, mark, assign, export and contacts', async ({ page 
     ),
   ).toBeVisible();
 
-  await drawer.getByLabel('Owner').selectOption({ label: 'Rami Haddad' });
+  await drawer.getByRole('combobox', { name: 'Owner' }).click();
+  await page.getByRole('option', { name: 'Rami Haddad' }).click();
   await expect(page.getByText('Assigned to Rami Haddad.', { exact: true })).toBeVisible();
 
   await page.goto(`/en/p/${lumiere}/contacts`);
@@ -104,6 +120,103 @@ test('staff: filters, drawer, mark, assign, export and contacts', async ({ page 
   await expect(page).toHaveURL(new RegExp(`/leads\\?lead=${sara}`));
   await expect(page.getByRole('dialog', { name: 'Sara Al Noor' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Timeline' })).toBeVisible();
+});
+
+test('staff: leads paging, page size, reload, filter reset, a page past the end, an old link', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await signIn(page, 'admin@example.test');
+  await page.goto(`/en/p/${lumiere}/leads`);
+  await range(page, '1–20 of 64');
+  const nav = page.getByRole('navigation', { name: 'Pagination' });
+  // Previous is dimmed on the first page; the current page is marked; compact numbers show 1 … 4.
+  await expect(nav.getByRole('button', { name: 'Previous page' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await expect(nav.getByRole('link', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link', { name: 'Page 4' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Show d+ more/ })).toHaveCount(0);
+
+  // A bigger page: the address carries size=50 and starts again at page 1; page 2 holds the other 14.
+  await page.getByRole('link', { name: 'Page 3' }).click();
+  await expect(page).toHaveURL(/page=3/);
+  await choose(page, 'Rows per page', '50');
+  await expect(page).toHaveURL(/size=50/);
+  await expect(page).not.toHaveURL(/page=/);
+  await range(page, '1–50 of 64');
+  await page.getByRole('link', { name: 'Next page' }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await range(page, '51–64 of 64');
+  await expect(nav.getByRole('button', { name: 'Next page' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+
+  // The address is the state: a reload keeps the page and the size.
+  await page.reload();
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page).toHaveURL(/size=50/);
+  await range(page, '51–64 of 64');
+
+  // Changing a filter, the tab or the search starts again at page 1 (the size stays).
+  await choose(page, 'Source', 'Google Ads');
+  await expect(page).toHaveURL(/source=google/);
+  await expect(page).not.toHaveURL(/page=/);
+  await expect(page).toHaveURL(/size=50/);
+  await choose(page, 'Source', 'All sources');
+  await page.getByRole('link', { name: 'Next page' }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await page.getByRole('tab', { name: /MQL/ }).click();
+  await expect(page).toHaveURL(/tab=mql/);
+  await expect(page).not.toHaveURL(/page=/);
+
+  // A page past the end shows the last page and fixes the address.
+  await page.goto(`/en/p/${lumiere}/leads?page=99`);
+  await expect(page).toHaveURL(/page=4/);
+  await range(page, '61–64 of 64');
+
+  // An old ?limit= link is ignored: the default page of 20.
+  await page.goto(`/en/p/${lumiere}/leads?limit=40`);
+  await range(page, '1–20 of 64');
+});
+
+test('staff: contacts paging and the search toolbar inside the card', async ({ page }) => {
+  test.setTimeout(60_000);
+  await signIn(page, 'admin@example.test');
+  await page.goto(`/en/p/${lumiere}/contacts`);
+  await expect(page.getByRole('table', { name: 'Contacts' })).toBeVisible();
+  // The search is the toolbar of the flush card, not a box above it.
+  const card = page
+    .locator('div.rounded-card')
+    .filter({ has: page.getByRole('table', { name: 'Contacts' }) });
+  await expect(card.getByRole('searchbox', { name: 'Search contacts' })).toBeVisible();
+  await range(page, '1–20 of 30');
+  await expect(page.getByRole('button', { name: /Show d+ more/ })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Next page' }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await range(page, '21–30 of 30');
+
+  await choose(page, 'Rows per page', '10');
+  await expect(page).toHaveURL(/size=10/);
+  await expect(page).not.toHaveURL(/page=/);
+  await range(page, '1–10 of 30');
+  await page.getByRole('link', { name: 'Page 3' }).click();
+  await expect(page).toHaveURL(/page=3/);
+  await range(page, '21–30 of 30');
+  await page.reload();
+  await range(page, '21–30 of 30');
+
+  // The search starts again at page 1.
+  await page.getByRole('searchbox', { name: 'Search contacts' }).fill('Person');
+  await expect(page).toHaveURL(/q=Person/);
+  await expect(page).not.toHaveURL(/page=/);
+  await range(page, '1–10 of 28');
+
+  await page.goto(`/en/p/${lumiere}/contacts?page=99`);
+  await expect(page).toHaveURL(/page=2/);
+  await range(page, '21–30 of 30');
 });
 
 test('client: waiting tab first, inline mark, no staff chrome, contacts not found', async ({

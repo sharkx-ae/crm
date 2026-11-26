@@ -4,10 +4,11 @@ import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import type { ClientLeadRow, LeadsPage, LeadTab } from '../../contracts/leads.ts';
 import { useProjectFormat } from '../../lib/i18n/use-project-format.ts';
-import { type LeadFilters, PAGE_CAP, PAGE_STEP } from '../../lib/leads-url.ts';
+import type { LeadFilters } from '../../lib/leads-url.ts';
 import { Button } from '../ui/button.tsx';
 import { Card } from '../ui/card.tsx';
 import { EmptyState } from '../ui/empty-state.tsx';
+import { Pagination } from '../ui/pagination.tsx';
 import { type TabKeyTone, Tabs, TabsList, TabsPanel, TabsTrigger } from '../ui/tabs.tsx';
 import { LeadsTable } from './leads-table.tsx';
 import { LeadsToolbar } from './leads-toolbar.tsx';
@@ -18,19 +19,22 @@ type Tab = { value: LeadTab; label: string; count: number; tone?: TabKeyTone; ho
 /**
  * One flush card (mockup `card flush`): state bar, ribbon tabs, toolbar, table. The client's tabs start with "Waiting
  * for review" (the same filter as Unreviewed). Nothing here filters or slices: `data` is what the api returned for the
- * address, and "Show 20 more" asks the api for 20 more rows.
+ * address: one page of it, with the footer that moves between pages.
  */
 export function LeadsScreen({
   data,
   filters,
   onChange,
   hrefFor,
+  pageHref,
   renderMark,
 }: {
   data: LeadsPage;
   filters: LeadFilters;
   onChange: (change: Partial<LeadFilters>) => void;
   hrefFor: (id: string) => string;
+  /** The address of another page of this same view. */
+  pageHref: (page: number) => string;
   renderMark?: (row: ClientLeadRow) => ReactNode;
 }) {
   const t = useTranslations('leads');
@@ -56,84 +60,72 @@ export function LeadsScreen({
 
   const filtered = Boolean(filters.q || filters.source || filters.owner);
   const nothingYet = c.all === 0 && !filtered;
-  const more = Math.min(PAGE_STEP, data.total - data.rows.length);
-  const canGrow = data.rows.length < data.total && filters.limit < PAGE_CAP;
-  const capped = data.rows.length < data.total && filters.limit >= PAGE_CAP;
 
   return (
-    <>
-      <Card flush>
-        <StatusBar
-          label={t('statusBar')}
-          segments={[
-            { key: 'new', count: c.unreviewed, label: tStatus('new') },
-            { key: 'mql', count: c.mql, label: tStatus('mql') },
-            { key: 'sql', count: c.sql, label: tStatus('sql') },
-            { key: 'nq', count: c.not_qualified, label: tStatus('not_qualified') },
-          ]}
+    <Card flush>
+      <StatusBar
+        label={t('statusBar')}
+        segments={[
+          { key: 'new', count: c.unreviewed, label: tStatus('new') },
+          { key: 'mql', count: c.mql, label: tStatus('mql') },
+          { key: 'sql', count: c.sql, label: tStatus('sql') },
+          { key: 'nq', count: c.not_qualified, label: tStatus('not_qualified') },
+        ]}
+      />
+      <Tabs
+        value={filters.tab}
+        onValueChange={(tab) => onChange({ tab: tab as LeadTab })}
+        variant="ribbon"
+      >
+        <TabsList label={t('tabs.label')}>
+          {tabs.map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              count={format.number(tab.count)}
+              keyTone={tab.tone}
+              hot={tab.hot}
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <LeadsToolbar
+          filters={filters}
+          sources={data.sources}
+          owners={data.view === 'staff' ? data.owners : null}
+          onChange={onChange}
         />
-        <Tabs
-          value={filters.tab}
-          onValueChange={(tab) => onChange({ tab: tab as LeadTab })}
-          variant="ribbon"
-        >
-          <TabsList label={t('tabs.label')}>
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                count={format.number(tab.count)}
-                keyTone={tab.tone}
-                hot={tab.hot}
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <LeadsToolbar
-            filters={filters}
-            sources={data.sources}
-            owners={data.view === 'staff' ? data.owners : null}
-            onChange={onChange}
-          />
-          <TabsPanel value={filters.tab}>
-            {data.rows.length === 0 ? (
-              nothingYet ? (
-                <EmptyState title={t('empty.noneTitle')} body={t('empty.noneBody')} />
-              ) : (
-                <EmptyState
-                  title={t('empty.matchTitle')}
-                  body={t('empty.matchBody')}
-                  action={
-                    <Button onClick={() => onChange({ tab: 'all', q: '', source: '', owner: '' })}>
-                      {t('empty.clear')}
-                    </Button>
-                  }
-                />
-              )
+        <TabsPanel value={filters.tab}>
+          {data.rows.length === 0 ? (
+            nothingYet ? (
+              <EmptyState title={t('empty.noneTitle')} body={t('empty.noneBody')} />
             ) : (
-              <LeadsTable
-                rows={data.rows}
-                staff={staff}
-                hrefFor={hrefFor}
-                renderMark={renderMark}
+              <EmptyState
+                title={t('empty.matchTitle')}
+                body={t('empty.matchBody')}
+                action={
+                  <Button onClick={() => onChange({ tab: 'all', q: '', source: '', owner: '' })}>
+                    {t('empty.clear')}
+                  </Button>
+                }
               />
-            )}
-          </TabsPanel>
-        </Tabs>
-      </Card>
-      {canGrow ? (
-        <div className="flex justify-center">
-          <Button
-            onClick={() => onChange({ limit: Math.min(PAGE_CAP, filters.limit + PAGE_STEP) })}
-          >
-            {t('more', { n: more })}
-          </Button>
-        </div>
+            )
+          ) : (
+            <LeadsTable rows={data.rows} staff={staff} hrefFor={hrefFor} renderMark={renderMark} />
+          )}
+        </TabsPanel>
+      </Tabs>
+      {data.rows.length > 0 ? (
+        <Pagination
+          page={filters.page}
+          size={filters.size}
+          total={data.total}
+          shown={data.rows.length}
+          hrefFor={pageHref}
+          onSizeChange={(size) => onChange({ size: size as LeadFilters['size'] })}
+        />
       ) : null}
-      {capped ? (
-        <p className="text-center text-label text-sx-muted">{t('cap', { n: PAGE_CAP })}</p>
-      ) : null}
-    </>
+    </Card>
   );
 }

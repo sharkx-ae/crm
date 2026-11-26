@@ -25,7 +25,7 @@ export function ExportButton({
   const { toast } = useToast();
   if (!can(me, 'lead.export', projectId)) return null;
 
-  const href = `/api/export/leads?${leadsApiParams(projectId, filters, { withLimit: false })}`;
+  const href = `/api/export/leads?${leadsApiParams(projectId, filters, { withPaging: false })}`;
 
   const download = async (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();

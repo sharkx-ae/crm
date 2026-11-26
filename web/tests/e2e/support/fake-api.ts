@@ -364,7 +364,11 @@ const server = createServer(async (req, res) => {
               ? lead.status === 'new'
               : lead.status === parsed.data.tab,
           );
-    const rows = [...tabbed].sort(byNewest).slice(0, parsed.data.limit).map(rowFor);
+    const from = (parsed.data.page - 1) * parsed.data.limit;
+    const rows = [...tabbed]
+      .sort(byNewest)
+      .slice(from, from + parsed.data.limit)
+      .map(rowFor);
     const counts = {
       all: base.length,
       unreviewed: base.filter((lead) => lead.status === 'new').length,
@@ -545,8 +549,9 @@ const server = createServer(async (req, res) => {
           (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? '') ||
           b.id.localeCompare(a.id),
       );
+    const from = (parsed.data.page - 1) * parsed.data.limit;
     return ok(res, contactsPage, {
-      rows: rows.slice(0, parsed.data.limit),
+      rows: rows.slice(from, from + parsed.data.limit),
       total: rows.length,
     });
   }

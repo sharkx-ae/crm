@@ -15,8 +15,6 @@
     "noneTitle": "No contacts yet",
     "matchTitle": "No contacts match"
   },
-  "more": "Show {n} more",
-  "cap": "Showing the newest {n}. Use search to narrow the list.",
   "drawer": {
     "subtitle": "Contact profile",
     "details": "Details",

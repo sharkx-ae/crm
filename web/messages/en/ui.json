@@ -14,5 +14,12 @@
   "open": "Open",
   "closed": "Closed",
   "nothingYet": "Nothing here yet",
-  "showMore": "Show {n} more"
+  "pagination": {
+    "label": "Pagination",
+    "rowsPerPage": "Rows per page",
+    "range": "<r>{from}–{to}</r> of <r>{total}</r>",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {n}"
+  }
 }

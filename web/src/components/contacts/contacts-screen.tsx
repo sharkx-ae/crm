@@ -3,18 +3,13 @@
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import type { ContactProfile, ContactsPage } from '../../contracts/contacts.ts';
-import {
-  type ContactFilters,
-  contactsSearch,
-  PAGE_CAP,
-  PAGE_STEP,
-} from '../../lib/contacts-url.ts';
+import { type ContactFilters, contactsSearch } from '../../lib/contacts-url.ts';
 import { usePathname, useRouter } from '../../lib/i18n/navigation.ts';
 import { useAutoRefresh } from '../../lib/use-auto-refresh.ts';
-import { Button } from '../ui/button.tsx';
-import { Card } from '../ui/card.tsx';
+import { Card, CardToolbar } from '../ui/card.tsx';
 import { EmptyState } from '../ui/empty-state.tsx';
-import { Icon } from '../ui/icons.tsx';
+import { Pagination } from '../ui/pagination.tsx';
+import { SearchField } from '../ui/search-field.tsx';
 import { useToast } from '../ui/toast.tsx';
 import { ContactDrawer } from './contact-drawer.tsx';
 import { ContactsTable } from './contacts-table.tsx';
@@ -23,8 +18,8 @@ const REFRESH_MS = 5000;
 const SEARCH_DELAY_MS = 300;
 
 /**
- * Contacts (F4b S8, S9): one search, one flush table, and a profile drawer on `?contact=`. The address is the
- * state and the page refreshes itself every 5 s (F4b D2). Nothing here filters or slices.
+ * Contacts (F4b S8, S9): one flush card (search toolbar, table, paging footer) and a profile drawer on `?contact=`.
+ * The address is the state and the page refreshes itself every 5 s (F4b D2). Nothing here filters or slices.
  */
 export function ContactsScreen({
   projectId,
@@ -33,6 +28,7 @@ export function ContactsScreen({
   profile,
   contactId,
   contactMissing,
+  pageClamped,
 }: {
   projectId: string;
   data: ContactsPage;
@@ -40,6 +36,8 @@ export function ContactsScreen({
   profile: ContactProfile | null;
   contactId: string | null;
   contactMissing: boolean;
+  /** The address asked for a page past the end: `filters` already holds the last page; fix the address. */
+  pageClamped: boolean;
 }) {
   const t = useTranslations('contacts');
   const router = useRouter();
@@ -78,31 +76,32 @@ export function ContactsScreen({
     });
   }, [contactMissing, contactId]);
 
+  // The server already rendered the last page; make the address say so.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when a clamp happens, not on every search change
+  useEffect(() => {
+    if (pageClamped)
+      router.replace(`${pathname}${contactsSearch(filters, {}, contactId)}`, { scroll: false });
+  }, [pageClamped]);
+
   const type = (next: string) => {
     setValue(next);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => go({ q: next.trim() }), SEARCH_DELAY_MS);
   };
 
-  const more = Math.min(PAGE_STEP, data.total - data.rows.length);
-  const canGrow = data.rows.length < data.total && filters.limit < PAGE_CAP;
-  const capped = data.rows.length < data.total && filters.limit >= PAGE_CAP;
   const nothingYet = data.total === 0 && !filters.q;
 
   return (
     <>
-      <label className="flex h-9 max-w-[340px] items-center gap-2.5 rounded-field border border-sx-line bg-sx-paper ps-3 pe-3 text-sx-muted focus-within:border-sx-black has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-sx-red">
-        <Icon name="search" size="sm" />
-        <span className="sr-only">{t('searchLabel')}</span>
-        <input
-          type="search"
-          value={value}
-          onChange={(e) => type(e.target.value)}
-          placeholder={t('search')}
-          className="min-w-0 flex-1 border-0 bg-transparent text-sx-black outline-none"
-        />
-      </label>
       <Card flush>
+        <CardToolbar>
+          <SearchField
+            label={t('searchLabel')}
+            placeholder={t('search')}
+            value={value}
+            onChange={type}
+          />
+        </CardToolbar>
         {data.rows.length === 0 ? (
           <EmptyState title={nothingYet ? t('empty.noneTitle') : t('empty.matchTitle')} />
         ) : (
@@ -111,17 +110,17 @@ export function ContactsScreen({
             hrefFor={(id) => `${pathname}${contactsSearch(filters, { contact: id }, contactId)}`}
           />
         )}
+        {data.rows.length > 0 ? (
+          <Pagination
+            page={filters.page}
+            size={filters.size}
+            total={data.total}
+            shown={data.rows.length}
+            hrefFor={(page) => `${pathname}${contactsSearch(filters, { page }, contactId)}`}
+            onSizeChange={(size) => go({ size: size as ContactFilters['size'] })}
+          />
+        ) : null}
       </Card>
-      {canGrow ? (
-        <div className="flex justify-center">
-          <Button onClick={() => go({ limit: Math.min(PAGE_CAP, filters.limit + PAGE_STEP) })}>
-            {t('more', { n: more })}
-          </Button>
-        </div>
-      ) : null}
-      {capped ? (
-        <p className="text-center text-label text-sx-muted">{t('cap', { n: PAGE_CAP })}</p>
-      ) : null}
       {profile ? (
         <ContactDrawer
           key={profile.contact.id}

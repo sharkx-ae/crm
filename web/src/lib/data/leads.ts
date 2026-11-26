@@ -4,9 +4,9 @@ import { apiCall } from '../api/client.ts';
 import { ApiError } from '../api/error.ts';
 import { type LeadFilters, leadsApiParams } from '../leads-url.ts';
 
-/** One page of leads: the api applies the tab, filters, search and limit; the browser never filters or slices. */
+/** One page of leads: the api applies the tab, filters, search and page; the browser never filters or slices. */
 export async function getLeads(projectId: string, filters: LeadFilters): Promise<LeadsPage> {
-  return apiCall(leadsPage, `/leads?${leadsApiParams(projectId, filters, { withLimit: true })}`);
+  return apiCall(leadsPage, `/leads?${leadsApiParams(projectId, filters, { withPaging: true })}`);
 }
 
 /** Null when the lead is gone, not this client's, or a test lead (the api answers 404 for all of them). */

@@ -30,6 +30,8 @@ export function LeadsWorkspace(props: {
   detail: LeadDetail | null;
   /** The address named a lead that is gone: say so once and drop it from the address. */
   leadMissing: boolean;
+  /** The address asked for a page past the end: `filters` already holds the last page; fix the address. */
+  pageClamped: boolean;
   leadId: string | null;
 }) {
   return (
@@ -46,6 +48,7 @@ function Workspace({
   filters,
   detail,
   leadMissing,
+  pageClamped,
   leadId,
 }: {
   me: Me;
@@ -54,6 +57,7 @@ function Workspace({
   filters: LeadFilters;
   detail: LeadDetail | null;
   leadMissing: boolean;
+  pageClamped: boolean;
   leadId: string | null;
 }) {
   const t = useTranslations('leads');
@@ -82,6 +86,13 @@ function Workspace({
     router.replace(`${pathname}${leadsSearch(filters, { lead: null }, leadId)}`, { scroll: false });
   }, [leadMissing, leadId]);
 
+  // The server already rendered the last page; make the address say so (once, without a new history entry).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when a clamp happens, not on every filter change
+  useEffect(() => {
+    if (pageClamped)
+      router.replace(`${pathname}${leadsSearch(filters, {}, leadId)}`, { scroll: false });
+  }, [pageClamped]);
+
   const client = data.view === 'client';
 
   return (
@@ -101,6 +112,7 @@ function Workspace({
         filters={filters}
         onChange={go}
         hrefFor={(id) => `${pathname}${leadsSearch(filters, { lead: id }, leadId)}`}
+        pageHref={(page) => `${pathname}${leadsSearch(filters, { page }, leadId)}`}
         // A client marks from the table (mockup `markInline`): only a lead still waiting shows the buttons.
         renderMark={
           client ? (row) => <ClientMarkCell row={row} projectId={projectId} /> : undefined

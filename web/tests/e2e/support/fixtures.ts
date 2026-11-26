@@ -69,14 +69,17 @@ const projects: ProjectDetail[] = [
   },
 ];
 
-// Forty Lumière leads, newest first by index. Enough that the first page of 20 hides one, so "Show 20 more" is real.
+// Sixty-four Lumière leads, the highest number the newest. Four pages of 20 (and a partial last one), so paging is real:
+// page 2 starts at rank 21, a page size of 50 leaves 14 for page 2, and 100 holds them all.
 // Named rows are the ones the stubbed spec looks for; the rest fill the counts.
 const RAMI = '8e9f0a1b-2c3d-4e5f-8a6b-7c8d9e0f1a2b';
 const leadId = (n: number) => `a1000000-0000-4000-8000-${n.toString(16).padStart(12, '0')}`;
-const SARA = leadId(40);
-const HADI = leadId(39);
-const GOOGLE_ONLY = leadId(38);
-const PAGE_TWO = leadId(20);
+export const LEAD_COUNT = 64;
+const SARA = leadId(LEAD_COUNT);
+const HADI = leadId(LEAD_COUNT - 1);
+const GOOGLE_ONLY = leadId(LEAD_COUNT - 2);
+/** Rank 21 newest first: the first row of page 2 at the default size. */
+const PAGE_TWO = leadId(LEAD_COUNT - 20);
 const NOOR = leadId(10);
 const SARA_CONTACT = 'c1000000-0000-4000-8000-000000000001';
 const RECEIVED = Date.parse('2026-11-25T10:00:00.000Z');
@@ -96,7 +99,7 @@ export type FixtureContact = {
 const STATUS_CYCLE: LeadStatus[] = ['new', 'mql', 'sql', 'not_qualified'];
 const SOURCE_CYCLE: Source[] = ['meta', 'google', 'website'];
 
-const leads: FixtureLead[] = Array.from({ length: 40 }, (_, i) => {
+const leads: FixtureLead[] = Array.from({ length: LEAD_COUNT }, (_, i) => {
   const n = i + 1;
   const owned = n % 2 === 1;
   const lead: FixtureLead = {
@@ -110,7 +113,7 @@ const leads: FixtureLead[] = Array.from({ length: 40 }, (_, i) => {
     campaign: `Campaign ${n}`,
     status: STATUS_CYCLE[n % STATUS_CYCLE.length] ?? 'new',
     reason: null,
-    createdAt: new Date(RECEIVED - (40 - n) * 60_000).toISOString(),
+    createdAt: new Date(RECEIVED - (LEAD_COUNT - n) * 60_000).toISOString(),
     answers: {},
     ownerId: owned ? RAMI : null,
     ownerName: owned ? 'Rami Haddad' : null,
@@ -176,6 +179,21 @@ const contacts: FixtureContact[] = [
     createdAt: '2026-11-18T08:00:00.000Z',
     leadIds: [HADI],
   },
+  // Twenty-eight more, so Contacts has 30 in all: a full first page of 20 and a partial second of 10. Each is the
+  // contact of lead N (leads 3 to 30), so they sort by that lead's time: newest first, 30 down to 3.
+  ...Array.from({ length: 28 }, (_, i): FixtureContact => {
+    const n = i + 3;
+    return {
+      id: `c1000000-0000-4000-8000-${(n + 2).toString(16).padStart(12, '0')}`,
+      projectId: LUMIERE,
+      name: `Person ${n}`,
+      phone: `+97155100${String(n).padStart(4, '0')}`,
+      phoneDisplay: `+971 55 100 ${String(n).padStart(4, '0')}`,
+      email: `person${n}@example.test`,
+      createdAt: '2026-11-10T08:00:00.000Z',
+      leadIds: [leadId(n)],
+    };
+  }),
 ];
 
 // The Overview's chart data for Lumière (F13a): thirty days ending on the fixture's "today", 25 Nov in Dubai, and six

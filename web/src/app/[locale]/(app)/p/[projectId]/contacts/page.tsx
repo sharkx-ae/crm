@@ -3,9 +3,10 @@ import { ContactsScreen } from '../../../../../../components/contacts/contacts-s
 import { parseContactsAddress } from '../../../../../../lib/contacts-url.ts';
 import { getContact, getContacts } from '../../../../../../lib/data/contacts.ts';
 import { guardRoute } from '../../../../../../lib/nav/guard.ts';
+import { lastPage } from '../../../../../../lib/paging.ts';
 
 // Contacts (F4b): staff only. A client user never reaches this page (guardRoute 404s). The address is the state
-// (?q&limit&contact); the api does the search and the paging.
+// (?q&page&size&contact); the api does the search and the paging.
 export default async function ContactsPage({
   params,
   searchParams,
@@ -16,12 +17,18 @@ export default async function ContactsPage({
   const { locale, projectId } = await params;
   setRequestLocale(locale);
   await guardRoute('contacts', projectId);
-  const { filters, contactId } = parseContactsAddress(await searchParams);
+  const { filters: asked, contactId } = parseContactsAddress(await searchParams);
 
-  const [data, profile] = await Promise.all([
-    getContacts(projectId, filters),
+  const [first, profile] = await Promise.all([
+    getContacts(projectId, asked),
     contactId ? getContact(projectId, contactId) : Promise.resolve(null),
   ]);
+
+  // A page past the end: show the last page now, and let the client correct the address.
+  const last = lastPage(first.total, asked.size);
+  const pageClamped = asked.page > last;
+  const filters = pageClamped ? { ...asked, page: last } : asked;
+  const data = pageClamped && first.total > 0 ? await getContacts(projectId, filters) : first;
 
   return (
     <div className="flex flex-col gap-6">
@@ -32,6 +39,7 @@ export default async function ContactsPage({
         profile={profile}
         contactId={contactId}
         contactMissing={Boolean(contactId) && profile === null}
+        pageClamped={pageClamped}
       />
     </div>
   );

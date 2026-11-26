@@ -1,40 +1,49 @@
 import { z } from 'zod';
-import { contactsQuery } from '../contracts/contacts.ts';
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  type PageSize,
+  parsePage,
+  parsePageSize,
+} from './paging.ts';
 
-// The Contacts screen's state lives in the address (F4b D4): ?q&limit&contact. Pure, so the page and the
+// The Contacts screen's state lives in the address (F4b D4): ?q&page&size&contact. Pure, so the page and the
 // screen share one reading and one writing of it.
 
-export const PAGE_STEP = 20;
-export const PAGE_CAP = 200;
+export type ContactFilters = {
+  q: string;
+  /** 1-based. */
+  page: number;
+  /** Rows per page: 10, 20, 50 or 100. Sent to the api as `limit`. */
+  size: PageSize;
+};
 
-export type ContactFilters = { q: string; limit: number };
-
-export const DEFAULT_FILTERS: ContactFilters = { q: '', limit: PAGE_STEP };
+export const DEFAULT_FILTERS: ContactFilters = {
+  q: '',
+  page: DEFAULT_PAGE,
+  size: DEFAULT_PAGE_SIZE,
+};
 
 type Raw = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
-const PROBE = '00000000-0000-4000-8000-000000000000';
 
-/** Reads the address. A limit the contract refuses is dropped; a contact id that is not a uuid is ignored. */
+/** Reads the address. A page or size the contract refuses is dropped (an old `?limit=` is ignored); a contact id that is not a uuid is ignored. */
 export function parseContactsAddress(raw: Raw): {
   filters: ContactFilters;
   contactId: string | null;
 } {
   const q = first(raw.q)?.trim().slice(0, 120) ?? '';
-  const limitRaw = first(raw.limit);
-  const limitOk =
-    limitRaw !== undefined &&
-    contactsQuery.safeParse({ projectId: PROBE, limit: limitRaw }).success;
   const contact = first(raw.contact);
   return {
-    filters: { q, limit: limitOk ? Number(limitRaw) : PAGE_STEP },
+    filters: { q, page: parsePage(raw.page), size: parsePageSize(raw.size) },
     contactId: contact && z.uuid().safeParse(contact).success ? contact : null,
   };
 }
 
 /**
- * The query string for `current` with `change` applied, defaults left out. Changing the search starts over at
- * 20 rows. `contact` (the open drawer) is carried unless `change.contact` is null.
+ * The query string for `current` with `change` applied, defaults left out. Changing the search or the page size
+ * starts over at page 1 (unless the change names a page). `contact` (the open drawer) is carried unless
+ * `change.contact` is null.
  */
 export function contactsSearch(
   current: ContactFilters,
@@ -42,15 +51,16 @@ export function contactsSearch(
   contact: string | null = null,
 ): string {
   const { contact: next = contact, ...patch } = change;
-  const qChanged = 'q' in patch && patch.q !== current.q;
+  const resets = (['q', 'size'] as const).some((k) => k in patch && patch[k] !== current[k]);
   const f: ContactFilters = {
     ...current,
     ...patch,
-    limit: 'limit' in patch ? (patch.limit as number) : qChanged ? PAGE_STEP : current.limit,
+    page: 'page' in patch ? (patch.page as number) : resets ? DEFAULT_PAGE : current.page,
   };
   const p = new URLSearchParams();
   if (f.q) p.set('q', f.q);
-  if (f.limit !== PAGE_STEP) p.set('limit', String(f.limit));
+  if (f.page !== DEFAULT_PAGE) p.set('page', String(f.page));
+  if (f.size !== DEFAULT_PAGE_SIZE) p.set('size', String(f.size));
   if (next) p.set('contact', next);
   const s = p.toString();
   return s ? `?${s}` : '';
@@ -58,7 +68,7 @@ export function contactsSearch(
 
 /** The api query for these filters. The browser never filters or slices. */
 export function contactsApiParams(projectId: string, f: ContactFilters): URLSearchParams {
-  const p = new URLSearchParams({ projectId, limit: String(f.limit) });
+  const p = new URLSearchParams({ projectId, page: String(f.page), limit: String(f.size) });
   if (f.q) p.set('q', f.q);
   return p;
 }

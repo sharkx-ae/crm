@@ -4,7 +4,8 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { LeadsPage } from '../../contracts/leads.ts';
 import type { LeadFilters } from '../../lib/leads-url.ts';
-import { Icon } from '../ui/icons.tsx';
+import { CardToolbar } from '../ui/card.tsx';
+import { SearchField } from '../ui/search-field.tsx';
 import { Select } from '../ui/select.tsx';
 
 const SEARCH_DELAY_MS = 300;
@@ -47,23 +48,17 @@ export function LeadsToolbar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 ps-4 pe-4 py-3 rail:ps-6 rail:pe-6 rail:py-4">
-      {/* The input draws no outline of its own; the whole box gets the brand's 3px red ring on keyboard focus. */}
-      <label className="flex h-9 min-w-[200px] max-w-[340px] flex-1 items-center gap-2.5 rounded-field border border-sx-line bg-sx-paper ps-3 pe-3 text-sx-muted focus-within:border-sx-black has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-sx-red">
-        <Icon name="search" size="sm" />
-        <span className="sr-only">{t('searchLabel')}</span>
-        <input
-          type="search"
-          value={value}
-          onChange={(e) => type(e.target.value)}
-          placeholder={t('search')}
-          className="min-w-0 flex-1 border-0 bg-transparent text-sx-black outline-none"
-        />
-      </label>
+    <CardToolbar>
+      <SearchField
+        label={t('searchLabel')}
+        placeholder={t('search')}
+        value={value}
+        onChange={type}
+      />
       <Select
         size="sm"
+        fit
         aria-label={t('source')}
-        className="w-auto min-w-[150px]"
         value={filters.source}
         onValueChange={(source) => onChange({ source })}
         options={[
@@ -74,8 +69,8 @@ export function LeadsToolbar({
       {owners ? (
         <Select
           size="sm"
+          fit
           aria-label={t('owner')}
-          className="w-auto min-w-[150px]"
           value={filters.owner}
           onValueChange={(owner) => onChange({ owner })}
           options={[
@@ -88,6 +83,6 @@ export function LeadsToolbar({
           ]}
         />
       ) : null}
-    </div>
+    </CardToolbar>
   );
 }

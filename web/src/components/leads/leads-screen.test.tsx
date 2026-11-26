@@ -82,6 +82,7 @@ function setup(data: LeadsPage, filters: Partial<LeadFilters> = {}, withMark = f
           filters={{ ...DEFAULT_FILTERS, ...filters }}
           onChange={onChange}
           hrefFor={(id) => `/p/x/leads?lead=${id}`}
+          pageHref={(page) => `/p/x/leads?page=${page}`}
           renderMark={withMark ? (row) => <ClientMarkCell row={row} projectId={P} /> : undefined}
         />
       </ProjectProvider>
@@ -193,37 +194,57 @@ describe('empty states, paging', () => {
     expect(onChange).toHaveBeenCalledWith({ tab: 'all', q: '', source: '', owner: '' });
   });
 
-  it('Show 20 more asks for 20 more rows, and says how many are left when fewer remain', async () => {
-    setup(
-      staffPage({
-        total: 50,
-        counts: { ...counts, all: 50 },
-        rows: Array.from({ length: 20 }, (_, i) => staff(i + 1)),
-      }),
-      { limit: 20 },
+  it('shows the range and a page footer; the current page is marked and is not a red button', () => {
+    const rows = Array.from({ length: 20 }, (_, i) => staff(i + 1));
+    setup(staffPage({ total: 64, counts: { ...counts, all: 64 }, rows }), { page: 2 });
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.textContent).toContain('21–40 of 64');
+    const current = within(nav).getByRole('link', { name: 'Page 2' });
+    expect(current.getAttribute('aria-current')).toBe('page');
+    expect(current.className).toContain('bg-sx-red-soft');
+    expect(current.className).not.toContain('bg-sx-red ');
+    expect(within(nav).getByRole('link', { name: 'Page 1' }).getAttribute('href')).toBe(
+      '/p/x/leads?page=1',
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Show 20 more' }));
-    expect(onChange).toHaveBeenCalledWith({ limit: 40 });
+    expect(within(nav).getByRole('link', { name: 'Next page' }).getAttribute('href')).toBe(
+      '/p/x/leads?page=3',
+    );
+    expect(within(nav).getByRole('link', { name: 'Previous page' }).getAttribute('href')).toBe(
+      '/p/x/leads?page=1',
+    );
   });
 
-  it('fewer than 20 left shows that number; nothing left shows no button', () => {
-    const rows = Array.from({ length: 45 }, (_, i) => staff(i + 1));
-    setup(staffPage({ total: 50, rows }), { limit: 60 });
-    expect(screen.getByRole('button', { name: 'Show 5 more' })).toBeTruthy();
-  });
-
-  it('at 200 the button is replaced by the cap line', () => {
-    const rows = Array.from({ length: 200 }, (_, i) => staff(i + 1));
-    setup(staffPage({ total: 320, counts: { ...counts, all: 320 }, rows }), { limit: 200 });
-    expect(screen.queryByRole('button', { name: /Show/ })).toBeNull();
+  it('on the first page Previous is disabled; on the last Next is; the partial last range is right', () => {
+    const rows = Array.from({ length: 4 }, (_, i) => staff(i + 1));
+    setup(staffPage({ total: 64, counts: { ...counts, all: 64 }, rows }), { page: 4 });
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.textContent).toContain('61–64 of 64');
+    // At the end Next is a dimmed button that does nothing, not a link.
     expect(
-      screen.getByText('Showing the newest 200. Use search or filters, or export.'),
-    ).toBeTruthy();
+      within(nav).getByRole('button', { name: 'Next page' }).getAttribute('aria-disabled'),
+    ).toBe('true');
+    expect(within(nav).queryByRole('link', { name: 'Next page' })).toBeNull();
+    expect(
+      within(nav).getByRole('link', { name: 'Previous page' }).getAttribute('aria-disabled'),
+    ).toBeNull();
   });
 
-  it('everything shown: no button, no cap line', () => {
-    setup(staffPage({ total: 2 }));
-    expect(screen.queryByRole('button', { name: /Show/ })).toBeNull();
+  it('rows per page offers 10, 20, 50 and 100 and asks for the new size through onChange', async () => {
+    setup(staffPage({ total: 64, counts: { ...counts, all: 64 } }));
+    const size = screen.getByRole('combobox', { name: 'Rows per page' });
+    expect(await optionLabels(size)).toEqual(['10', '20', '50', '100']);
+    await chooseOption(size, '50');
+    expect(onChange).toHaveBeenCalledWith({ size: 50 });
+  });
+
+  it('no more "Show 20 more" button or cap line', () => {
+    setup(staffPage({ total: 64, counts: { ...counts, all: 64 } }));
+    expect(screen.queryByRole('button', { name: /Show d+ more/ })).toBeNull();
     expect(screen.queryByText(/Showing the newest/)).toBeNull();
+  });
+
+  it('an empty list has no footer', () => {
+    setup(staffPage({ rows: [], total: 0, counts: { ...counts, all: 0 } }));
+    expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
   });
 });

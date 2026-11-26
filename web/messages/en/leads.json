@@ -54,8 +54,6 @@
     "matchBody": "Try another tab or clear the search.",
     "clear": "Clear filters"
   },
-  "more": "Show {n} more",
-  "cap": "Showing the newest {n}. Use search or filters, or export.",
   "drawer": {
     "received": "{client} · received {ago}",
     "qualification": "Qualification",
