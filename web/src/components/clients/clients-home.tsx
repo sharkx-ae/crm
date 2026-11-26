@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import type { ReactNode } from 'react';
 import type { HealthState } from '../../contracts/common.ts';
 import type { ProjectsHomeResponse } from '../../contracts/projects.ts';
 import { zoneLabel } from '../../lib/i18n/format.ts';
@@ -6,7 +7,7 @@ import { Link } from '../../lib/i18n/navigation.ts';
 import type { Locale } from '../../lib/i18n/routing.ts';
 import { Avatar } from '../ui/avatar.tsx';
 import { UserText } from '../ui/bidi.tsx';
-import { Card } from '../ui/card.tsx';
+import { Card, CardToolbar } from '../ui/card.tsx';
 import { Chip } from '../ui/chip.tsx';
 import { ClickRow } from '../ui/click-row.tsx';
 import { type DotState, Dots } from '../ui/dots.tsx';
@@ -23,15 +24,22 @@ const DOT: Record<HealthState, DotState> = {
   not_connected: 'off',
 };
 
-/** Clients home (mockup viewClients): KPI strip on the canvas, then one flush card with the search and the table. */
+/**
+ * Clients home (mockup viewClients): the KPI strip on the canvas with the page's one action ("Add client") at its
+ * inline end (above the strip, still at the inline end, under 900px), then one flush card with the search toolbar and
+ * the table.
+ */
 export async function ClientsHome({
   data,
   searching,
   canCreate,
+  action,
 }: {
   data: ProjectsHomeResponse;
   searching: boolean;
   canCreate: boolean;
+  /** The primary action (Add client), super admin only. */
+  action?: ReactNode;
 }) {
   const t = await getTranslations('projects.home');
   // Each client's own time zone, labelled (F13a): its numbers count "today" from its own midnight.
@@ -41,17 +49,22 @@ export async function ClientsHome({
 
   return (
     <div className="flex flex-col gap-6">
-      <KpiStrip>
-        <Kpi label={t('kpi.newToday')} value={totals.newToday} />
-        <Kpi label={t('kpi.unreplied')} value={totals.unreplied} />
-        <Kpi label={t('kpi.overdue')} value={totals.overdue} />
-        <Kpi label={t('kpi.toFix')} value={totals.toFix} hot={totals.toFix > 0} />
-      </KpiStrip>
+      <div className="flex flex-col gap-4 rail:flex-row rail:items-end rail:gap-6">
+        <div className="min-w-0 flex-1">
+          <KpiStrip>
+            <Kpi label={t('kpi.newToday')} value={totals.newToday} />
+            <Kpi label={t('kpi.unreplied')} value={totals.unreplied} />
+            <Kpi label={t('kpi.overdue')} value={totals.overdue} />
+            <Kpi label={t('kpi.toFix')} value={totals.toFix} hot={totals.toFix > 0} />
+          </KpiStrip>
+        </div>
+        {action ? <div className="order-first flex-none self-end rail:order-none">{action}</div> : null}
+      </div>
 
       <Card flush>
-        <div className="ps-4 pe-4 pt-4 pb-3 rail:ps-6 rail:pe-6 rail:pt-5">
+        <CardToolbar>
           <ClientsSearch />
-        </div>
+        </CardToolbar>
         {rows.length === 0 ? (
           searching ? (
             <EmptyState title={t('noMatchTitle')} body={t('noMatchBody')} />
