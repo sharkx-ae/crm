@@ -105,12 +105,12 @@ node scripts/verify.mjs          # apps you changed + contracts sync check
 node scripts/verify.mjs --all    # both apps
 ```
 
-GitHub CI is currently paused (manual trigger only), so this script is the only gate. `main` must always be green.
+GitHub CI is currently paused (manual trigger only), so this script is the only gate. `master` must always be green.
 
 ## Working on it
 
 - **Specs:** one file per spec in `docs/specs/` (build order and owners in `docs/specs/ORDER.md`). Build one sub-feature at a time and tick its acceptance criteria. Anything not in the PRD is an Extra: ask first.
-- **Git:** small commits straight to `main`, message prefix `<spec-id>: …` (for example `F2a: add app shell`). `git pull --rebase` and `node scripts/verify.mjs` before each push. Contract changes go in their own `contracts:` commit.
+- **Git:** work on **`master`**; `main` is the release branch and is never pushed to directly. Small commits to `master`, message prefix `<spec-id>: …` (for example `F2a: add app shell`). `git pull --rebase` and `node scripts/verify.mjs` before each push. Contract changes go in their own `contracts:` commit. To release, open a pull request `master` → `main`.
 - **UI:** follows `skills/sharkx-brand-guidelines` (SHARKX Red `#e70101` and Black `#1c0f0f`, light canvases, no dark theme, SVG icons) and the clickable prototype in `docs/inputs/` (kept local, not in git).
 - **Strings:** English in `web/messages/en/<module>.json`; Arabic and French follow in the F2c batch.
 - **Progress:** `node scripts/track.js list`; open `docs/plan.html` for the timeline.
@@ -121,7 +121,7 @@ Foundation and access (database, row-level security, sign-in with emailed code, 
 
 ## Deployment
 
-Railway services `web`, `api` and `worker` plus Postgres. Staging deploys automatically from `main`; production is promoted manually after UAT. Environments, variables and secrets: [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md). Never commit secrets: only the two `.env.example` files are tracked. Never run `db:migrate` against production from a laptop.
+Railway services `web`, `api` and `worker` plus Postgres. Staging deploys automatically from `master`; production deploys from `main`, which only changes through a `master` → `main` release pull request after UAT. Environments, variables and secrets: [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md). Never commit secrets: only the two `.env.example` files are tracked. Never run `db:migrate` against production from a laptop.
 
 ## Documentation
 

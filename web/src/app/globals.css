@@ -53,13 +53,114 @@
 
   --breakpoint-rail: 900px;
   --breakpoint-wide: 1100px;
+
+  /* Layers answer an action and nothing else moves (mockup). The drawer enters from the inline end, so RTL has its own direction. */
+  --animate-sx-slide: sx-slide 0.18s ease-out;
+  --animate-sx-slide-rtl: sx-slide-rtl 0.18s ease-out;
+  --animate-sx-rise: sx-rise 0.18s ease-out;
+  /* The toast enters from the inline end (bottom right in English, bottom left in Arabic). */
+  --animate-sx-toast-in: sx-toast-in 0.18s ease-out;
+  --animate-sx-toast-in-rtl: sx-toast-in-rtl 0.18s ease-out;
+  --animate-sx-toast-out: sx-toast-out 0.12s ease-in forwards;
+  --animate-sx-toast-swipe-out: sx-toast-swipe-out 0.12s ease-out forwards;
+  @keyframes sx-slide {
+    from {
+      transform: translateX(28px);
+      opacity: 0.4;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-slide-rtl {
+    from {
+      transform: translateX(-28px);
+      opacity: 0.4;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-toast-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-toast-in-rtl {
+    from {
+      transform: translateX(-24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-toast-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes sx-toast-swipe-out {
+    from {
+      translate: var(--radix-toast-swipe-end-x) 0;
+      opacity: 1;
+    }
+    to {
+      translate: var(--radix-toast-swipe-end-x) 0;
+      opacity: 0;
+    }
+  }
+  @keyframes sx-rise {
+    from {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
 }
 
 /* Devices that cannot hover get the off-canvas rail instead of the hover rail. */
 @custom-variant touch (@media (hover: none));
+/* Wide screen with a pointer that hovers: the icon rail that opens on hover or focus and pushes the page. */
+@custom-variant desk (@media (min-width: 900px) and (hover: hover));
 
 @utility focus-ring {
   &:focus-visible {
+    outline: 3px solid var(--color-sx-red);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Baseline for everything focusable that has no component of its own (a link in a table cell, a bare <a>): the
+ * brand's 3px red ring. It lives in @layer base so a utility (focus-ring, or the Tabs' inset offset) always wins;
+ * unlayered CSS would beat every utility. tabindex="-1" is left out: those are programmatic focus targets (dialog,
+ * toast viewport, tab panel), not tab stops, and should not draw a ring.
+ */
+@layer base {
+  :where(
+    a[href],
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
     outline: 3px solid var(--color-sx-red);
     outline-offset: 2px;
   }
@@ -82,11 +183,17 @@ body {
   font-family: var(--font-ar);
 }
 
+/*
+ * !important is deliberate: this rule must beat the animate-* and transition utilities (higher specificity than `*`),
+ * otherwise reduced motion would not turn the drawer, toast and rail animations off.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override the animate-* utilities */
     animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override the transition utilities */
     transition: none !important;
   }
 }

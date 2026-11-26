@@ -2,6 +2,7 @@
 // Zod-validated; a missing or invalid variable stops the process with a readable message.
 // Adding a variable: update api/.env.example, the schema below, and Railway (docs/ENVIRONMENTS.md).
 import { z } from 'zod';
+import { password } from '../contracts/common.ts';
 
 const shared = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -50,6 +51,10 @@ export const emailEnvSchema = shared
   .extend(email.shape)
   .superRefine(requireEmailOutsideLocal);
 
+// `pnpm db:seed` only (F4a S5): the shared dev password of every seeded user. Same rules as a real password.
+// Local/staging only; never set in production, and the api and worker never read it.
+export const seedSchema = shared.pick({ APP_ENV: true }).extend({ SEED_PASSWORD: password });
+
 export const testSchema = z.object({
   TEST_DATABASE_URL: z
     .url({ protocol: /^postgres(ql)?$/ })
@@ -90,5 +95,7 @@ export const getDbEnv = (): z.infer<typeof dbSchema> =>
   cached('db', () => parseEnv(dbSchema, process.env, 'database'));
 export const getEmailEnv = (): z.infer<typeof emailEnvSchema> =>
   cached('email', () => parseEnv(emailEnvSchema, process.env, 'email'));
+export const getSeedEnv = (): z.infer<typeof seedSchema> =>
+  cached('seed', () => parseEnv(seedSchema, process.env, 'seed'));
 export const getTestDbUrl = (): string =>
   cached('test', () => parseEnv(testSchema, process.env, 'test').TEST_DATABASE_URL);

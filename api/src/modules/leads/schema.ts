@@ -55,7 +55,13 @@ export const leadEvents = pgTable(
     actorId: uuid('actor_id'),
     at: tstz('at').notNull().defaultNow(),
   },
-  (t) => [index('lead_events_lead_idx').on(t.leadId, t.at)],
+  (t) => [
+    index('lead_events_lead_idx').on(t.leadId, t.at),
+    // ingestLead's replay check (F4a S1): was this (source, externalId) already merged into a lead of this client?
+    index('lead_events_merged_external_idx')
+      .on(t.projectId, sql`(${t.data}->>'source')`, sql`(${t.data}->>'externalId')`)
+      .where(sql`${t.kind} = 'merged'`),
+  ],
 );
 
 export const leadForms = pgTable(

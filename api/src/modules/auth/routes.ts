@@ -154,8 +154,8 @@ export const authRoutes: FastifyPluginAsync<{ env: ApiEnv }> = async (app, { env
       response: okResponse,
       audit: 'one',
     },
-    async ({ body }) => {
-      await confirmReset(body);
+    async ({ body, ip }) => {
+      await confirmReset(body, new Date(), ip);
       return { ok: true as const };
     },
   );
@@ -184,7 +184,7 @@ export const authRoutes: FastifyPluginAsync<{ env: ApiEnv }> = async (app, { env
       response: pendingSessionResponse,
       audit: 'one',
     },
-    async ({ body }) => acceptInvite(body),
+    async ({ body, ip }) => acceptInvite(body, new Date(), ip),
   );
 
   // A manager is invited with user.manage (super admin only); a client user with clientuser.manage on its project.

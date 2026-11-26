@@ -1,4 +1,4 @@
-import { cardClass, primaryButtonClass } from './ui.ts';
+import { cardClass, fullPageCardClass, primaryButtonClass } from './ui.ts';
 
 // A short message with one way out. Used by the forbidden, not-found and expired-link screens.
 export function StatusPanel({
@@ -14,11 +14,14 @@ export function StatusPanel({
   fullPage?: boolean;
 }) {
   const panel = (
-    <section className={`${cardClass} max-w-md text-start`} aria-labelledby="status-title">
-      <h1 id="status-title" className="mb-3 text-2xl font-bold text-sx-black">
+    <section
+      className={`${fullPage ? fullPageCardClass : cardClass} max-w-md text-start`}
+      aria-labelledby="status-title"
+    >
+      <h1 id="status-title" className="mb-3 font-heading text-figure text-sx-black">
         {title}
       </h1>
-      <p className="mb-6 text-base text-sx-muted">{body}</p>
+      <p className="mb-6 text-sx-muted">{body}</p>
       <a href={cta.href} className={primaryButtonClass}>
         {cta.label}
       </a>

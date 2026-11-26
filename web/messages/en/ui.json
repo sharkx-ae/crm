@@ -7,10 +7,30 @@
   "saving": "Saving...",
   "search": "Search",
   "loading": "Loading",
+  "notification": "Notification",
+  "notifications": "Notifications",
   "tryAgain": "Try again",
   "back": "Back",
   "open": "Open",
   "closed": "Closed",
   "nothingYet": "Nothing here yet",
-  "showMore": "Show {n} more"
+  "sortBy": "Sort by {column}",
+  "pagination": {
+    "label": "Pagination",
+    "rowsPerPage": "Rows per page",
+    "range": "<r>{from}–{to}</r> of <r>{total}</r>",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {n}"
+  },
+  "errorShort": {
+    "UNAUTHENTICATED": "Session ended. Sign in again",
+    "FORBIDDEN": "No access",
+    "NOT_FOUND": "Not found",
+    "CONFLICT": "Already exists",
+    "VALIDATION": "Check the fields",
+    "RATE_LIMITED": "Too many tries. Retry in {minutes, plural, one {# min} other {# min}}",
+    "INTEGRATION_ERROR": "Email not sent. Try again",
+    "INTERNAL": "Something went wrong"
+  }
 }

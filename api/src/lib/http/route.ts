@@ -35,9 +35,21 @@ export type RouteSpec<
   query?: Q;
   params?: P;
   response: R;
-  /** Every mutating route declares whether its handler writes exactly one audit row ('one') or none. */
-  audit?: 'one' | 'none';
+  /**
+   * Every mutating route declares how many audit rows its handler writes: exactly one ('one'), none ('none'), or a
+   * fixed number when one request is several audited mutations (e.g. create client = project.created + user.invited).
+   */
+  audit?: AuditDeclaration;
 };
+
+export type AuditDeclaration = 'one' | 'none' | { count: number };
+
+/** Rows a route promises to write, or null when it promises none. */
+export function expectedAuditRows(audit: AuditDeclaration | undefined): number | null {
+  if (audit === 'one') return 1;
+  if (audit && typeof audit === 'object') return audit.count;
+  return null;
+}
 
 export type RouteContext<
   A extends RouteAccess,
@@ -58,7 +70,7 @@ type AnySpec = {
   url: string;
   access: RouteAccess;
   action?: unknown;
-  audit?: 'one' | 'none';
+  audit?: AuditDeclaration;
 };
 
 /** Every route defined in this process, for the structure tests. Keyed by `METHOD url`. */
@@ -107,7 +119,15 @@ export function defineRoute<
     throw new Error(`${label}: only session routes take an action`);
   }
   if (spec.method !== 'GET' && !spec.audit) {
-    throw new Error(`${label}: a mutating route must declare audit: 'one' | 'none'`);
+    throw new Error(`${label}: a mutating route must declare audit: 'one' | 'none' | { count }`);
+  }
+  if (
+    typeof spec.audit === 'object' &&
+    !(Number.isInteger(spec.audit.count) && spec.audit.count >= 2)
+  ) {
+    throw new Error(
+      `${label}: audit { count } must be a whole number of at least 2 (use 'one' or 'none' otherwise)`,
+    );
   }
   routeSpecs.set(label, spec);
 
@@ -161,9 +181,12 @@ export function defineRoute<
         session: session as RouteContext<A, B, Q, P>['session'],
       });
 
-      // Test mode: a mutating route that says 'one' must have written exactly one audit row (plan §6.6).
-      if (spec.audit === 'one' && req.server.sharkxAssertAudit && getContext().auditCount !== 1) {
-        throw new Error(`${label}: expected exactly one audit row, got ${getContext().auditCount}`);
+      // Test mode: a mutating route must have written exactly the audit rows it declared (plan §6.6).
+      const want = expectedAuditRows(spec.audit);
+      if (want !== null && req.server.sharkxAssertAudit && getContext().auditCount !== want) {
+        throw new Error(
+          `${label}: expected exactly ${want} audit row(s), got ${getContext().auditCount}`,
+        );
       }
       // Parsing the response strips fields the contract does not name.
       return spec.response.parse(out);

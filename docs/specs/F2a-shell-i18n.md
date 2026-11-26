@@ -22,7 +22,7 @@ F1a.
 ## Edge cases
 - Arabic strings longer than English; mixed-direction content (phone numbers, Latin names).
 - Dates/numbers formatted per locale and project time zone.
-- Switcher with zero or one project; managers and the super admin see all clients; a client user has no switcher (own client only) and a nav limited to its four areas.
+- Switcher with zero or one project; managers and the super admin see all clients; a client user has no switcher (own client only) and a nav limited to its five areas (Overview, Leads, WhatsApp, Reports, Connectors; web plan §2.3).
 - Mobile: rail collapses, no horizontal scroll at 360 px.
 
 ## Out of scope

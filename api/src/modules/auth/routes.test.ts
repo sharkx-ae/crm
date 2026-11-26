@@ -162,8 +162,8 @@ describe('sign-in: nothing about a failure is revealed', () => {
     const body = errorBody.parse(locked.json());
     expect(body.error.code).toBe('RATE_LIMITED');
     expect(body.error.retryAfterSec).toBeGreaterThan(0);
-    // another address is not locked
-    expect((await login(u.email, u.password, freshIp())).statusCode).toBe(200);
+    // the account bucket does not reset when the forwarded address changes
+    expect((await login(u.email, u.password, freshIp())).statusCode).toBe(429);
     expect(
       (await auditRows('auth.login_failed')).some(
         (r) => (r.meta as { reason?: string }).reason === 'rate_limited',

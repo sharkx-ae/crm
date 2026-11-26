@@ -8,6 +8,10 @@ import { httpPlugin, serverOptions } from './lib/http/plugin.ts';
 import type { SessionResolver } from './lib/http/route.ts';
 import { auditRoutes } from './modules/audit/index.ts';
 import { authRoutes, resolveSession } from './modules/auth/index.ts';
+import { contactRoutes } from './modules/contacts/index.ts';
+import { leadRoutes } from './modules/leads/index.ts';
+import { projectRoutes } from './modules/projects/index.ts';
+import { reportRoutes } from './modules/reports/index.ts';
 import { healthRoutes } from './routes/health.ts';
 
 export type AppDeps = {
@@ -25,6 +29,10 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
   await app.register(healthRoutes, { env });
   await app.register(authRoutes, { env });
   await app.register(auditRoutes);
+  await app.register(projectRoutes, { env });
+  await app.register(leadRoutes);
+  await app.register(contactRoutes);
+  await app.register(reportRoutes);
   return app;
 }
 

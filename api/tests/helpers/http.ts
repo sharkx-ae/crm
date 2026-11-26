@@ -7,6 +7,7 @@ import type { Role, UserStatus } from '../../src/contracts/common.ts';
 import * as s from '../../src/db/schema/index.ts';
 import { hashPassword } from '../../src/lib/crypto/index.ts';
 import { memoryTransport, setEmailTransport } from '../../src/lib/email/index.ts';
+import { rateKey } from '../../src/lib/rate-limit/index.ts';
 import { withSystem } from '../../src/lib/tenant/index.ts';
 import { ensureSuperAdmin } from './db.ts';
 import { INTERNAL_TOKEN, testEnv } from './env.ts';
@@ -130,8 +131,11 @@ export const SUPER_EMAIL = 'super-admin@test.local';
 export async function signInSuperAdmin(app: FastifyInstance, mail: Mail) {
   const id = await ensureSuperAdmin();
   const pwHash = await hashPassword(PASSWORD);
-  await withSystem(null, (tx) =>
-    tx.update(s.users).set({ pwHash, status: 'active' }).where(eq(s.users.id, id)),
-  );
+  // Every test file shares this one account, and the code-send limit is 3 per user per 10 minutes: clear its counter
+  // first so the suite does not fail on how many files ran before this one (the limit itself is tested in auth).
+  await withSystem(null, async (tx) => {
+    await tx.update(s.users).set({ pwHash, status: 'active' }).where(eq(s.users.id, id));
+    await tx.delete(s.rateLimits).where(eq(s.rateLimits.key, rateKey('code_send', id)));
+  });
   return { id, ...(await signIn(app, mail, SUPER_EMAIL)) };
 }

@@ -1,20 +1,38 @@
 // GENERATED from api/src/contracts by scripts/sync-contracts.mjs. Do not edit; change the source and re-run the script.
 import { z } from 'zod';
-import { actorKind, e164, email, iso, leadStatus, source } from './common.ts';
+import {
+  actorKind,
+  e164,
+  email,
+  iso,
+  leadStatus,
+  pageNumber,
+  pageSize,
+  sortDir,
+  source,
+} from './common.ts';
 
 // F4a/F4b shapes (web plan §3.4, §4.1, §4.4). Responses carry a `view` so a client-role
 // shape is always the strict allowlist and a new endpoint cannot forget the projection.
 export const leadTab = z.enum(['all', 'unreviewed', 'mql', 'sql', 'not_qualified']);
+export const leadSort = z.enum(['lead', 'source', 'campaign', 'status', 'owner', 'received']);
 const owner = z.union([z.uuid(), z.literal('unassigned')]);
 
-// GET /leads. `limit` pages by "Show 20 more", up to 200.
+// The query of a read by id (GET /leads/:id, GET /contacts/:id): can() runs on the client before the row is read.
+export const projectScope = z.object({ projectId: z.uuid() });
+
+// GET /leads. `page` (1-based) and `limit` (the page size: 10, 20, 50 or 100) page the list; `total` on the response
+// is the size of the tab's whole set, whatever the page.
 export const leadsQuery = z.object({
   projectId: z.uuid(),
   tab: leadTab.default('all'),
   q: z.string().trim().max(120).optional(),
   source: source.optional(),
   owner: owner.optional(),
-  limit: z.coerce.number().int().min(1).max(200).default(20),
+  sort: leadSort.optional(),
+  dir: sortDir.optional(),
+  page: pageNumber,
+  limit: pageSize,
 });
 
 // The client allowlist (CONTRACTS §1: never owner, stage, notes, events, tasks, isTest).
@@ -47,8 +65,15 @@ const counts = z.object({
   not_qualified: z.number().int().nonnegative(),
 });
 const pageBase = { counts, total: z.number().int().nonnegative(), sources: z.array(source) };
+// The owner filter (staff): active managers, plus anyone else who still owns a lead of this client.
+const ownerChoice = z.object({ id: z.uuid(), name: z.string(), active: z.boolean() });
 export const leadsPage = z.discriminatedUnion('view', [
-  z.object({ view: z.literal('staff'), ...pageBase, rows: z.array(staffLeadRow) }),
+  z.object({
+    view: z.literal('staff'),
+    ...pageBase,
+    rows: z.array(staffLeadRow),
+    owners: z.array(ownerChoice),
+  }),
   z.object({ view: z.literal('client'), ...pageBase, rows: z.array(clientLeadRow) }),
 ]);
 
@@ -132,6 +157,7 @@ export const leadExportRows = z.discriminatedUnion('view', [
 ]);
 
 export type LeadTab = z.infer<typeof leadTab>;
+export type ProjectScope = z.infer<typeof projectScope>;
 export type LeadsQuery = z.infer<typeof leadsQuery>;
 export type ClientLeadRow = z.infer<typeof clientLeadRow>;
 export type StaffLeadRow = z.infer<typeof staffLeadRow>;
@@ -144,3 +170,4 @@ export type MappingTarget = z.infer<typeof mappingTarget>;
 export type SaveFormMappingRequest = z.infer<typeof saveFormMappingRequest>;
 export type LeadExportRequest = z.infer<typeof leadExportRequest>;
 export type LeadExportRows = z.infer<typeof leadExportRows>;
+export type LeadSort = z.infer<typeof leadSort>;

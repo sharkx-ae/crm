@@ -1,0 +1,42 @@
+{
+  "table": "Contacts",
+  "unnamed": "Unnamed contact",
+  "open": "Open {name}",
+  "searchLabel": "Search contacts",
+  "search": "Search name, phone, email",
+  "columns": {
+    "contact": "Contact",
+    "email": "Email",
+    "leads": "Leads",
+    "latestStatus": "Latest status",
+    "lastActivity": "Last activity"
+  },
+  "empty": {
+    "noneTitle": "No contacts yet",
+    "matchTitle": "No contacts match"
+  },
+  "drawer": {
+    "subtitle": "Contact profile",
+    "details": "Details",
+    "leads": "Leads ({n})",
+    "chats": "Chats",
+    "notes": "Internal notes",
+    "statusChanges": "Status changes",
+    "noChats": "No chats yet.",
+    "noNotes": "No notes.",
+    "noMarks": "No marks yet.",
+    "messages": "{n} messages on {number}",
+    "unknownNumber": "this number",
+    "leadMeta": "{source} · {ago}",
+    "noCampaign": "Lead",
+    "phone": "Phone",
+    "email": "Email",
+    "client": "Client",
+    "mark": "Marked {to} by {name}",
+    "markReason": "Marked {to} ({reason}) by {name}",
+    "someone": "someone"
+  },
+  "toast": {
+    "gone": "That contact is no longer available."
+  }
+}

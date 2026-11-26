@@ -20,12 +20,14 @@
     "db:generate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file-if-exists=.env.local src/db/migrate.ts",
     "auth:seed-admin": "node --env-file-if-exists=.env.local src/db/seed-super-admin.ts",
+    "db:seed": "node --env-file-if-exists=.env.local src/db/seed.ts",
     "db:studio": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "verify": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "dependencies": {
     "drizzle-orm": "0.45.4",
     "fastify": "5.12.8",
+    "libphonenumber-js": "1.13.17",
     "pg": "8.23.1",
     "pg-boss": "12.38.2",
     "zod": "4.6.7"

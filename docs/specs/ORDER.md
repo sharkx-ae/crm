@@ -3,7 +3,7 @@
 - Day 1 = Fri 20 Nov 2026 · Day 3 = Sun 22 Nov (today's baseline) · Day 14 = Thu 3 Dec · Day 21 = Thu 10 Dec. Calendar days, weekends included.
 - **Alex** and **John** each own whole features: screen, Server Action, api route, service, schema, tests. Nobody waits for the other half of a feature.
 - **Priority:** Phase 1 Base portal (sign-in, invites, reset password, role dashboards) → Phase 2 WhatsApp → Phase 3 lead sources → Phase 4 work the leads → Phase 5 close the loop → hardening. Phases overlap only where the two devs work in parallel.
-- Re-baselined from D3 (F1b was in progress, F2a not started). Estimates, not promises: feature freeze lands about D19 (was D18); see "Risks".
+- Re-baselined from D3 (F1b was in progress, F2a not started). Estimates, not promises: the last new feature (Release 4, the TikTok/LinkedIn/Snapchat connectors) lands about D21; see "Risks".
 
 > **F1 delivered (D3):** see [F1-technical-plan.md](F1-technical-plan.md). John: `getSession`/`requireSession`, `defineAction`, `inviteUser`/`setUserStatus`/`getUsers` and `inviteUserTx` (for F2b `createProject`, call `deliver()` after commit) are ready; `GET /audit` is ready for F1e. Local setup: both apps need the same `INTERNAL_API_TOKEN`.
 
@@ -20,7 +20,7 @@ Demo script: super admin signs in with a code → creates a client → invites i
 | D8 | D8 | [F1d Audit writes, queue, email, limits, alerts](F1d-queue-audit.md) | Alex | F1b |
 | D8 | D8 | [F10a Client dashboard foundation + client users](F10a-client-workspace.md) | John | F2a, F1c |
 | D9 | D10 | [F4b Leads screen, drawer, contacts](F4b-leads-ui.md) | John | F4a, F2a |
-| D11 | D11 | [F13a Overview (staff and client)](F13a-overview-agency.md) | John | F4b |
+| D11 | D11 | [F13a Overview (staff and client)](F13a-overview-agency.md) | John | F4b, F3b |
 
 ## Phase 2 · WhatsApp (Alex, one feature end to end)
 | Start | End | Spec | Owner | Depends on |
@@ -56,11 +56,11 @@ Note: F6 needs the F14b wizard (D14), so John builds F6 on fixtures D13 and wire
 | D18 | D18 | [F13b Reports](F13b-reports.md) | John | F13a |
 | D19 | D19 | [F1e Audit log viewer](F1e-audit-viewer.md) | John | F1d, F2a |
 
-## Hardening and handover
+## Release 4 · connectors, then testing and handover
 | Start | End | Spec | Owner | Depends on |
 |---|---|---|---|---|
 | D20 | D21 | [F9a Adapter interface and TikTok](F9a-adapters-tiktok.md) + [F9b LinkedIn and Snapchat](F9b-linkedin-snapchat.md) | John | F4a, F14b |
-| D20 | D21 | [F15a Security and fixture suites](F15a-security-fixtures.md) | Alex | F1b, F3b, F5 |
+| D20 | D21 | [F15a Security and fixture suites](F15a-security-fixtures.md) | Alex | F1b, F3b, F5, F9b |
 | D22 | D22 | [F2c Arabic/French and RTL QA](F2c-ar-fr-rtl.md) | John | F13b |
 | D22 | D23 | [F15b Playwright smoke flows](F15b-playwright.md) | John | F13b, F10b |
 | D21 | D23 | [F15c Staging, backups, handover, demo](F15c-staging-handover-demo.md) | Both | F15a, F15b |
@@ -79,14 +79,15 @@ Note: F6 needs the F14b wizard (D14), so John builds F6 on fixtures D13 and wire
 
 ## Risks
 - **Meta App Review:** WhatsApp submission moves from D9 to about D11, lead retrieval from D12 to about D16. Mitigation: Alex registers the Meta developer app and starts Tech Provider paperwork on D3; SHARKX business verification must be underway (CONTACT-SHARKX day 1).
-- **Capacity:** both devs are booked to about D19. If the freeze must stay D18, cut F9b (LinkedIn/Snapchat) to post-launch: it is fixture-only and awaiting platform access anyway.
-- `docs/plan-data.js` and `docs/plan.html` still show the old days and owners; re-sync them from this table.
+- **Capacity:** both devs are booked to about D21. LinkedIn and Snapchat (F9b) are the connectors most likely to slip: they are fixture-only and depend on platform access (LinkedIn gives no response time). Tell SHARKX early if they move.
+- F13a (D11) is tagged Release 1 (due D10) and needs F3b (Release 2) for first-reply times: it lands one day after R1, or moves to R2.
 
 ## Releases
-- **R1 (D10):** base portal and seeded dashboards.
-- **R2 (D16):** WhatsApp, website/CSV, Google, Meta, hub, pipeline, tasks.
-- **R3 (D19):** client marking, conversion feedback, health, automation, reports, audit viewer.
-- D20–23 hardening and the TikTok/LinkedIn/Snapchat fixtures; D24–30 UAT and production.
+- **Release 1 · Base portal (D10):** sign-in, invites, clients, team, client dashboard, lead engine, leads and contacts, overview.
+- **Release 2 · Lead sources and follow-up (D16):** WhatsApp (connect, sync, inbox), integrations hub and wizard, Meta Lead Ads, website forms and CSV, Google lead forms, pipeline and kanban, tasks and reminders.
+- **Release 3 · Close the loop (D19):** client marking, results sent to Meta and Google, health and alerts, automation, reports, audit log screen.
+- **Release 4 · TikTok, LinkedIn, Snapchat (D21):** the three remaining lead connectors (F9a, F9b). The last new feature: from D22 only testing, translation and fixes.
+- D20–23 testing and handover (F15a, F2c, F15b, F15c); D24–30 UAT and production.
 
 ## External milestones (not build work)
 - Meta App Review: WhatsApp about D11, lead retrieval about D16.

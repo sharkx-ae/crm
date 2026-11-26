@@ -1,0 +1,1 @@
+CREATE INDEX "lead_events_merged_external_idx" ON "lead_events" USING btree ("project_id",("data"->>'source'),("data"->>'externalId')) WHERE "lead_events"."kind" = 'merged';

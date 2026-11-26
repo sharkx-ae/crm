@@ -11,6 +11,7 @@ next-env.d.ts
 # env: every .env* file except the committed template
 .env*
 !.env.example
+!.env.*.example
 
 # tests
 coverage/

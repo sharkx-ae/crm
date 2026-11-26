@@ -6,8 +6,8 @@ Repo, toolchain, environments and frozen contracts exist so Alex and John build 
 
 ## Acceptance criteria
 - [ ] The api's `/health` reports DB, queue, each integration, last webhook time (checks stubbed until F1d/F14a). Web `/api/health` stays reachability only.
-- [ ] CI: typecheck, Biome, Vitest (Postgres), audit; runs on every push to `main`; staging deploys only after green CI.
-- [ ] Staging auto-deploys from `main`; production promoted manually.
+- [ ] CI: typecheck, Biome, Vitest (Postgres), audit; runs on every push to `master`; staging deploys only after green CI.
+- [ ] Staging auto-deploys from `master`; production is promoted by merging `master` into `main`.
 
 ## Data model / API / job changes
 - No tables (F1b). `api/src/contracts/` mirrors `docs/specs/CONTRACTS.md` exactly; `web/src/contracts/` is its generated copy.

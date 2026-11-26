@@ -1,7 +1,7 @@
 # PRD · SHARKX Agency CRM
 
 - Authority: SOW (2026-10-16) > Client Requirements > Feature Document > mockup (UI only). Anything not in the SOW is an Extra.
-- Window: build from D1 (Fri 20 Nov). Re-baselined D3: base portal D10, feature freeze about D19, hardening D20–23, UAT and production D24–30. Order and owners: `docs/specs/ORDER.md`. Each dev builds whole features, web and api.
+- Window: build from D1 (Fri 20 Nov). Re-baselined D3: base portal D10, last new feature (TikTok/LinkedIn/Snapchat connectors) about D21, testing and handover D20–23, UAT and production D24–30. Order and owners: `docs/specs/ORDER.md`. Each dev builds whole features, web and api.
 - Trace key: **SOW** = SOW §4 module (hours from §8) · **Mockup** = screen in `docs/inputs/sharkx-crm-mockup.html`. Sub-features and status: `docs/specs/STATUS.md`.
 - Change 2026-11-21: three roles only (super admin, manager, client); the secure no-login client link is replaced by client login. SOW change order pending (ARCHITECTURE §10).
 
@@ -134,7 +134,7 @@
 
 ### F15
 **Testing, deploy, handover** · A + B · SOW: testing, deployment, handover (14h)
-- CI: typecheck, Biome, Vitest (Postgres), audit; runs on every push to `main` (devs run `node scripts/verify.mjs` first). Staging auto-deploys from `main` only after green CI (Railway "Wait for CI"); production promoted manually.
+- CI: typecheck, Biome, Vitest (Postgres), audit; runs on every push to `master` (devs run `node scripts/verify.mjs` first). Staging auto-deploys from `master` only after green CI (Railway "Wait for CI"); production promoted manually.
 - Tests: isolation + permission suite (super admin, manager, client), webhook signature and idempotency, adapter fixtures, 6 Playwright flows; manual UAT checklist.
 - Seed/demo data from the mockup (5 clients, ~64 leads) plus a super admin, two managers and one client user per client.
 - Backups on; restore drill passed before production.

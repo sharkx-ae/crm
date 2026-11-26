@@ -1,0 +1,168 @@
+{
+  "now": "2026-11-25T10:00:00.000Z",
+  "totalLeads": 64,
+  "clients": {
+    "lum": {
+      "leads": 16,
+      "testLeads": 1,
+      "newToday": 3,
+      "byStatus": {
+        "new": 4,
+        "mql": 4,
+        "sql": 6,
+        "not_qualified": 1
+      },
+      "withChat": 11,
+      "unreplied": 4,
+      "overdueTasks": 2,
+      "overview": {
+        "leads30": 15,
+        "mqlRate": 0.6667,
+        "sqlRate": 0.4,
+        "medianFirstReplyMin": 19,
+        "replied": 10,
+        "bySource": {
+          "meta": 6,
+          "tiktok": 3,
+          "google": 2,
+          "snapchat": 1,
+          "whatsapp": 2,
+          "website": 1
+        },
+        "peak": {
+          "date": "2026-10-30",
+          "count": 4
+        }
+      }
+    },
+    "prl": {
+      "leads": 13,
+      "testLeads": 0,
+      "newToday": 3,
+      "byStatus": {
+        "new": 1,
+        "mql": 10,
+        "sql": 1,
+        "not_qualified": 1
+      },
+      "withChat": 10,
+      "unreplied": 5,
+      "overdueTasks": 0,
+      "overview": {
+        "leads30": 13,
+        "mqlRate": 0.8462,
+        "sqlRate": 0.0769,
+        "medianFirstReplyMin": 14,
+        "replied": 8,
+        "bySource": {
+          "website": 3,
+          "tiktok": 4,
+          "meta": 2,
+          "youtube": 1,
+          "whatsapp": 3
+        },
+        "peak": {
+          "date": "2026-11-25",
+          "count": 3
+        }
+      }
+    },
+    "nov": {
+      "leads": 12,
+      "testLeads": 0,
+      "newToday": 2,
+      "byStatus": {
+        "new": 4,
+        "mql": 3,
+        "sql": 4,
+        "not_qualified": 1
+      },
+      "withChat": 7,
+      "unreplied": 4,
+      "overdueTasks": 1,
+      "overview": {
+        "leads30": 12,
+        "mqlRate": 0.5833,
+        "sqlRate": 0.3333,
+        "medianFirstReplyMin": 16,
+        "replied": 5,
+        "bySource": {
+          "whatsapp": 3,
+          "meta": 2,
+          "google": 1,
+          "snapchat": 3,
+          "website": 1,
+          "tiktok": 2
+        },
+        "peak": {
+          "date": "2026-11-13",
+          "count": 2
+        }
+      }
+    },
+    "fal": {
+      "leads": 12,
+      "testLeads": 1,
+      "newToday": 3,
+      "byStatus": {
+        "new": 1,
+        "mql": 4,
+        "sql": 4,
+        "not_qualified": 2
+      },
+      "withChat": 6,
+      "unreplied": 4,
+      "overdueTasks": 0,
+      "overview": {
+        "leads30": 11,
+        "mqlRate": 0.7273,
+        "sqlRate": 0.3636,
+        "medianFirstReplyMin": 22,
+        "replied": 5,
+        "bySource": {
+          "website": 2,
+          "google": 3,
+          "whatsapp": 1,
+          "linkedin": 3,
+          "meta": 2
+        },
+        "peak": {
+          "date": "2026-11-25",
+          "count": 3
+        }
+      }
+    },
+    "oas": {
+      "leads": 11,
+      "testLeads": 0,
+      "newToday": 3,
+      "byStatus": {
+        "new": 4,
+        "mql": 1,
+        "sql": 1,
+        "not_qualified": 5
+      },
+      "withChat": 9,
+      "unreplied": 7,
+      "overdueTasks": 1,
+      "overview": {
+        "leads30": 11,
+        "mqlRate": 0.1818,
+        "sqlRate": 0.0909,
+        "medianFirstReplyMin": 21,
+        "replied": 8,
+        "bySource": {
+          "meta": 4,
+          "tiktok": 2,
+          "snapchat": 2,
+          "google": 1,
+          "whatsapp": 2
+        },
+        "peak": {
+          "date": "2026-11-25",
+          "count": 3
+        }
+      }
+    }
+  }
+}

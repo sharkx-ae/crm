@@ -2,10 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
+import { AuthHeading } from '../../../../components/auth/auth-heading.tsx';
 import { FormError } from '../../../../components/auth/form-error.tsx';
 import { PasswordField } from '../../../../components/auth/password-field.tsx';
 import {
-  cardClass,
+  authFormClass,
   inputClass,
   labelClass,
   linkClass,
@@ -35,11 +36,10 @@ export function LoginForm({ resetDone, resetHref }: { resetDone?: string; resetH
   const wrongCredentials = error?.code === 'UNAUTHENTICATED' || error?.code === 'VALIDATION';
 
   return (
-    <form onSubmit={submit} className={`${cardClass} space-y-5 text-start`} noValidate>
-      <div>
-        <h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
-        <p className="text-base text-sx-muted">{t('subtitle')}</p>
-      </div>
+    <form onSubmit={submit} className={authFormClass} noValidate>
+      <AuthHeading title={t('title')}>
+        <p>{t('subtitle')}</p>
+      </AuthHeading>
       {resetDone ? (
         <p
           role="status"
@@ -82,9 +82,6 @@ export function LoginForm({ resetDone, resetHref }: { resetDone?: string; resetH
         error={wrongCredentials ? null : error}
         override={wrongCredentials ? t('invalid') : undefined}
       />
-      <a href={resetHref} className={linkClass}>
-        {t('forgot')}
-      </a>
       <button
         type="submit"
         disabled={pending || !email || !password}
@@ -92,6 +89,11 @@ export function LoginForm({ resetDone, resetHref }: { resetDone?: string; resetH
       >
         {pending ? t('submitting') : t('submit')}
       </button>
+      <div className="flex flex-wrap items-center justify-between gap-x-4">
+        <a href={resetHref} className={linkClass}>
+          {t('forgot')}
+        </a>
+      </div>
     </form>
   );
 }

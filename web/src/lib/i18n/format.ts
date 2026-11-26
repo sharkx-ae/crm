@@ -42,6 +42,12 @@ export function createFormat(
     year: 'numeric',
   });
   const shortDateFmt = new Intl.DateTimeFormat(tag, { timeZone, day: 'numeric', month: 'short' });
+  // A calendar day the api already bucketed in the project's zone: read and shown in UTC so no zone moves it.
+  const plainDayFmt = new Intl.DateTimeFormat(tag, {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'short',
+  });
   const timeFmt = new Intl.DateTimeFormat(tag, {
     timeZone,
     hour: '2-digit',
@@ -113,6 +119,11 @@ export function createFormat(
       const h = Math.round(min / 60);
       if (h < 24) return t('h', { n: h });
       return t('d', { n: Math.round(h / 24) });
+    },
+    /** "25 Nov" for a `YYYY-MM-DD` calendar day (the Overview's buckets), whatever the zone. */
+    plainDay: (day: string) => {
+      const d = /^\d{4}-\d{2}-\d{2}$/.test(day) ? parse(`${day}T00:00:00Z`) : null;
+      return d ? plainDayFmt.format(d) : EMPTY;
     },
     number: (n: number | null | undefined) => (finite(n) ? numberFmt.format(n) : EMPTY),
     /** A ratio (0.125) as "12.5%": one decimal, as the brand asks. */

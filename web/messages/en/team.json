@@ -1,0 +1,47 @@
+{
+  "managers": {
+    "title": "Managers",
+    "help": "The SHARKX team. Managers work on every client and can invite client users.",
+    "invite": "Invite manager",
+    "inviteTitle": "Invite a manager",
+    "inviteDescription": "Managers work on every client.",
+    "empty": "No managers yet. Invite the first one."
+  },
+  "clientUsers": {
+    "title": "Client users",
+    "help": "One client per user, one role. They sign in with password and an emailed code.",
+    "invite": "Invite client user",
+    "inviteTitle": "Invite a client user",
+    "inviteDescription": "Joins {name} with the client role.",
+    "empty": "No client users yet. Invite the first one."
+  },
+  "table": {
+    "label": "Users",
+    "name": "Name",
+    "email": "Email",
+    "status": "Status",
+    "actions": "Actions",
+    "disable": "Disable",
+    "enable": "Enable",
+    "disableName": "Disable {name}",
+    "enableName": "Enable {name}"
+  },
+  "status": {
+    "active": "Active",
+    "invited": "Invited",
+    "disabled": "Disabled"
+  },
+  "inviteForm": {
+    "name": "Full name",
+    "email": "Email",
+    "help": "They get a single-use link (72 hours) to set a password, then sign in with a code sent by email.",
+    "submit": "Send invite",
+    "submitting": "Sending...",
+    "sent": "Invite sent to {email}",
+    "conflict": "That email already has an account."
+  },
+  "toast": {
+    "disabled": "{name} disabled. Sessions revoked.",
+    "enabled": "{name} enabled"
+  }
+}

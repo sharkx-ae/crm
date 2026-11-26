@@ -22,6 +22,20 @@
       "when": 1795349775986,
       "tag": "0002_roles_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795544662223,
+      "tag": "0003_project_assign_cursor_daily_hours",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795546924188,
+      "tag": "0004_lead_events_merged_external_idx",
+      "breakpoints": true
     }
   ]
 }

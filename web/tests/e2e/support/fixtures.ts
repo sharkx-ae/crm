@@ -1,0 +1,245 @@
+// Fixtures shared by the fake api and the stubbed Playwright specs. Invented people and clients; no real data.
+import type { LeadStatus, Locale, Role, Source } from '../../../src/contracts/common.ts';
+import type { StaffLeadRow } from '../../../src/contracts/leads.ts';
+import type { ProjectDetail } from '../../../src/contracts/projects.ts';
+
+const LUMIERE = '0b6f7c1e-4d2a-4f3b-9a1c-1e2d3c4b5a60';
+const PEARL = '7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d';
+
+const weekdays = [1, 2, 3, 4, 5, 6, 7].map((day) => ({
+  day,
+  open: day <= 5,
+  from: '09:00',
+  to: '18:00',
+}));
+
+const users: {
+  userId: string;
+  email: string;
+  name: string;
+  role: Role;
+  projectIds: string[];
+  /** The saved language (users.locale). */
+  locale: Locale;
+}[] = [
+  {
+    userId: '3c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f',
+    email: 'client@example.test',
+    name: 'Lina Haddad',
+    role: 'client',
+    projectIds: [LUMIERE],
+    locale: 'en',
+  },
+  {
+    userId: '5d6e7f80-91a2-4b3c-8d4e-5f6a7b8c9d0e',
+    email: 'admin@example.test',
+    name: 'Agency Admin',
+    role: 'super_admin',
+    projectIds: [],
+    locale: 'en',
+  },
+  {
+    userId: '8e9f0a1b-2c3d-4e5f-8a6b-7c8d9e0f1a2b',
+    email: 'manager-fr@example.test',
+    name: 'Rami Haddad',
+    role: 'manager',
+    projectIds: [],
+    locale: 'fr',
+  },
+];
+
+const projects: ProjectDetail[] = [
+  {
+    id: LUMIERE,
+    name: 'Lumière Aesthetics',
+    city: 'Dubai',
+    industry: 'Aesthetic clinic',
+    color: '#e70101',
+    timezone: 'Asia/Dubai',
+    businessHours: weekdays,
+  },
+  {
+    id: PEARL,
+    name: 'Pearl Derma Clinic',
+    city: 'Abu Dhabi',
+    industry: 'Dermatology',
+    color: '#1c0f0f',
+    timezone: 'Asia/Dubai',
+    businessHours: weekdays,
+  },
+];
+
+// Sixty-four Lumière leads, the highest number the newest. Four pages of 20 (and a partial last one), so paging is real:
+// page 2 starts at rank 21, a page size of 50 leaves 14 for page 2, and 100 holds them all.
+// Named rows are the ones the stubbed spec looks for; the rest fill the counts.
+const RAMI = '8e9f0a1b-2c3d-4e5f-8a6b-7c8d9e0f1a2b';
+const leadId = (n: number) => `a1000000-0000-4000-8000-${n.toString(16).padStart(12, '0')}`;
+export const LEAD_COUNT = 64;
+const SARA = leadId(LEAD_COUNT);
+const HADI = leadId(LEAD_COUNT - 1);
+const GOOGLE_ONLY = leadId(LEAD_COUNT - 2);
+/** Rank 21 newest first: the first row of page 2 at the default size. */
+const PAGE_TWO = leadId(LEAD_COUNT - 20);
+const NOOR = leadId(10);
+const SARA_CONTACT = 'c1000000-0000-4000-8000-000000000001';
+const RECEIVED = Date.parse('2026-11-25T10:00:00.000Z');
+
+export type FixtureLead = StaffLeadRow & { projectId: string };
+export type FixtureContact = {
+  id: string;
+  projectId: string;
+  name: string | null;
+  phone: string | null;
+  phoneDisplay: string | null;
+  email: string | null;
+  createdAt: string;
+  leadIds: string[];
+};
+
+const STATUS_CYCLE: LeadStatus[] = ['new', 'mql', 'sql', 'not_qualified'];
+const SOURCE_CYCLE: Source[] = ['meta', 'google', 'website'];
+
+const leads: FixtureLead[] = Array.from({ length: LEAD_COUNT }, (_, i) => {
+  const n = i + 1;
+  const owned = n % 2 === 1;
+  const lead: FixtureLead = {
+    id: leadId(n),
+    projectId: LUMIERE,
+    name: `Lead ${n}`,
+    phone: `+97150${String(1000000 + n)}`,
+    phoneDisplay: `+971 50 ${String(1000000 + n)}`,
+    email: `lead${n}@example.test`,
+    source: SOURCE_CYCLE[n % SOURCE_CYCLE.length] ?? 'meta',
+    campaign: `Campaign ${n}`,
+    status: STATUS_CYCLE[n % STATUS_CYCLE.length] ?? 'new',
+    reason: null,
+    createdAt: new Date(RECEIVED - (LEAD_COUNT - n) * 60_000).toISOString(),
+    answers: {},
+    ownerId: owned ? RAMI : null,
+    ownerName: owned ? 'Rami Haddad' : null,
+  };
+  return lead;
+});
+
+const named = (id: string): FixtureLead => {
+  const lead = leads.find((l) => l.id === id);
+  if (!lead) throw new Error(`missing fixture lead ${id}`);
+  return lead;
+};
+
+Object.assign(named(SARA), {
+  name: 'Sara Al Noor',
+  source: 'meta' as const,
+  status: 'new' as const,
+  campaign: 'Ramadan consult',
+  email: 'sara@example.test',
+  answers: { Treatment: 'Botox' },
+  ownerId: null,
+  ownerName: null,
+});
+Object.assign(named(HADI), {
+  name: 'Hadi New',
+  source: 'website' as const,
+  status: 'new' as const,
+  ownerId: RAMI,
+  ownerName: 'Rami Haddad',
+});
+Object.assign(named(GOOGLE_ONLY), {
+  name: 'Google Only',
+  source: 'google' as const,
+  status: 'mql' as const,
+});
+Object.assign(named(PAGE_TWO), { name: 'Page Two Lead' });
+Object.assign(named(NOOR), {
+  name: 'Noor SQL',
+  source: 'google' as const,
+  status: 'sql' as const,
+  ownerId: RAMI,
+  ownerName: 'Rami Haddad',
+});
+
+const contacts: FixtureContact[] = [
+  {
+    id: SARA_CONTACT,
+    projectId: LUMIERE,
+    name: 'Sara Al Noor',
+    phone: named(SARA).phone,
+    phoneDisplay: named(SARA).phoneDisplay,
+    email: 'sara@example.test',
+    createdAt: '2026-11-20T08:00:00.000Z',
+    leadIds: [SARA],
+  },
+  {
+    id: 'c1000000-0000-4000-8000-000000000002',
+    projectId: LUMIERE,
+    name: 'Omar Farid',
+    phone: '+971501111111',
+    phoneDisplay: '+971 50 111 1111',
+    email: 'omar@example.test',
+    createdAt: '2026-11-18T08:00:00.000Z',
+    leadIds: [HADI],
+  },
+  // Twenty-eight more, so Contacts has 30 in all: a full first page of 20 and a partial second of 10. Each is the
+  // contact of lead N (leads 3 to 30), so they sort by that lead's time: newest first, 30 down to 3.
+  ...Array.from({ length: 28 }, (_, i): FixtureContact => {
+    const n = i + 3;
+    return {
+      id: `c1000000-0000-4000-8000-${(n + 2).toString(16).padStart(12, '0')}`,
+      projectId: LUMIERE,
+      name: `Person ${n}`,
+      phone: `+97155100${String(n).padStart(4, '0')}`,
+      phoneDisplay: `+971 55 100 ${String(n).padStart(4, '0')}`,
+      email: `person${n}@example.test`,
+      createdAt: '2026-11-10T08:00:00.000Z',
+      leadIds: [leadId(n)],
+    };
+  }),
+];
+
+// The Overview's chart data for Lumière (F13a): thirty days ending on the fixture's "today", 25 Nov in Dubai, and six
+// sources so the "Other" row shows. The tiles' rates and the waiting list come from the leads above (they change
+// when a spec marks one). Pearl has no leads: its Overview shows the empty states and the dashes.
+const OVERVIEW_TODAY = '2026-11-25';
+const overviewDays = [
+  1, 1, 0, 2, 1, 0, 3, 1, 1, 0, 2, 4, 1, 0, 1, 2, 0, 1, 3, 1, 0, 2, 1, 1, 0, 2, 3, 1, 2, 3,
+]; // 40 in all, the same as the six sources; the peak is 4 on 7 Nov
+const overview = {
+  lumiere: {
+    perDay: overviewDays.map((count, i) => ({
+      date: new Date(Date.parse(`${OVERVIEW_TODAY}T00:00:00Z`) - (29 - i) * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+      count,
+    })),
+    bySource: [
+      { source: 'meta', count: 14 },
+      { source: 'tiktok', count: 9 },
+      { source: 'google', count: 7 },
+      { source: 'whatsapp', count: 5 },
+      { source: 'snapchat', count: 3 },
+      { source: 'website', count: 2 },
+    ] satisfies { source: Source; count: number }[],
+    medianFirstReplyMin: 19,
+  },
+};
+
+export const FIXTURE = {
+  password: 'Correct-horse-1234',
+  code: '123456',
+  users,
+  projects,
+  leads,
+  contacts,
+  overview,
+  ids: {
+    lumiere: LUMIERE,
+    pearl: PEARL,
+    rami: RAMI,
+    sara: SARA,
+    hadi: HADI,
+    googleOnly: GOOGLE_ONLY,
+    pageTwo: PAGE_TWO,
+    noor: NOOR,
+    saraContact: SARA_CONTACT,
+  },
+};

@@ -1,4 +1,7 @@
 {
+  "brand": {
+    "logoAlt": "SHARKX"
+  },
   "nav": {
     "label": "Main",
     "clients": "Clients",
@@ -24,21 +27,34 @@
     "workspace": "Workspace",
     "setup": "Setup"
   },
+  "menu": {
+    "open": "Open menu",
+    "close": "Close menu"
+  },
   "switcher": {
     "label": "Client",
     "allClients": "All clients",
     "agencyWorkspace": "Agency workspace",
     "clientDashboard": "Client dashboard",
     "noClients": "No clients yet",
-    "addClient": "Add client"
+    "addClient": "Add client",
+    "seeMore": "See {n} more"
   },
   "language": {
-    "label": "Language"
+    "label": "Language",
+    "en": "English",
+    "ar": "العربية",
+    "fr": "Français"
   },
   "me": {
     "signOut": "Sign out"
   },
   "footer": {
-    "line": "SharkX · {date} · Confidential · sharkx.ae"
+    "line": "SharkX · <d>{date}</d> · Confidential · sharkx.ae",
+    "user": "<n>{name}</n> · {role}"
+  },
+  "placeholder": {
+    "title": "Coming soon in this release",
+    "body": "This screen is being built. The menu shows what is ready today."
   }
 }
