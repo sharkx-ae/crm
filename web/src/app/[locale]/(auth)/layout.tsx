@@ -41,7 +41,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
         </div>
         <p className="text-label text-white">{t('footer')}</p>
       </section>
-      <main className="grid min-w-0 place-items-center px-6 py-8">
+      <main className="grid min-w-0 grid-cols-[minmax(0,1fr)] place-items-center px-6 py-8">
         <div className="flex w-[min(400px,100%)] flex-col gap-5">{children}</div>
       </main>
     </div>
