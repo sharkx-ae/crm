@@ -114,7 +114,7 @@ export function ContactsScreen({
       </Card>
       {canGrow ? (
         <div className="flex justify-center">
-          <Button onClick={() => go({ limit: filters.limit + PAGE_STEP })}>
+          <Button onClick={() => go({ limit: Math.min(PAGE_CAP, filters.limit + PAGE_STEP) })}>
             {t('more', { n: more })}
           </Button>
         </div>

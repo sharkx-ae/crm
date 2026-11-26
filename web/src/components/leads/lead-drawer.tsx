@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import type { LeadDetail } from '../../contracts/leads.ts';
+import { ltrIsolate } from '../../lib/bidi.ts';
 import { cx } from '../../lib/cx.ts';
 import { useProjectFormat } from '../../lib/i18n/use-project-format.ts';
 import { useProject } from '../shell/project-context.tsx';
@@ -77,7 +78,7 @@ export function LeadDrawer({
     <Drawer
       open
       onOpenChange={(open) => !open && onClose()}
-      title={label}
+      title={lead.name || !lead.phoneDisplay ? label : ltrIsolate(label)}
       subtitle={
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <StatusChip status={lead.status} />

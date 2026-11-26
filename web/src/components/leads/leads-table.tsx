@@ -73,7 +73,13 @@ export function LeadsTable({
                   className="flex min-w-0 flex-col leading-snug text-sx-black no-underline"
                 >
                   <span className="font-heading text-section">
-                    <UserText>{name}</UserText>
+                    {r.name ? (
+                      <UserText>{r.name}</UserText>
+                    ) : r.phoneDisplay ? (
+                      <Phone>{r.phoneDisplay}</Phone>
+                    ) : (
+                      name
+                    )}
                   </span>
                   {r.name && r.phoneDisplay ? (
                     <Phone className="text-label text-sx-muted">{r.phoneDisplay}</Phone>

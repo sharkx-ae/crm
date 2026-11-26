@@ -47,7 +47,13 @@ export function ContactsTable({
                   className="flex min-w-0 flex-col leading-snug text-sx-black no-underline"
                 >
                   <span className="font-heading text-section">
-                    <UserText>{name}</UserText>
+                    {row.name ? (
+                      <UserText>{row.name}</UserText>
+                    ) : row.phoneDisplay ? (
+                      <Phone>{row.phoneDisplay}</Phone>
+                    ) : (
+                      name
+                    )}
                   </span>
                   {row.name && row.phoneDisplay ? (
                     <Phone className="text-label text-sx-muted">{row.phoneDisplay}</Phone>

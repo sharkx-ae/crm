@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import type { ContactProfile } from '../../contracts/contacts.ts';
+import { ltrIsolate } from '../../lib/bidi.ts';
 import { cx } from '../../lib/cx.ts';
 import { Link } from '../../lib/i18n/navigation.ts';
 import { useProjectFormat } from '../../lib/i18n/use-project-format.ts';
@@ -70,7 +71,7 @@ export function ContactDrawer({
     <Drawer
       open
       onOpenChange={(open) => !open && onClose()}
-      title={name}
+      title={contact.name || !contact.phoneDisplay ? name : ltrIsolate(name)}
       subtitle={<p className="text-label text-sx-muted">{t('drawer.subtitle')}</p>}
     >
       <Section title={t('drawer.details')} first>
@@ -120,7 +121,9 @@ export function ContactDrawer({
               .map((chat) =>
                 t('drawer.messages', {
                   n: chat.messages,
-                  number: chat.numberLabel ?? chat.phoneDisplay ?? t('drawer.unknownNumber'),
+                  number:
+                    chat.numberLabel ??
+                    (chat.phoneDisplay ? ltrIsolate(chat.phoneDisplay) : t('drawer.unknownNumber')),
                 }),
               )
               .join(', ')}

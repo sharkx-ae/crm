@@ -1,10 +1,12 @@
 // RFC 4180 CSV for the leads export (F4b S4). Cells that a spreadsheet would treat as a formula get a leading quote.
 
-const FORMULA = /^[=+\-@\t]/;
+const FORMULA = /^[=+\-@\t\r]/;
+// A phone in E.164 starts with + but is not a formula: guarding it would show the apostrophe in the Phone column.
+const E164 = /^\+[1-9]\d{6,14}$/;
 
 /** One cell: spreadsheet-injection guard, then RFC 4180 quoting. */
 export function csvField(value: string): string {
-  const guarded = FORMULA.test(value) ? `'${value}` : value;
+  const guarded = FORMULA.test(value) && !E164.test(value) ? `'${value}` : value;
   if (/[",\r\n]/.test(guarded)) return `"${guarded.replaceAll('"', '""')}"`;
   return guarded;
 }

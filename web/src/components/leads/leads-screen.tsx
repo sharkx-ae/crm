@@ -124,7 +124,9 @@ export function LeadsScreen({
       </Card>
       {canGrow ? (
         <div className="flex justify-center">
-          <Button onClick={() => onChange({ limit: filters.limit + PAGE_STEP })}>
+          <Button
+            onClick={() => onChange({ limit: Math.min(PAGE_CAP, filters.limit + PAGE_STEP) })}
+          >
             {t('more', { n: more })}
           </Button>
         </div>

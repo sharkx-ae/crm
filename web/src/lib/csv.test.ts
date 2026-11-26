@@ -36,7 +36,10 @@ describe('csvField', () => {
 
   it('prefixes a leading = + - @ or tab so a spreadsheet does not run it', () => {
     expect(csvField('=cmd')).toBe("'=cmd");
-    expect(csvField('+971501112233')).toBe("'+971501112233");
+    // a real phone number is not a formula: no apostrophe in the Phone column
+    expect(csvField('+971501112233')).toBe('+971501112233');
+    expect(csvField('+971 50 1112233')).toBe("'+971 50 1112233");
+    expect(csvField('+1+1')).toBe("'+1+1");
     expect(csvField('-1')).toBe("'-1");
     expect(csvField('@sum')).toBe("'@sum");
     expect(csvField('\thidden')).toBe("'\thidden");
@@ -61,7 +64,7 @@ describe('leadsCsv', () => {
     const [header, body] = csv.trimEnd().split('\r\n');
     expect(header).toBe('Name,Phone,Email,Source,Campaign,Status,Reason,Received');
     expect(header).not.toContain('Owner');
-    expect(body).toBe(`Sara Noor,'+971501112233,sara@example.com,meta,Spring,mql,,${utc}`);
+    expect(body).toBe(`Sara Noor,+971501112233,sara@example.com,meta,Spring,mql,,${utc}`);
   });
 
   it('staff file adds Owner before Received, and Received is ISO UTC', () => {
