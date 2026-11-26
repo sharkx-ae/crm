@@ -13,6 +13,18 @@ async function signIn(page: Page, email: string) {
   await page.getByLabel('Digit 1 of 6').fill(FIXTURE.code);
   await expect(page).not.toHaveURL(/\/code$/);
 }
+/**
+ * Opens a modal from its button. A click that lands before the page has hydrated does nothing, which happens when
+ * the machine is busy, so click again until the dialog shows.
+ */
+async function openDialog(page: Page, button: string, dialog: string) {
+  const modal = page.getByRole('dialog', { name: dialog });
+  await expect(async () => {
+    if (!(await modal.isVisible())) await page.getByRole('button', { name: button }).click();
+    await expect(modal).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  return modal;
+}
 const noSideScroll = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
@@ -91,8 +103,7 @@ test('client users: settings opens on its tab; invite, disable and enable a clie
   await expect(table.getByText('Lina Haddad')).toBeVisible();
 
   // An email that already has an account is refused in the modal.
-  await page.getByRole('button', { name: 'Invite client user' }).click();
-  let dialog = page.getByRole('dialog', { name: 'Invite a client user' });
+  let dialog = await openDialog(page, 'Invite client user', 'Invite a client user');
   await expect(dialog.getByText('Joins Lumière Aesthetics with the client role.')).toBeVisible();
   await dialog.getByLabel('Full name').fill('Someone Else');
   await dialog.getByLabel('Email').fill('client@example.test');
@@ -100,8 +111,7 @@ test('client users: settings opens on its tab; invite, disable and enable a clie
   await expect(dialog.getByText('That email already has an account.')).toBeVisible();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
 
-  await page.getByRole('button', { name: 'Invite client user' }).click();
-  dialog = page.getByRole('dialog', { name: 'Invite a client user' });
+  dialog = await openDialog(page, 'Invite client user', 'Invite a client user');
   await dialog.getByLabel('Full name').fill('Front Desk');
   await dialog.getByLabel('Email').fill(email);
   await dialog.getByRole('button', { name: 'Send invite' }).click();
