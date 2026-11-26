@@ -12,6 +12,8 @@ import { WaitingCard } from './waiting-card.tsx';
 // Overview (F13a, mockup `viewOverview` minus the PRD hide list: no page title or sub-line, no deltas, no funnel,
 // no Won, no cost per SQL). Staff: KPI strip, a "Leads per day" card and a quiet "Leads by source" aside. A client:
 // one more tile, the waiting-for-review card first, then both panels quiet under a hairline. No primary button.
+// The two panels sit side by side from 1100px (the `wide` breakpoint); below it they stack, so the chart is never
+// squeezed into a column narrower than its bars (at 900 to 1100px the rail is open and the content is ~800px).
 
 const CHART_H = { staff: 264, client: 200 } as const;
 
@@ -107,15 +109,15 @@ export async function OverviewScreen({
       {data.view === 'client' ? (
         <>
           <WaitingCard rows={data.waiting} projectId={projectId} />
-          <div className="grid grid-cols-1 gap-6 rail:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <section className="min-w-0 border-t border-sx-border pt-5">{perDay}</section>
             <section className="min-w-0 border-t border-sx-border pt-5">{bySource}</section>
           </div>
         </>
       ) : (
-        <div className="grid grid-cols-1 gap-6 rail:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="min-w-0">{perDay}</Card>
-          <section className="min-w-0 rail:pt-[25px]">{bySource}</section>
+          <section className="min-w-0 wide:pt-[25px]">{bySource}</section>
         </div>
       )}
     </div>
