@@ -1,13 +1,14 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { ContactRow } from '../../contracts/contacts.ts';
+import type { ContactRow, ContactSort } from '../../contracts/contacts.ts';
 import { Link } from '../../lib/i18n/navigation.ts';
 import { useProjectFormat } from '../../lib/i18n/use-project-format.ts';
+import { nextSort, type Sort } from '../../lib/sort.ts';
 import { StatusChip } from '../leads/leads-table.tsx';
 import { Phone, UserText } from '../ui/bidi.tsx';
 import { ClickRow } from '../ui/click-row.tsx';
-import { Table, Td, Th } from '../ui/table.tsx';
+import { SortTh, Table, Td } from '../ui/table.tsx';
 
 /**
  * The contacts table (mockup `sx-table`): name and phone, email, how many leads, the newest lead's status, and
@@ -16,22 +17,39 @@ import { Table, Td, Th } from '../ui/table.tsx';
 export function ContactsTable({
   rows,
   hrefFor,
+  sort,
+  onSort,
 }: {
   rows: readonly ContactRow[];
   hrefFor: (id: string) => string;
+  sort: Sort<ContactSort>;
+  onSort: (next: Sort<ContactSort>) => void;
 }) {
   const t = useTranslations('contacts');
   const format = useProjectFormat();
+  const tUi = useTranslations('ui');
+  const head = (key: ContactSort, text: string, num = false) => (
+    <SortTh
+      sortKey={key}
+      active={sort.sort}
+      dir={sort.dir}
+      onSort={(k) => onSort(nextSort(sort, k))}
+      label={tUi('sortBy', { column: text })}
+      num={num}
+    >
+      {text}
+    </SortTh>
+  );
 
   return (
     <Table aria-label={t('table')}>
       <thead>
         <tr>
-          <Th>{t('columns.contact')}</Th>
-          <Th>{t('columns.email')}</Th>
-          <Th num>{t('columns.leads')}</Th>
-          <Th>{t('columns.latestStatus')}</Th>
-          <Th num>{t('columns.lastActivity')}</Th>
+          {head('contact', t('columns.contact'))}
+          {head('email', t('columns.email'))}
+          {head('leads', t('columns.leads'), true)}
+          {head('status', t('columns.latestStatus'))}
+          {head('activity', t('columns.lastActivity'), true)}
         </tr>
       </thead>
       <tbody>

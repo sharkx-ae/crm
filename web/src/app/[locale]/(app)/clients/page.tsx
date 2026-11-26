@@ -23,7 +23,7 @@ export default async function ClientsPage({
   const canCreate = can(me, 'project.create');
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <ClientsHome
         data={data}
         searching={!!query}

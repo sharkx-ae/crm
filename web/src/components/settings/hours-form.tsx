@@ -3,10 +3,8 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import type { BusinessHoursDay } from '../../contracts/projects.ts';
-import type { ActionError } from '../../lib/action.ts';
 import { updateProjectSettings } from '../../lib/actions/projects.ts';
 import { useRouter } from '../../lib/i18n/navigation.ts';
-import { FormError } from '../auth/form-error.tsx';
 import { Button } from '../ui/button.tsx';
 import { Card } from '../ui/card.tsx';
 import { Field } from '../ui/field.tsx';
@@ -14,6 +12,7 @@ import { Input } from '../ui/input.tsx';
 import { Select } from '../ui/select.tsx';
 import { Switch } from '../ui/switch.tsx';
 import { useToast } from '../ui/toast.tsx';
+import { useErrorToast } from '../ui/use-error-toast.ts';
 
 /** The zones the clients use (Dubai, Abu Dhabi, Morocco). */
 export const ZONES = ['Asia/Dubai', 'Africa/Casablanca'] as const;
@@ -40,7 +39,7 @@ export function HoursForm({
   const { toast } = useToast();
   const [timezone, setTimezone] = useState(initialZone);
   const [days, setDays] = useState(() => [...businessHours].sort((a, b) => a.day - b.day));
-  const [error, setError] = useState<ActionError | null>(null);
+  const showError = useErrorToast();
   const [pending, start] = useTransition();
 
   const patch = (day: number, change: Partial<BusinessHoursDay>) =>
@@ -52,12 +51,14 @@ export function HoursForm({
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
-    if (invalid) return;
-    setError(null);
+    if (invalid) {
+      toast(t('invalid'), { tone: 'error' });
+      return;
+    }
     start(async () => {
       const res = await updateProjectSettings({ projectId, timezone, businessHours: days });
       if (!res.ok) {
-        setError(res.error);
+        showError(res.error);
         return;
       }
       toast(t('saved'));
@@ -125,7 +126,6 @@ export function HoursForm({
             );
           })}
         </ul>
-        <FormError error={error} override={invalid ? t('invalid') : undefined} />
         <div>
           <Button variant="primary" type="submit" loading={pending} disabled={invalid}>
             {pending ? t('saving') : t('save')}

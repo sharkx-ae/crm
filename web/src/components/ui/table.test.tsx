@@ -63,7 +63,7 @@ describe('Table', () => {
         <tbody />
       </Table>,
     );
-    expect(container.firstElementChild?.className).toContain('overflow-x-auto');
+    expect(container.firstElementChild?.className).toContain('overflow-auto');
   });
 });
 

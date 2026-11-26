@@ -35,6 +35,7 @@ export function Pagination({
   total,
   shown,
   hrefFor,
+  onPageChange,
   onSizeChange,
 }: {
   /** 1-based, already inside the range the api returned. */
@@ -44,7 +45,10 @@ export function Pagination({
   total: number;
   /** Rows on this page. */
   shown: number;
-  hrefFor: (page: number) => string;
+  /** Pages as real links (a list whose page lives in the address). */
+  hrefFor?: (page: number) => string;
+  /** Pages as buttons (a short list held in the browser, e.g. Team). One of `hrefFor` or `onPageChange`. */
+  onPageChange?: (page: number) => void;
   onSizeChange: (size: number) => void;
 }) {
   const t = useTranslations('ui.pagination');
@@ -56,9 +60,9 @@ export function Pagination({
   const items = pageItems(page, last);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-sx-border px-4 py-3 rail:px-6">
+    <div className="flex flex-none flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-sx-border px-4 py-3 rail:px-6">
       <div className="hidden items-center gap-2.5 sm:flex">
-        <span className="text-label text-sx-muted">{t('rowsPerPage')}</span>
+        <span className="whitespace-nowrap text-label text-sx-muted">{t('rowsPerPage')}</span>
         <Select
           size="sm"
           fit
@@ -72,7 +76,13 @@ export function Pagination({
         <p className="me-2 text-label text-sx-muted">
           {t.rich('range', { from: n(from), to: n(to), total: n(total), r: figures })}
         </p>
-        <Step label={t('previous')} icon="left" href={page > 1 ? hrefFor(page - 1) : null} />
+        <Step
+          label={t('previous')}
+          icon="left"
+          to={page > 1 ? page - 1 : null}
+          hrefFor={hrefFor}
+          onPageChange={onPageChange}
+        />
         <ul className="m-0 hidden list-none items-center gap-1 p-0 sm:flex">
           {items.map((item, i) => (
             <PageLink
@@ -82,10 +92,17 @@ export function Pagination({
               label={(p) => t('page', { n: p })}
               text={n}
               hrefFor={hrefFor}
+              onPageChange={onPageChange}
             />
           ))}
         </ul>
-        <Step label={t('next')} icon="right" href={page < last ? hrefFor(page + 1) : null} />
+        <Step
+          label={t('next')}
+          icon="right"
+          to={page < last ? page + 1 : null}
+          hrefFor={hrefFor}
+          onPageChange={onPageChange}
+        />
       </nav>
     </div>
   );
@@ -95,14 +112,19 @@ export function Pagination({
 function Step({
   label,
   icon,
-  href,
+  to,
+  hrefFor,
+  onPageChange,
 }: {
   label: string;
   icon: 'left' | 'right';
-  href: string | null;
+  /** The page it goes to, or null at the end of the list. */
+  to: number | null;
+  hrefFor?: (page: number) => string;
+  onPageChange?: (page: number) => void;
 }) {
   const glyph = <Icon name={icon} size="sm" flip />;
-  if (href === null) {
+  if (to === null) {
     return (
       <button type="button" aria-disabled="true" aria-label={label} className={cx(CELL, OFF)}>
         {glyph}
@@ -110,9 +132,48 @@ function Step({
     );
   }
   return (
-    <Link href={href} scroll={false} aria-label={label} className={cx(CELL, GHOST)}>
+    <PageTarget
+      page={to}
+      label={label}
+      className={cx(CELL, GHOST)}
+      hrefFor={hrefFor}
+      onPageChange={onPageChange}
+    >
       {glyph}
-    </Link>
+    </PageTarget>
+  );
+}
+
+/** A link to a page of the address, or a button that asks the screen to show it. */
+function PageTarget({
+  page,
+  hrefFor,
+  onPageChange,
+  label,
+  current,
+  className,
+  children,
+}: {
+  page: number;
+  hrefFor?: (page: number) => string;
+  onPageChange?: (page: number) => void;
+  label: string;
+  current?: boolean;
+  className: string;
+  children: ReactNode;
+}) {
+  const aria = { 'aria-label': label, 'aria-current': current ? ('page' as const) : undefined };
+  if (hrefFor) {
+    return (
+      <Link href={hrefFor(page)} scroll={false} className={className} {...aria}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={() => onPageChange?.(page)} className={className} {...aria}>
+      {children}
+    </button>
   );
 }
 
@@ -122,12 +183,14 @@ function PageLink({
   label,
   text,
   hrefFor,
+  onPageChange,
 }: {
   item: PageItem;
   current: number;
   label: (page: number) => string;
   text: (n: number) => string;
-  hrefFor: (page: number) => string;
+  hrefFor?: (page: number) => string;
+  onPageChange?: (page: number) => void;
 }) {
   if (item === 'gap') {
     return (
@@ -139,15 +202,16 @@ function PageLink({
   const isCurrent = item === current;
   return (
     <li>
-      <Link
-        href={hrefFor(item)}
-        scroll={false}
-        aria-label={label(item)}
-        aria-current={isCurrent ? 'page' : undefined}
+      <PageTarget
+        page={item}
+        label={label(item)}
+        current={isCurrent}
         className={cx(CELL, isCurrent ? CURRENT : GHOST)}
+        hrefFor={hrefFor}
+        onPageChange={onPageChange}
       >
         {text(item)}
-      </Link>
+      </PageTarget>
     </li>
   );
 }

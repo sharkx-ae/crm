@@ -19,7 +19,11 @@ export function StatusBar({
 }) {
   const shown = segments.filter((s) => s.count > 0);
   return (
-    <div role="img" aria-label={label} className="mx-4 mt-5 mb-4 flex h-2 gap-0.5 rail:mx-6">
+    <div
+      role="img"
+      aria-label={label}
+      className="mx-4 mt-4 mb-3 flex h-2 flex-none gap-0.5 rail:mx-6"
+    >
       {shown.map((s) => (
         <i
           key={s.key}

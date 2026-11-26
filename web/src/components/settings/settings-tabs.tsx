@@ -11,7 +11,7 @@ export function SettingsTabs({ projectId }: { projectId: string }) {
   return (
     <nav
       aria-label={t('tabsLabel')}
-      className="flex gap-6 overflow-x-auto border-b border-sx-border"
+      className="flex gap-6 overflow-x-auto overflow-y-hidden border-b border-sx-border"
     >
       {SETTINGS_TABS.map((tab) => {
         const href = `/p/${projectId}/settings/${tab.slug}`;

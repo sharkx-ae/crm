@@ -1,8 +1,10 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import type { ClientLeadRow } from '../../contracts/leads.ts';
+import { useLocale, useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
+import type { ClientLeadRow, LeadSort } from '../../contracts/leads.ts';
 import { Link } from '../../lib/i18n/navigation.ts';
+import { NO_SORT, type Sort, sortRows } from '../../lib/sort.ts';
 import { ClientMarkCell } from '../leads/client-mark-cell.tsx';
 import { LeadsTable } from '../leads/leads-table.tsx';
 import { Button } from '../ui/button.tsx';
@@ -17,6 +19,26 @@ import { Icon } from '../ui/icons.tsx';
  */
 export function WaitingCard({ rows, projectId }: { rows: ClientLeadRow[]; projectId: string }) {
   const t = useTranslations('reports.overview');
+  const locale = useLocale();
+  const [sort, setSort] = useState<Sort<LeadSort>>(NO_SORT);
+  // A handful of rows held in the browser, so they sort here (the full Leads screen sorts in the api).
+  const sorted = useMemo(
+    () =>
+      sortRows(
+        rows,
+        sort,
+        (r, key) =>
+          key === 'lead'
+            ? (r.name ?? r.phoneDisplay)
+            : key === 'received'
+              ? Date.parse(r.createdAt)
+              : key === 'source'
+                ? r.source
+                : r.campaign,
+        locale,
+      ),
+    [rows, sort, locale],
+  );
   const leadsHref = `/p/${projectId}/leads?tab=unreviewed`;
 
   return (
@@ -34,7 +56,9 @@ export function WaitingCard({ rows, projectId }: { rows: ClientLeadRow[]; projec
         <EmptyState title={t('waiting.emptyTitle')} body={t('waiting.emptyBody')} />
       ) : (
         <LeadsTable
-          rows={rows}
+          rows={sorted}
+          sort={sort}
+          onSort={setSort}
           staff={false}
           showStatus={false}
           label={t('waiting.table')}

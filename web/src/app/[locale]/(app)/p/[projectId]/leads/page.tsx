@@ -36,7 +36,7 @@ export default async function LeadsPage({
   const data = pageClamped && first.total > 0 ? await getLeads(projectId, filters) : first;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <LeadsWorkspace
         me={me}
         projectId={projectId}

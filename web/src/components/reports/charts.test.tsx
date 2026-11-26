@@ -43,7 +43,7 @@ describe('BarChart', () => {
     expect(svg?.getAttribute('role')).toBe('img');
     expect(svg?.getAttribute('aria-label')).toContain('GMT+4');
     expect(svg?.closest('[dir="ltr"]')).not.toBeNull();
-    expect(c.querySelectorAll('table.sr-only tbody tr')).toHaveLength(30);
+    expect(c.querySelectorAll('.sr-only table tbody tr')).toHaveLength(30);
   });
 
   it('labels the axis with the first, middle and last day', () => {

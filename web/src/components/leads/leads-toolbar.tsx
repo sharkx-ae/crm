@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import type { LeadsPage } from '../../contracts/leads.ts';
 import type { LeadFilters } from '../../lib/leads-url.ts';
 import { CardToolbar } from '../ui/card.tsx';
@@ -19,12 +19,15 @@ export function LeadsToolbar({
   sources,
   owners,
   onChange,
+  actions,
 }: {
   filters: LeadFilters;
   sources: LeadsPage['sources'];
   /** Staff only; a client has no owner filter. */
   owners: Extract<LeadsPage, { view: 'staff' }>['owners'] | null;
   onChange: (change: Partial<LeadFilters>) => void;
+  /** The screen's action (Export), at the inline end of the filter row. */
+  actions?: ReactNode;
 }) {
   const t = useTranslations('leads.toolbar');
   const tSource = useTranslations('common.source');
@@ -97,6 +100,7 @@ export function LeadsToolbar({
           ]}
         />
       ) : null}
+      {actions ? <div className="ms-auto flex flex-none items-center gap-2">{actions}</div> : null}
     </CardToolbar>
   );
 }

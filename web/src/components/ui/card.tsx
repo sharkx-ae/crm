@@ -9,15 +9,21 @@ const FLUSH_CELLS =
 
 export function Card({
   flush = false,
+  fill = false,
   className,
   ...rest
-}: HTMLAttributes<HTMLDivElement> & { flush?: boolean }) {
+}: HTMLAttributes<HTMLDivElement> & {
+  flush?: boolean;
+  /** Takes the free height of the screen (at least 24rem) so a table inside scrolls under its own header and above its footer, never the page. */
+  fill?: boolean;
+}) {
   return (
     <div
       {...rest}
       className={cx(
         'min-w-0 rounded-card border border-sx-border bg-sx-paper shadow-sx',
         flush ? cx('overflow-hidden', FLUSH_CELLS) : 'p-4 rail:p-6',
+        fill && 'flex min-h-[24rem] flex-1 flex-col',
         className,
       )}
     />

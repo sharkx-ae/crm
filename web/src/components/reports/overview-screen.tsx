@@ -90,7 +90,7 @@ export async function OverviewScreen({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-1 flex-col gap-4">
       <KpiStrip>
         <Kpi label={t('kpi.leads30')} value={format.number(kpis.leads30)} />
         <Kpi label={t('kpi.newToday')} value={format.number(kpis.newToday)} />
@@ -109,13 +109,13 @@ export async function OverviewScreen({
       {data.view === 'client' ? (
         <>
           <WaitingCard rows={data.waiting} projectId={projectId} />
-          <div className="grid grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="grid flex-none grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <section className="min-w-0 border-t border-sx-border pt-5">{perDay}</section>
             <section className="min-w-0 border-t border-sx-border pt-5">{bySource}</section>
           </div>
         </>
       ) : (
-        <div className="grid grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="grid flex-none grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="min-w-0">{perDay}</Card>
           <section className="min-w-0 wide:pt-[25px]">{bySource}</section>
         </div>

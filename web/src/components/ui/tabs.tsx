@@ -41,8 +41,8 @@ export function Tabs({
 }
 
 const LIST: Record<TabsVariant, string> = {
-  underline: 'flex gap-6 overflow-x-auto border-sx-border border-b',
-  ribbon: 'flex overflow-x-auto border-sx-border border-b',
+  underline: 'flex gap-6 overflow-x-auto overflow-y-hidden border-sx-border border-b',
+  ribbon: 'flex flex-none overflow-x-auto overflow-y-hidden border-sx-border border-b',
 };
 
 export function TabsList({

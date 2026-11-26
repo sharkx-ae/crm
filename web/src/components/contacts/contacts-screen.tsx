@@ -93,7 +93,7 @@ export function ContactsScreen({
 
   return (
     <>
-      <Card flush>
+      <Card flush fill>
         <CardToolbar>
           <SearchField
             label={t('searchLabel')}
@@ -108,6 +108,8 @@ export function ContactsScreen({
           <ContactsTable
             rows={data.rows}
             hrefFor={(id) => `${pathname}${contactsSearch(filters, { contact: id }, contactId)}`}
+            sort={{ sort: filters.sort, dir: filters.dir }}
+            onSort={(s) => go({ sort: s.sort, dir: s.dir })}
           />
         )}
         {data.rows.length > 0 ? (

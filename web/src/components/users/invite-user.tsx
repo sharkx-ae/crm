@@ -2,15 +2,14 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
-import type { ActionError } from '../../lib/action.ts';
 import { inviteUser } from '../../lib/actions/users.ts';
 import { useRouter } from '../../lib/i18n/navigation.ts';
-import { FormError } from '../auth/form-error.tsx';
 import { Button } from '../ui/button.tsx';
 import { Field } from '../ui/field.tsx';
 import { Input } from '../ui/input.tsx';
 import { Modal } from '../ui/modal.tsx';
 import { useToast } from '../ui/toast.tsx';
+import { useErrorToast } from '../ui/use-error-toast.ts';
 
 // "Invite manager" (Team) or "Invite client user" (a client's settings, F10a): full name and email. The invited
 // person gets a single-use link by email; the list refreshes and shows them as Invited.
@@ -27,13 +26,12 @@ export function InviteUser(
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [error, setError] = useState<ActionError | null>(null);
+  const showError = useErrorToast();
   const [pending, start] = useTransition();
   const formId = `invite-${props.kind}`;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     start(async () => {
       const res = await inviteUser(
         props.kind === 'manager'
@@ -41,7 +39,7 @@ export function InviteUser(
           : { kind: 'client', name, email, projectId: props.projectId },
       );
       if (!res.ok) {
-        setError(res.error);
+        showError(res.error);
         return;
       }
       setOpen(false);
@@ -61,7 +59,6 @@ export function InviteUser(
         open={open}
         onOpenChange={(o) => {
           setOpen(o);
-          if (!o) setError(null);
         }}
         title={props.title}
         description={props.description}
@@ -95,10 +92,6 @@ export function InviteUser(
               required
             />
           </Field>
-          <FormError
-            error={error?.code === 'CONFLICT' ? null : error}
-            override={error?.code === 'CONFLICT' ? t('conflict') : undefined}
-          />
         </form>
       </Modal>
     </>

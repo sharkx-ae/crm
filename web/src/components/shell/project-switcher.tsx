@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { Link } from '../../lib/i18n/navigation.ts';
 import { Avatar } from '../ui/avatar.tsx';
 import { UserText } from '../ui/bidi.tsx';
@@ -8,11 +9,16 @@ import { Icon } from '../ui/icons.tsx';
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '../ui/menu.tsx';
 import { useShell } from './shell-context.tsx';
 
+// The list shows this many clients, then "See 5 more" each time, so an agency with 40 clients keeps a short menu.
+const STEP = 5;
+
 /** Staff only: jump between clients, or back to the agency workspace ("All clients"). */
 export function ProjectSwitcher({ projectId }: { projectId: string | null }) {
   const t = useTranslations('shell.switcher');
   const { me, options } = useShell();
   const current = options.find((o) => o.id === projectId) ?? null;
+  const [shown, setShown] = useState(STEP);
+  const remaining = options.length - shown;
 
   return (
     <Menu
@@ -56,17 +62,32 @@ export function ProjectSwitcher({ projectId }: { projectId: string | null }) {
           ) : null}
         </>
       ) : (
-        options.map((o) => (
-          <MenuItem key={o.id} asChild>
-            <Link
-              href={`/p/${o.id}/overview`}
-              aria-current={o.id === projectId ? 'true' : undefined}
+        <>
+          {options.slice(0, shown).map((o) => (
+            <MenuItem key={o.id} asChild>
+              <Link
+                href={`/p/${o.id}/overview`}
+                aria-current={o.id === projectId ? 'true' : undefined}
+              >
+                <Avatar name={o.name} shape="square" size="sm" color={o.color} />
+                <UserText>{o.name}</UserText>
+              </Link>
+            </MenuItem>
+          ))}
+          {remaining > 0 ? (
+            <MenuItem
+              // Keeps the menu open: it reveals the next five.
+              onSelect={(e) => {
+                e.preventDefault();
+                setShown((n) => n + STEP);
+              }}
+              className="text-sx-muted"
             >
-              <Avatar name={o.name} shape="square" size="sm" color={o.color} />
-              <UserText>{o.name}</UserText>
-            </Link>
-          </MenuItem>
-        ))
+              <Icon name="down" size="sm" />
+              {t('seeMore', { n: Math.min(STEP, remaining) })}
+            </MenuItem>
+          ) : null}
+        </>
       )}
     </Menu>
   );

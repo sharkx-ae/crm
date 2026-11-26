@@ -28,6 +28,7 @@ export function LeadsScreen({
   hrefFor,
   pageHref,
   renderMark,
+  actions,
 }: {
   data: LeadsPage;
   filters: LeadFilters;
@@ -36,6 +37,8 @@ export function LeadsScreen({
   /** The address of another page of this same view. */
   pageHref: (page: number) => string;
   renderMark?: (row: ClientLeadRow) => ReactNode;
+  /** Export: sits in the filter row so the table gets the height. */
+  actions?: ReactNode;
 }) {
   const t = useTranslations('leads');
   const tStatus = useTranslations('common.status');
@@ -62,7 +65,7 @@ export function LeadsScreen({
   const nothingYet = c.all === 0 && !filtered;
 
   return (
-    <Card flush>
+    <Card flush fill>
       <StatusBar
         label={t('statusBar')}
         segments={[
@@ -76,6 +79,7 @@ export function LeadsScreen({
         value={filters.tab}
         onValueChange={(tab) => onChange({ tab: tab as LeadTab })}
         variant="ribbon"
+        className="flex min-h-0 flex-1 flex-col"
       >
         <TabsList label={t('tabs.label')}>
           {tabs.map((tab) => (
@@ -95,8 +99,9 @@ export function LeadsScreen({
           sources={data.sources}
           owners={data.view === 'staff' ? data.owners : null}
           onChange={onChange}
+          actions={actions}
         />
-        <TabsPanel value={filters.tab}>
+        <TabsPanel value={filters.tab} className="flex min-h-0 flex-1 flex-col">
           {data.rows.length === 0 ? (
             nothingYet ? (
               <EmptyState title={t('empty.noneTitle')} body={t('empty.noneBody')} />
@@ -112,7 +117,14 @@ export function LeadsScreen({
               />
             )
           ) : (
-            <LeadsTable rows={data.rows} staff={staff} hrefFor={hrefFor} renderMark={renderMark} />
+            <LeadsTable
+              rows={data.rows}
+              staff={staff}
+              hrefFor={hrefFor}
+              renderMark={renderMark}
+              sort={{ sort: filters.sort, dir: filters.dir }}
+              onSort={(s) => onChange({ sort: s.sort, dir: s.dir })}
+            />
           )}
         </TabsPanel>
       </Tabs>

@@ -7,7 +7,6 @@ import type { LeadDetail, LeadsPage } from '../../contracts/leads.ts';
 import { usePathname, useRouter } from '../../lib/i18n/navigation.ts';
 import { type LeadFilters, leadsSearch } from '../../lib/leads-url.ts';
 import { useAutoRefresh } from '../../lib/use-auto-refresh.ts';
-import { PageActions } from '../ui/page-actions.tsx';
 import { useToast } from '../ui/toast.tsx';
 import { ClientMarkCell } from './client-mark-cell.tsx';
 import { ExportButton } from './export-button.tsx';
@@ -97,21 +96,17 @@ function Workspace({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3">
-        {client ? (
-          <p className="text-sx-muted">
-            {t('waitingLine', { n: data.counts.unreviewed, total: data.counts.all })}
-          </p>
-        ) : null}
-        <PageActions>
-          <ExportButton me={me} projectId={projectId} filters={filters} />
-        </PageActions>
-      </div>
+      {client ? (
+        <p className="flex-none text-sx-muted">
+          {t('waitingLine', { n: data.counts.unreviewed, total: data.counts.all })}
+        </p>
+      ) : null}
       <LeadsScreen
         data={data}
         filters={filters}
         onChange={go}
         hrefFor={(id) => `${pathname}${leadsSearch(filters, { lead: id }, leadId)}`}
+        actions={<ExportButton me={me} projectId={projectId} filters={filters} />}
         pageHref={(page) => `${pathname}${leadsSearch(filters, { page }, leadId)}`}
         // A client marks from the table (mockup `markInline`): only a lead still waiting shows the buttons.
         renderMark={

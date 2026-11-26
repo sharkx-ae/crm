@@ -11,7 +11,7 @@ export default async function SettingsLayout({
 }) {
   const { projectId } = await params;
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <SettingsTabs projectId={projectId} />
       {children}
     </div>

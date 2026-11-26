@@ -19,7 +19,7 @@ describe('parseLeadFilters', () => {
         { tab: 'mql', q: ' sara ', source: 'meta', owner: OWNER, page: '3', size: '50' },
         staff,
       ),
-    ).toEqual({ tab: 'mql', q: 'sara', source: 'meta', owner: OWNER, page: 3, size: 50 });
+    ).toEqual(at({ tab: 'mql', q: 'sara', source: 'meta', owner: OWNER, page: 3, size: 50 }));
     expect(parseLeadFilters({ owner: 'unassigned' }, staff).owner).toBe('unassigned');
   });
 
@@ -108,5 +108,25 @@ describe('leadsApiParams', () => {
     expect(leadsApiParams('P', DEFAULT_FILTERS, { withPaging: true }).toString()).toBe(
       'projectId=P&tab=all&page=1&limit=20',
     );
+  });
+});
+
+describe('sorting in the address', () => {
+  it('reads a known column, drops an unknown one, and a client cannot sort by owner', () => {
+    expect(parseLeadFilters({ sort: 'source', dir: 'desc' }, staff)).toMatchObject({
+      sort: 'source',
+      dir: 'desc',
+    });
+    expect(parseLeadFilters({ sort: 'owner', dir: 'asc' }, staff).sort).toBe('owner');
+    expect(parseLeadFilters({ sort: 'owner', dir: 'asc' }, { client: true }).sort).toBe('');
+    expect(parseLeadFilters({ sort: 'nope' }, staff).sort).toBe('');
+  });
+
+  it('a new sort goes back to page 1 and reaches the api', () => {
+    const third = at({ page: 3 });
+    expect(leadsSearch(third, { sort: 'received', dir: 'desc' })).toBe('?sort=received&dir=desc');
+    expect(
+      leadsApiParams('p', at({ sort: 'lead', dir: 'asc' }), { withPaging: true }).get('sort'),
+    ).toBe('lead');
   });
 });

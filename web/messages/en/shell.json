@@ -37,7 +37,8 @@
     "agencyWorkspace": "Agency workspace",
     "clientDashboard": "Client dashboard",
     "noClients": "No clients yet",
-    "addClient": "Add client"
+    "addClient": "Add client",
+    "seeMore": "See {n} more"
   },
   "language": {
     "label": "Language",

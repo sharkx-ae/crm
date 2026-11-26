@@ -15,8 +15,8 @@ import { PageActions } from './page-actions.tsx';
 import { Skeleton } from './skeleton.tsx';
 
 describe('Icon', () => {
-  it('has the mockup set of 47 icons, every one drawable', () => {
-    expect(ICON_NAMES).toHaveLength(47);
+  it('has the mockup set of 47 icons plus the sort arrows, every one drawable', () => {
+    expect(ICON_NAMES).toHaveLength(48);
     for (const name of ICON_NAMES) {
       const { container, unmount } = renderIntl(<Icon name={name} />);
       expect(container.querySelector('svg')?.childElementCount, name).toBeGreaterThan(0);

@@ -3,22 +3,26 @@
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import type { UserSummary } from '../../contracts/auth.ts';
-import type { ActionError } from '../../lib/action.ts';
 import { setUserStatus } from '../../lib/actions/users.ts';
 import { useRouter } from '../../lib/i18n/navigation.ts';
-import { FormError } from '../auth/form-error.tsx';
+import { useLocalTable } from '../../lib/use-local-table.ts';
 import { Avatar } from '../ui/avatar.tsx';
 import { UserText } from '../ui/bidi.tsx';
 import { Button } from '../ui/button.tsx';
 import { EmptyState } from '../ui/empty-state.tsx';
-import { Table, Td, Th } from '../ui/table.tsx';
+import { Pagination } from '../ui/pagination.tsx';
+import { SortTh, Table, Td, Th } from '../ui/table.tsx';
 import { useToast } from '../ui/toast.tsx';
+import { useErrorToast } from '../ui/use-error-toast.ts';
 
 const DOT: Record<UserSummary['status'], string> = {
   active: 'bg-sx-ok',
   invited: 'bg-sx-warn',
   disabled: 'bg-sx-faint',
 };
+
+type SortKey = 'name' | 'email' | 'status';
+const sortValue = (u: UserSummary, key: SortKey) => u[key];
 
 // Managers (Team, F2b S3) and client users (F10a S2): name, email, status, Disable/Enable. Disabling signs the person
 // out at once (the api revokes their sessions) and takes a manager out of round-robin.
@@ -32,21 +36,22 @@ export function UsersTable({
   tone?: 'ink' | 'soft';
 }) {
   const t = useTranslations('team');
+  const tUi = useTranslations('ui');
   const router = useRouter();
   const { toast } = useToast();
   const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<ActionError | null>(null);
+  const showError = useErrorToast();
   const [, start] = useTransition();
+  const table = useLocalTable(users, sortValue);
 
   const toggle = (u: UserSummary) => {
     const status = u.status === 'disabled' ? 'active' : 'disabled';
     setBusy(u.id);
-    setError(null);
     start(async () => {
       const res = await setUserStatus({ userId: u.id, status });
       setBusy(null);
       if (!res.ok) {
-        setError(res.error);
+        showError(res.error);
         return;
       }
       toast(t(status === 'disabled' ? 'toast.disabled' : 'toast.enabled', { name: u.name }));
@@ -61,16 +66,25 @@ export function UsersTable({
       <Table aria-label={t('table.label')}>
         <thead>
           <tr>
-            <Th>{t('table.name')}</Th>
-            <Th>{t('table.email')}</Th>
-            <Th>{t('table.status')}</Th>
+            {(['name', 'email', 'status'] as const).map((key) => (
+              <SortTh
+                key={key}
+                sortKey={key}
+                active={table.sort.sort}
+                dir={table.sort.dir}
+                onSort={table.onSort}
+                label={tUi('sortBy', { column: t(`table.${key}`) })}
+              >
+                {t(`table.${key}`)}
+              </SortTh>
+            ))}
             <Th>
               <span className="sr-only">{t('table.actions')}</span>
             </Th>
           </tr>
         </thead>
         <tbody>
-          {users.map((u) => (
+          {table.view.map((u) => (
             <tr key={u.id}>
               <Td>
                 <span className="flex items-center gap-2.5">
@@ -107,9 +121,14 @@ export function UsersTable({
           ))}
         </tbody>
       </Table>
-      <div className="ps-4 pe-4 pb-3 rail:ps-6 rail:pe-6">
-        <FormError error={error} />
-      </div>
+      <Pagination
+        page={table.page}
+        size={table.size}
+        total={table.total}
+        shown={table.view.length}
+        onPageChange={table.onPageChange}
+        onSizeChange={table.onSizeChange}
+      />
     </>
   );
 }

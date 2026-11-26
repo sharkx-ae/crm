@@ -1,4 +1,5 @@
-import { type LeadTab, leadsQuery } from '../contracts/leads.ts';
+import type { SortDir } from '../contracts/common.ts';
+import { type LeadSort, type LeadTab, leadSort, leadsQuery } from '../contracts/leads.ts';
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -6,6 +7,7 @@ import {
   parsePage,
   parsePageSize,
 } from './paging.ts';
+import { parseSort } from './sort.ts';
 
 // The Leads screen's state lives in the address (F4b §4.8): ?tab&q&source&owner&page&size&lead, so a reload or a shared
 // link keeps the view. Pure, so the page, the toolbar and the tests share one reading and one writing of it.
@@ -15,6 +17,9 @@ export type LeadFilters = {
   q: string;
   source: string;
   owner: string;
+  /** A sortable column, or '' for the natural order (newest first). */
+  sort: LeadSort | '';
+  dir: SortDir;
   /** 1-based. */
   page: number;
   /** Rows per page: 10, 20, 50 or 100. Sent to the api as `limit`. */
@@ -26,9 +31,14 @@ export const DEFAULT_FILTERS: LeadFilters = {
   q: '',
   source: '',
   owner: '',
+  sort: '',
+  dir: 'asc',
   page: DEFAULT_PAGE,
   size: DEFAULT_PAGE_SIZE,
 };
+
+/** A client never sees the owner, so it cannot sort by it. */
+const CLIENT_SORTS = leadSort.options.filter((s) => s !== 'owner');
 
 type Raw = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -51,6 +61,7 @@ export function parseLeadFilters(raw: Raw, o: { client: boolean }): LeadFilters 
     q: q ?? '',
     source: pick('source') ?? '',
     owner: o.client ? '' : (pick('owner') ?? ''),
+    ...parseSort(raw.sort, raw.dir, o.client ? CLIENT_SORTS : leadSort.options),
     page: parsePage(raw.page),
     size: parsePageSize(raw.size),
   };
@@ -67,7 +78,7 @@ export function leadsSearch(
   lead: string | null = null,
 ): string {
   const { lead: nextLead = lead, ...patch } = change;
-  const resets = (['tab', 'q', 'source', 'owner', 'size'] as const).some(
+  const resets = (['tab', 'q', 'source', 'owner', 'size', 'sort', 'dir'] as const).some(
     (k) => k in patch && patch[k] !== current[k],
   );
   const f: LeadFilters = {
@@ -80,6 +91,10 @@ export function leadsSearch(
   if (f.q) p.set('q', f.q);
   if (f.source) p.set('source', f.source);
   if (f.owner) p.set('owner', f.owner);
+  if (f.sort) {
+    p.set('sort', f.sort);
+    p.set('dir', f.dir);
+  }
   if (f.page !== DEFAULT_PAGE) p.set('page', String(f.page));
   if (f.size !== DEFAULT_PAGE_SIZE) p.set('size', String(f.size));
   if (nextLead) p.set('lead', nextLead);
@@ -97,6 +112,10 @@ export function leadsApiParams(
   if (f.q) p.set('q', f.q);
   if (f.source) p.set('source', f.source);
   if (f.owner) p.set('owner', f.owner);
+  if (f.sort) {
+    p.set('sort', f.sort);
+    p.set('dir', f.dir);
+  }
   if (o.withPaging) {
     p.set('page', String(f.page));
     p.set('limit', String(f.size));

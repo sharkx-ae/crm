@@ -3,13 +3,14 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import type { LeadStatus } from '../../contracts/common.ts';
-import type { ClientLeadRow, StaffLeadRow } from '../../contracts/leads.ts';
+import type { ClientLeadRow, LeadSort, StaffLeadRow } from '../../contracts/leads.ts';
 import { Link } from '../../lib/i18n/navigation.ts';
 import { useProjectFormat } from '../../lib/i18n/use-project-format.ts';
+import { nextSort, type Sort } from '../../lib/sort.ts';
 import { Phone, UserText } from '../ui/bidi.tsx';
 import { Chip, type ChipTone } from '../ui/chip.tsx';
 import { ClickRow } from '../ui/click-row.tsx';
-import { Table, Td, Th } from '../ui/table.tsx';
+import { SortTh, Table, Td, Th } from '../ui/table.tsx';
 import { SourceBadge } from './source-badge.tsx';
 
 export const STATUS_TONE: Record<LeadStatus, ChipTone> = {
@@ -39,6 +40,8 @@ export function LeadsTable({
   renderMark,
   showStatus = true,
   label,
+  sort,
+  onSort,
 }: {
   rows: readonly LeadTableRow[];
   staff: boolean;
@@ -48,21 +51,42 @@ export function LeadsTable({
   showStatus?: boolean;
   /** The table's accessible name; the Leads screen's by default. */
   label?: string;
+  /** The sorted column, and what to do when a header is clicked. Without them the headers are plain text. */
+  sort?: Sort<LeadSort>;
+  onSort?: (next: Sort<LeadSort>) => void;
 }) {
   const t = useTranslations('leads');
   const tSource = useTranslations('common.source');
   const format = useProjectFormat();
+  const tUi = useTranslations('ui');
+
+  // A sortable header when the screen passes the sort state, a plain one otherwise (the Overview's waiting list).
+  const head = (key: LeadSort, text: string, num = false) =>
+    sort && onSort ? (
+      <SortTh
+        sortKey={key}
+        active={sort.sort}
+        dir={sort.dir}
+        onSort={(k) => onSort(nextSort(sort, k))}
+        label={tUi('sortBy', { column: text })}
+        num={num}
+      >
+        {text}
+      </SortTh>
+    ) : (
+      <Th num={num}>{text}</Th>
+    );
 
   return (
     <Table aria-label={label ?? t('table')}>
       <thead>
         <tr>
-          <Th>{t('columns.lead')}</Th>
-          <Th>{t('columns.source')}</Th>
-          <Th>{t('columns.campaign')}</Th>
-          {showStatus ? <Th>{t('columns.status')}</Th> : null}
-          {staff ? <Th>{t('columns.owner')}</Th> : null}
-          <Th num>{t('columns.received')}</Th>
+          {head('lead', t('columns.lead'))}
+          {head('source', t('columns.source'))}
+          {head('campaign', t('columns.campaign'))}
+          {showStatus ? head('status', t('columns.status')) : null}
+          {staff ? head('owner', t('columns.owner')) : null}
+          {head('received', t('columns.received'), true)}
           {renderMark ? <Th>{t('columns.markAs')}</Th> : null}
         </tr>
       </thead>

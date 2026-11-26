@@ -16,8 +16,8 @@ export default async function TeamPage({ params }: { params: Promise<{ locale: s
   ]);
 
   return (
-    <Card flush>
-      <div className="flex flex-wrap items-start justify-between gap-3 ps-4 pe-4 pt-4 pb-3 rail:ps-6 rail:pe-6 rail:pt-5">
+    <Card flush fill>
+      <div className="flex flex-none flex-wrap items-start justify-between gap-3 ps-4 pe-4 pt-4 pb-3 rail:ps-6 rail:pe-6 rail:pt-5">
         <div>
           <h2 className="font-heading text-section text-sx-black">{t('title')}</h2>
           <p className="text-label text-sx-muted">{t('help')}</p>

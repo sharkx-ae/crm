@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { SortDir } from '../contracts/common.ts';
+import { type ContactSort, contactSort } from '../contracts/contacts.ts';
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -6,12 +8,15 @@ import {
   parsePage,
   parsePageSize,
 } from './paging.ts';
+import { parseSort } from './sort.ts';
 
 // The Contacts screen's state lives in the address (F4b D4): ?q&page&size&contact. Pure, so the page and the
 // screen share one reading and one writing of it.
 
 export type ContactFilters = {
   q: string;
+  sort: ContactSort | '';
+  dir: SortDir;
   /** 1-based. */
   page: number;
   /** Rows per page: 10, 20, 50 or 100. Sent to the api as `limit`. */
@@ -20,6 +25,8 @@ export type ContactFilters = {
 
 export const DEFAULT_FILTERS: ContactFilters = {
   q: '',
+  sort: '',
+  dir: 'asc',
   page: DEFAULT_PAGE,
   size: DEFAULT_PAGE_SIZE,
 };
@@ -35,7 +42,12 @@ export function parseContactsAddress(raw: Raw): {
   const q = first(raw.q)?.trim().slice(0, 120) ?? '';
   const contact = first(raw.contact);
   return {
-    filters: { q, page: parsePage(raw.page), size: parsePageSize(raw.size) },
+    filters: {
+      q,
+      ...parseSort(raw.sort, raw.dir, contactSort.options),
+      page: parsePage(raw.page),
+      size: parsePageSize(raw.size),
+    },
     contactId: contact && z.uuid().safeParse(contact).success ? contact : null,
   };
 }
@@ -51,7 +63,9 @@ export function contactsSearch(
   contact: string | null = null,
 ): string {
   const { contact: next = contact, ...patch } = change;
-  const resets = (['q', 'size'] as const).some((k) => k in patch && patch[k] !== current[k]);
+  const resets = (['q', 'size', 'sort', 'dir'] as const).some(
+    (k) => k in patch && patch[k] !== current[k],
+  );
   const f: ContactFilters = {
     ...current,
     ...patch,
@@ -59,6 +73,10 @@ export function contactsSearch(
   };
   const p = new URLSearchParams();
   if (f.q) p.set('q', f.q);
+  if (f.sort) {
+    p.set('sort', f.sort);
+    p.set('dir', f.dir);
+  }
   if (f.page !== DEFAULT_PAGE) p.set('page', String(f.page));
   if (f.size !== DEFAULT_PAGE_SIZE) p.set('size', String(f.size));
   if (next) p.set('contact', next);
@@ -70,5 +88,9 @@ export function contactsSearch(
 export function contactsApiParams(projectId: string, f: ContactFilters): URLSearchParams {
   const p = new URLSearchParams({ projectId, page: String(f.page), limit: String(f.size) });
   if (f.q) p.set('q', f.q);
+  if (f.sort) {
+    p.set('sort', f.sort);
+    p.set('dir', f.dir);
+  }
   return p;
 }

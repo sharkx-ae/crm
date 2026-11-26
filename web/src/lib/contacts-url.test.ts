@@ -12,7 +12,7 @@ describe('parseContactsAddress', () => {
   it('reads search, page, size and the open contact, and defaults the rest', () => {
     expect(parseContactsAddress({})).toEqual({ filters: DEFAULT_FILTERS, contactId: null });
     expect(parseContactsAddress({ q: ' sara ', page: '2', size: '50', contact: ID })).toEqual({
-      filters: { q: 'sara', page: 2, size: 50 },
+      filters: { ...DEFAULT_FILTERS, q: 'sara', page: 2, size: 50 },
       contactId: ID,
     });
   });
@@ -30,13 +30,13 @@ describe('contactsSearch', () => {
   it('omits defaults, and drops the drawer on null', () => {
     expect(contactsSearch(DEFAULT_FILTERS)).toBe('');
     expect(contactsSearch(DEFAULT_FILTERS, { q: 'sara' }, ID)).toBe(`?q=sara&contact=${ID}`);
-    expect(contactsSearch({ q: 'sara', page: 2, size: 50 }, { contact: null }, ID)).toBe(
-      '?q=sara&page=2&size=50',
-    );
+    expect(
+      contactsSearch({ ...DEFAULT_FILTERS, q: 'sara', page: 2, size: 50 }, { contact: null }, ID),
+    ).toBe('?q=sara&page=2&size=50');
   });
 
   it('a changed search or page size goes back to page 1; a page change keeps them', () => {
-    const third = { q: 'sara', page: 3, size: 50 } as const;
+    const third = { ...DEFAULT_FILTERS, q: 'sara', page: 3, size: 50 } as const;
     expect(contactsSearch(third, { q: 'other' }, ID)).toBe(`?q=other&size=50&contact=${ID}`);
     expect(contactsSearch(third, { size: 10 })).toBe('?q=sara&size=10');
     expect(contactsSearch(third, { page: 4 })).toBe('?q=sara&page=4&size=50');
@@ -48,9 +48,24 @@ describe('contactsApiParams', () => {
   it('always sends page and limit (the size) and only sends a search when there is one', () => {
     const p = '00000000-0000-4000-8000-000000000001';
     expect(contactsApiParams(p, DEFAULT_FILTERS).toString()).toBe(`projectId=${p}&page=1&limit=20`);
-    const params = contactsApiParams(p, { q: 'sara', page: 3, size: 50 });
+    const params = contactsApiParams(p, { ...DEFAULT_FILTERS, q: 'sara', page: 3, size: 50 });
     expect(params.get('q')).toBe('sara');
     expect(params.get('page')).toBe('3');
     expect(params.get('limit')).toBe('50');
+  });
+});
+
+describe('sorting in the address', () => {
+  it('reads a known column and direction, drops the rest, and starts over at page 1 on a change', () => {
+    expect(parseContactsAddress({ sort: 'leads', dir: 'desc' }).filters).toMatchObject({
+      sort: 'leads',
+      dir: 'desc',
+    });
+    expect(parseContactsAddress({ sort: 'nope', dir: 'desc' }).filters.sort).toBe('');
+    const third = { ...DEFAULT_FILTERS, page: 3 };
+    expect(contactsSearch(third, { sort: 'email', dir: 'asc' })).toBe('?sort=email&dir=asc');
+    expect(
+      contactsApiParams('p', { ...DEFAULT_FILTERS, sort: 'email', dir: 'desc' }).get('sort'),
+    ).toBe('email');
   });
 });

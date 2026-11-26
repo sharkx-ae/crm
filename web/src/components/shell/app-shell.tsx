@@ -54,7 +54,7 @@ export function AppShell({
 
   return (
     <ShellProvider value={{ me, options }}>
-      <div className="flex min-h-dvh flex-col bg-sx-page desk:ps-(--rail-w) desk:has-[>aside:hover]:ps-(--side-w) desk:has-[>aside:focus-within]:ps-(--side-w) desk:transition-[padding] desk:duration-150">
+      <div className="relative flex h-dvh flex-col overflow-hidden bg-sx-page desk:ps-(--rail-w) desk:has-[>aside:hover]:ps-(--side-w) desk:has-[>aside:focus-within]:ps-(--side-w) desk:transition-[padding] desk:duration-150">
         <a
           href="#main"
           className="focus-ring sr-only z-99 rounded-btn bg-sx-paper ps-4 pe-4 py-2 font-label text-sx-black focus:not-sr-only focus:fixed focus:start-3 focus:top-3"
@@ -77,30 +77,32 @@ export function AppShell({
           onToggleRail={() => setOpen((v) => !v)}
           projectId={projectId}
         />
-        {/* Mockup .content + .wrap: 32px 40px 24px (20px 16px 16px under 900px); the page starts at the inline start,
-            up to 80rem wide, so the KPI strip, cards and tables share one left edge. The footer is pinned to the bottom
-            of a short page by the flex column. */}
+        {/* The page fills the width next to the rail (16px gutters, 24px from 900px). The frame is exactly one screen
+            tall: the topbar and the footer stay put and only <main> scrolls, and only when a page is taller than the
+            screen. A screen with a table gives the table card the free height (Card fill), so there the rows scroll
+            inside the card and the page does not. */}
         <main
           id="main"
           tabIndex={-1}
-          className="flex flex-1 flex-col px-4 pt-5 pb-4 outline-none rail:px-10 rail:pt-8 rail:pb-6"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 pb-3 outline-none rail:px-6 rail:pt-5"
         >
-          <div className="flex w-full max-w-[80rem] flex-1 flex-col">
-            <div className="flex flex-1 flex-col">{children}</div>
-            <footer className="mt-10 flex flex-wrap justify-between gap-2 border-t border-sx-border pt-3 text-label text-sx-muted">
-              {/* The date is isolated so an Arabic month does not reorder the Latin text around it. */}
-              <span>
-                {t.rich('footer.line', { date: footerDate, d: (chunks) => <bdi>{chunks}</bdi> })}
-              </span>
-              <span>
-                {t.rich('footer.user', {
-                  name: me.name,
-                  role: tRole(me.role),
-                  n: (chunks) => <UserText>{chunks}</UserText>,
-                })}
-              </span>
-            </footer>
+          {/* relative: absolutely positioned content (the chart's sr-only table) is clipped here, never extends the document. */}
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {children}
           </div>
+          <footer className="mt-4 flex flex-none flex-wrap justify-between gap-2 border-t border-sx-border pt-2.5 text-label text-sx-muted">
+            {/* The date is isolated so an Arabic month does not reorder the Latin text around it. */}
+            <span>
+              {t.rich('footer.line', { date: footerDate, d: (chunks) => <bdi>{chunks}</bdi> })}
+            </span>
+            <span>
+              {t.rich('footer.user', {
+                name: me.name,
+                role: tRole(me.role),
+                n: (chunks) => <UserText>{chunks}</UserText>,
+              })}
+            </span>
+          </footer>
         </main>
       </div>
     </ShellProvider>

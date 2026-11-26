@@ -103,23 +103,26 @@ export function BarChart({
           <span key={i}>{bars[i]?.label}</span>
         ))}
       </div>
-      <table className="sr-only">
-        <caption>{label}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{tableHeads.day}</th>
-            <th scope="col">{tableHeads.value}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bars.map((b) => (
-            <tr key={b.key}>
-              <td>{b.label}</td>
-              <td>{b.count}</td>
+      {/* A table ignores sr-only's clip (its rows overflow the 1px box and stretch the scroll area), so a div clips it. */}
+      <div className="sr-only">
+        <table>
+          <caption>{label}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{tableHeads.day}</th>
+              <th scope="col">{tableHeads.value}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {bars.map((b) => (
+              <tr key={b.key}>
+                <td>{b.label}</td>
+                <td>{b.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }

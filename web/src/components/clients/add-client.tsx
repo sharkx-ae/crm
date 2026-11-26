@@ -3,16 +3,15 @@
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { type CreateProjectRequest, projectCity } from '../../contracts/projects.ts';
-import type { ActionError } from '../../lib/action.ts';
 import { createProject } from '../../lib/actions/projects.ts';
 import { useRouter } from '../../lib/i18n/navigation.ts';
-import { FormError } from '../auth/form-error.tsx';
 import { Button } from '../ui/button.tsx';
 import { Field } from '../ui/field.tsx';
 import { Input } from '../ui/input.tsx';
 import { Modal } from '../ui/modal.tsx';
 import { Select } from '../ui/select.tsx';
 import { useToast } from '../ui/toast.tsx';
+import { useErrorToast } from '../ui/use-error-toast.ts';
 
 const FORM_ID = 'add-client-form';
 
@@ -26,7 +25,7 @@ export function AddClient({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(defaultOpen);
   const [pending, start] = useTransition();
-  const [error, setError] = useState<ActionError | null>(null);
+  const showError = useErrorToast();
   const [form, setForm] = useState<{
     name: string;
     city: CreateProjectRequest['city'];
@@ -37,7 +36,6 @@ export function AddClient({ defaultOpen = false }: { defaultOpen?: boolean }) {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     start(async () => {
       const res = await createProject({
         name: form.name,
@@ -46,7 +44,7 @@ export function AddClient({ defaultOpen = false }: { defaultOpen?: boolean }) {
         firstUser: { email: form.email },
       });
       if (!res.ok) {
-        setError(res.error);
+        showError(res.error);
         return;
       }
       setOpen(false);
@@ -66,7 +64,6 @@ export function AddClient({ defaultOpen = false }: { defaultOpen?: boolean }) {
         open={open}
         onOpenChange={(o) => {
           setOpen(o);
-          if (!o) setError(null);
         }}
         title={t('title')}
         description={t('description')}
@@ -123,10 +120,6 @@ export function AddClient({ defaultOpen = false }: { defaultOpen?: boolean }) {
               required
             />
           </Field>
-          <FormError
-            error={error?.code === 'CONFLICT' ? null : error}
-            override={error?.code === 'CONFLICT' ? t('conflict') : undefined}
-          />
         </form>
       </Modal>
     </>
