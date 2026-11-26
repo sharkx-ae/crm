@@ -1,0 +1,54 @@
+{
+  "whatsapp": {
+    "title": "WhatsApp",
+    "intro": "Connect the WhatsApp Business app number your team already uses. Scan a QR code in the app; the number then appears here.",
+    "connect": "Connect a WhatsApp number",
+    "connecting": "Connecting…",
+    "connected": "{number} is connected.",
+    "cancelled": "Connection cancelled. Nothing was changed.",
+    "timeout": "WhatsApp took too long to answer. Try again.",
+    "loadError": "The WhatsApp connection window could not load. Reload the page and try again.",
+    "awaiting": "WhatsApp connections are waiting for Meta approval.",
+    "limitNotice": "Until Meta finishes verifying SharkX, WhatsApp allows only a few new connections per week (about 10). If a connection is refused for this reason, you will see it here.",
+    "table": {
+      "caption": "WhatsApp numbers",
+      "number": "Number",
+      "label": "Label",
+      "sync": "Chat history",
+      "connected": "Connected",
+      "empty": "No WhatsApp number connected yet",
+      "emptyBody": "Connect the number your team uses in the WhatsApp Business app."
+    },
+    "sync": {
+      "none": "Not started",
+      "syncing": "Syncing {pct}%",
+      "done": "Done",
+      "missed": "Reconnect needed"
+    },
+    "signupErrors": {
+      "appVersion": "Update the WhatsApp Business app to the latest version, then try again.",
+      "notEligible": "This number cannot be connected yet. Keep using it in the WhatsApp Business app for a few more days, then try again.",
+      "personal": "This number is on personal WhatsApp. Move it to the WhatsApp Business app first.",
+      "notBusinessApp": "This number is not on the WhatsApp Business app, so it cannot be connected with a QR code.",
+      "country": "WhatsApp does not allow this connection for numbers from this country yet.",
+      "limit": "SharkX has reached Meta's limit for new WhatsApp connections this week. Try again in a few days.",
+      "qrRate": "Too many QR codes were requested. Wait a few minutes and try again.",
+      "qrFailed": "The QR code did not work. Get a new code and scan it again.",
+      "disconnecting": "This number is still being disconnected from its previous connection. Try again later.",
+      "otherProvider": "This number is connected through another provider. Disconnect it there first.",
+      "notEnabled": "WhatsApp connections are not enabled yet for SharkX. Contact SharkX.",
+      "unknown": "{message} (code {code})",
+      "unknownNoMessage": "WhatsApp could not finish the connection (code {code}). Try again."
+    },
+    "reasons": {
+      "not_configured": "WhatsApp connections are not set up on this environment yet. Contact SharkX.",
+      "qr_only": "Only a number that is already on the WhatsApp Business app can be connected. Choose your WhatsApp Business app number and scan the QR code.",
+      "code_expired": "The connection took too long and expired. Try again.",
+      "waba_mismatch": "Meta did not confirm access to that WhatsApp account. Try again and pick the account you want to connect.",
+      "no_number": "We could not find that number on the WhatsApp Business app. Check that it is active in the app, then try again.",
+      "subscribe_failed": "Meta did not accept the connection. Try again in a few minutes.",
+      "graph_unavailable": "WhatsApp (Meta) is not answering right now. Try again in a few minutes.",
+      "number_taken": "This number is already connected to another client in SharkX. Disconnect it there first."
+    }
+  }
+}

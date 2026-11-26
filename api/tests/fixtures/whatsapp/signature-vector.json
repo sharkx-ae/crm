@@ -1,0 +1,5 @@
+{
+  "secret": "test-app-secret",
+  "bodyFile": "webhooks/messages-text.json",
+  "header": "sha256=f42a39b222c60208471b5d95fd3e50442c85d23820791bca21d7853976c571f8"
+}

@@ -22,6 +22,7 @@ export const knownAuditActions = [
   'lead.assigned',
   'lead.exported',
   'form.mapping_saved',
+  'integration.connected',
 ] as const;
 
 export const auditQuery = z.object({

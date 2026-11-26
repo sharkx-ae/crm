@@ -15,6 +15,21 @@
 - Staging and production never share a database, `INTERNAL_API_TOKEN`, `TOKEN_ENC_KEY` or any API key.
 - `APP_ENV` (local | staging | production) drives behaviour. `NODE_ENV` stays `production` on Railway.
 
+## Meta and WhatsApp variables (F3a)
+| Variable | api | worker | web | Rule |
+|---|---|---|---|---|
+| `TOKEN_ENC_KEY` | ✓ | ✓ | | `<id>:<base64 of 32 bytes>`. Required on staging and production, and whenever the Meta group is set. Different on every environment. Generate: `node -e "console.log('k1:'+require('node:crypto').randomBytes(32).toString('base64'))"` |
+| `TOKEN_ENC_KEYS_OLD` | ✓ | ✓ | | optional, comma list of retired keys (decrypt only) |
+| `META_APP_ID` | ✓ | ✓ | ✓ | numeric; public |
+| `META_APP_SECRET` | ✓ | ✓ | | secret: signs and checks webhooks and `appsecret_proof` |
+| `META_WEBHOOK_VERIFY_TOKEN` | ✓ | | | 32+ random characters (`openssl rand -base64 32`), the value typed into the Meta dashboard |
+| `META_GRAPH_VERSION` | ✓ | ✓ | ✓ | `vNN.0`, default `v27.0`; the same value everywhere |
+| `META_ES_CONFIG_ID` | | | ✓ | Facebook Login for Business configuration id (Embedded Signup); public |
+| `META_ONBOARDING_LIMITED` | ✓ | | | `true` until Meta business verification and access verification are done, then remove it |
+- On `api`, `META_APP_ID` + `META_APP_SECRET` + `META_WEBHOOK_VERIFY_TOKEN` are all-or-none; on `worker` the first two; on `web` `META_APP_ID` + `META_ES_CONFIG_ID`. All optional on every environment: with none set the webhook answers 404 and the connect card shows "Awaiting access".
+- The Meta callback URL points at the **production api** only (`https://<production-api>/webhooks/meta`; Meta allows one per app). Staging leaves the Meta variables unset.
+- Meta app settings: turn "Require app secret" on.
+
 ## Where secrets live
 - Railway variables, per environment and per service. This is the only source for staging/production.
 - GitHub Actions: CI uses dummy, non-secret values in `ci.yml`. Repository secrets only if CI ever needs a real one.
@@ -31,7 +46,7 @@
 1. Generate a new value (e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`).
 2. Replace it in Railway for that environment only; Railway redeploys the affected services.
 3. Confirm the healthchecks are green, then revoke the old key at the provider (Resend, Meta, Google…).
-4. Note: `INTERNAL_API_TOKEN` must be changed on `api` and `web` together (until both have redeployed, web calls get 404); it does not sign anyone out. Rotating `TOKEN_ENC_KEY` needs the key-id migration (F5).
+4. Note: `INTERNAL_API_TOKEN` must be changed on `api` and `web` together (until both have redeployed, web calls get 404); it does not sign anyone out. Rotating `TOKEN_ENC_KEY`: generate `k2`, set `TOKEN_ENC_KEY=k2:<base64>` and move the previous value into `TOKEN_ENC_KEYS_OLD` on `api` and `worker` together (ARCHITECTURE §8); do not delete the old key until no row uses it.
 
 ## Manual setup steps (you, in the UIs)
 **GitHub**

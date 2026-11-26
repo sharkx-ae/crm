@@ -4,18 +4,29 @@ import { directionEnum, msgTypeEnum, originEnum, waSyncStateEnum } from '../../d
 import { projectRef } from '../../db/schema/refs.ts';
 import { contacts } from '../contacts/schema.ts';
 
-export const waNumbers = pgTable('wa_numbers', {
-  id: pk(),
-  projectId: projectRef(),
-  // A number belongs to exactly one client.
-  phoneE164: text('phone_e164').notNull().unique(),
-  label: text('label'),
-  phoneNumberId: text('phone_number_id'),
-  wabaId: text('waba_id'),
-  syncState: waSyncStateEnum('sync_state').notNull().default('none'),
-  syncPct: integer('sync_pct').notNull().default(0),
-  createdAt: createdAt(),
-});
+export const waNumbers = pgTable(
+  'wa_numbers',
+  {
+    id: pk(),
+    projectId: projectRef(),
+    // A number belongs to exactly one client.
+    phoneE164: text('phone_e164').notNull().unique(),
+    label: text('label'),
+    // Webhook routing key (`value.metadata.phone_number_id`): unique across clients, whatever RLS lets a client see.
+    phoneNumberId: text('phone_number_id').notNull(),
+    // `account_update` webhooks carry only the WABA id; also the token lookup (one token per WABA).
+    wabaId: text('waba_id').notNull(),
+    syncState: waSyncStateEnum('sync_state').notNull().default('none'),
+    syncPct: integer('sync_pct').notNull().default(0),
+    // Meta allows the history sync only within 24 h of onboarding; a reconnect restarts the clock (created_at does not).
+    onboardedAt: tstz('onboarded_at').notNull().defaultNow(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    unique('wa_numbers_phone_number_id_unique').on(t.phoneNumberId),
+    index('wa_numbers_waba_idx').on(t.wabaId),
+  ],
+);
 
 export const waConversations = pgTable(
   'wa_conversations',

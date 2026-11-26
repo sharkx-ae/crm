@@ -21,14 +21,20 @@ export const integrations = pgTable(
 );
 
 // Encrypted platform tokens (AES-256-GCM). App roles can't read this table: system role only.
-export const integrationTokens = pgTable('integration_tokens', {
-  id: pk(),
-  projectId: projectRef(),
-  integrationId: uuid('integration_id')
-    .notNull()
-    .references(() => integrations.id, { onDelete: 'cascade' }),
-  encValue: text('enc_value').notNull(),
-  keyId: text('key_id').notNull(),
-  expiresAt: tstz('expires_at'),
-  createdAt: createdAt(),
-});
+// One token per (integration, account): each WhatsApp Embedded Signup run is one WABA, with its own business token.
+export const integrationTokens = pgTable(
+  'integration_tokens',
+  {
+    id: pk(),
+    projectId: projectRef(),
+    integrationId: uuid('integration_id')
+      .notNull()
+      .references(() => integrations.id, { onDelete: 'cascade' }),
+    accountRef: text('account_ref').notNull(),
+    encValue: text('enc_value').notNull(),
+    keyId: text('key_id').notNull(),
+    expiresAt: tstz('expires_at'),
+    createdAt: createdAt(),
+  },
+  (t) => [unique('integration_tokens_integration_account').on(t.integrationId, t.accountRef)],
+);

@@ -8,6 +8,7 @@ Shared between **Alex (Dev A, Pipes)** and **John (Dev B, Product)** so both bui
 - Change 2026-11-23 (additive, web plan F2 §5.1): action `agency.read` (staff; Clients home and agency totals); new files `projects.ts`, `leads.ts`, `contacts.ts`, `reports.ts` (web-facing request/response shapes; responses for staff and client carry a `view`, the client shape is the strict `clientLeadKeys` allowlist); `clientChangeKinds` in `common.ts`; `knownAuditActions` += `project.created, project.updated, lead.created, lead.merged, lead.status_changed, lead.assigned, lead.exported, form.mapping_saved`. `projects.business_hours` becomes seven `{ day, open, from, to }` entries (migration 0003, F4a).
 - Change 2026-11-25 (additive, F4b decision D8): `leads.ts` adds `projectScope` (`{ projectId }`, the query of `GET /leads/:id` and `GET /contacts/:id`) and `owners` (`{ id, name, active }`) on the staff `leadsPage`; `contacts.ts` adds `contactsQuery` (`projectId, q?, limit`).
 - Change 2026-11-26 (UI polish, replaces F4b decision D3 "Show 20 more"): `common.ts` adds `PAGE_SIZES`, `pageNumber` and `pageSize`; `leadsQuery` and `contactsQuery` gain `page` (1-based, default 1) and `limit` becomes the page size, one of 10, 20, 50, 100 (default 20; anything else is `VALIDATION`). `total` stays on both pages. The export is unchanged (whole filtered set).
+- Change 2026-11-27 (additive, F3a): `common.ts` adds `waSyncState` (`none|syncing|done|missed`, moved out of `db/schema/enums.ts`, which now reads it from the contract); new `whatsapp.ts` (`metaId`, `waSignupEvent`, `waConnectRequest`, `waNumber`, `waNumbersResponse`, `waConnectResponse`); `knownAuditActions` += `integration.connected` (one row per connect; `entity: integration`; `meta: { platform, numberIds, reconnect }`, no phone numbers or Meta ids). DB (migration 0005): `wa_numbers.phone_number_id` and `waba_id` NOT NULL (`phone_number_id` unique), `wa_numbers.onboarded_at`, `integration_tokens.account_ref` NOT NULL with unique `(integration_id, account_ref)`.
 - Notation: `?` = optional, `uuid`, `iso` = ISO-8601 UTC string, `e164` = `+9715…`.
 
 ## 1 Session and permissions
@@ -47,9 +48,9 @@ Every tenant table has `project_id uuid not null` (RLS). All have `id uuid`, tim
 | audit_log | at, actor_kind, actor_id, project_id?, action, entity, entity_id, meta jsonb (INSERT-only) | A |
 | rate_limits, error_log | key/window/count · fingerprint, message, context | A |
 | integrations | project_id, platform, status (health), mode, account_label, last_data_at, note | A |
-| integration_tokens | integration_id, enc_value, key_id, expires_at | A |
+| integration_tokens | integration_id, account_ref (WABA id), enc_value, key_id, expires_at; unique(integration_id, account_ref) | A |
 | webhook_events | provider, external_id (unique pair), project_id?, payload jsonb, processed_at, error | A |
-| wa_numbers | project_id, phone_e164, label, phone_number_id, waba_id, sync_state none/syncing/done/missed, sync_pct | A |
+| wa_numbers | project_id, phone_e164 (unique), label, phone_number_id (unique, webhook routing key), waba_id, onboarded_at, sync_state none/syncing/done/missed, sync_pct | A |
 | wa_conversations | project_id, number_id, contact_id, last_message_at | A |
 | wa_messages | project_id, conversation_id, wa_message_id (unique), direction, origin, type, text?, ts | A |
 | conversion_mappings | project_id, status, meta_event, google_event, enabled | A |
@@ -92,10 +93,11 @@ Every tenant table has `project_id uuid not null` (RLS). All have `id uuid`, tim
 | maintenance | {} (cron daily) | worker (A) | A |
 
 ## 6 HTTP routes
-- **api public** (owner A): `GET|POST /webhooks/meta` (WhatsApp + Lead Ads, signature) · `POST /webhooks/{google,tiktok,linkedin,snapchat}` · `POST /forms/:key` (rate-limited) · `GET /oauth/:platform/callback` · `GET /health` → `{ status, service, version, checks: { db, queue, integrations }, lastWebhookAt }`
+- **api public** (owner A): `GET|POST /webhooks/meta` (WhatsApp + Lead Ads; GET = verify-token handshake, POST = `X-Hub-Signature-256` over the raw body, 401 and nothing stored on a bad one; both 404 while the Meta variables are unset) · `POST /webhooks/{google,tiktok,linkedin,snapchat}` · `POST /forms/:key` (rate-limited) · `GET /oauth/:platform/callback` · `GET /health` → `{ status, service, version, checks: { db, queue, integrations }, lastWebhookAt }`
 - **api internal** (called only by web, user session token forwarded): one route group per module; shapes in `api/src/contracts`. Every non-public route requires `x-internal-token` = `INTERNAL_API_TOKEN` (a wrong or missing token answers 404) and is registered through `defineRoute` with an access level (`anon` | `pending` | `session`), a `can()` action and an `audit` declaration. Web also sends `x-session-token`, `x-client-ip` (trusted only after the token check) and `x-request-id`. Every error is `errorBody` `{ error: { code, details?, retryAfterSec? } }`.
   - Auth (owner A): `POST /auth/login` · `POST /auth/code/verify` · `POST /auth/code/send` · `POST /auth/logout` · `GET|PATCH /me` · `POST /auth/reset/request` · `POST /auth/reset/confirm` · `POST /auth/invite/inspect` (a POST so a raw token never sits in an api URL) · `POST /auth/invite/accept`.
   - Users (owner A, called by John's F2b and F10a screens): `POST /users/invite` (manager: `user.manage`; client user: `clientuser.manage` on its project) · `GET /users?kind=manager|client[&projectId]` · `POST /users/:id/status`.
+  - WhatsApp (owner A, F3a; `integration.manage` on the project, so a client user connects its own numbers): `GET /projects/:projectId/whatsapp/numbers` → `waNumbersResponse` · `POST /projects/:projectId/whatsapp/connect` (`waConnectRequest`, one `integration.connected` audit row) → `waConnectResponse`. Failures are `INTEGRATION_ERROR` 502 or `CONFLICT` 409 with `details.reason` ∈ `not_configured, qr_only, code_expired, waba_mismatch, no_number, subscribe_failed, graph_unavailable, number_taken`; the web maps each to a plain-words message (`integrations.whatsapp.reasons.*`).
   - Audit (owner A, viewer is F1e by John): `GET /audit` (`audit.read`, super admin only; filters userId, action, projectId, from, to; keyset cursor).
 - **web BFF** (owner B unless noted): `GET /api/events?since=<cursor>` → `{ cursor, changes: [{ kind: changeKind, projectId, id }] }` (proxies the api) · `GET /api/health` (web + api + db) · `GET /api/export/[kind]` (kind: leads; scoped to the caller's role and projects; excludes is_test)
 

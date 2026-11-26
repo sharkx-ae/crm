@@ -204,7 +204,12 @@ async function newClient(timezone: string) {
     return first(
       await tx
         .insert(s.waNumbers)
-        .values({ projectId, phoneE164: `+9714${String(Math.floor(1e7 + Math.random() * 9e7))}` })
+        .values({
+          projectId,
+          phoneE164: `+9714${String(Math.floor(1e7 + Math.random() * 9e7))}`,
+          phoneNumberId: `pn-${randomUUID()}`,
+          wabaId: `waba-${randomUUID()}`,
+        })
         .returning({ id: s.waNumbers.id }),
     ).id;
   });

@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "id": "110000000000001",
+      "display_phone_number": "+1 555-010-0001",
+      "verified_name": "Test Business",
+      "is_on_biz_app": true,
+      "platform_type": "CLOUD_API"
+    }
+  ]
+}

@@ -6,17 +6,22 @@ import type { ApiEnv } from './lib/env.ts';
 import { reportError } from './lib/errors/index.ts';
 import { httpPlugin, serverOptions } from './lib/http/plugin.ts';
 import type { SessionResolver } from './lib/http/route.ts';
+import type { enqueue } from './lib/queue/index.ts';
 import { auditRoutes } from './modules/audit/index.ts';
 import { authRoutes, resolveSession } from './modules/auth/index.ts';
 import { contactRoutes } from './modules/contacts/index.ts';
 import { leadRoutes } from './modules/leads/index.ts';
 import { projectRoutes } from './modules/projects/index.ts';
 import { reportRoutes } from './modules/reports/index.ts';
+import { whatsappRoutes } from './modules/whatsapp/index.ts';
 import { healthRoutes } from './routes/health.ts';
+import { metaWebhookRoutes } from './routes/webhooks/meta.ts';
 
 export type AppDeps = {
   resolveSession?: SessionResolver;
   onUnexpected?: (err: Error, route: string) => void;
+  /** Tests swap the queue producer; production uses lib/queue. */
+  enqueue?: typeof enqueue;
 };
 
 export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<FastifyInstance> {
@@ -27,12 +32,14 @@ export async function buildApp(env: ApiEnv, deps: AppDeps = {}): Promise<Fastify
     onUnexpected: deps.onUnexpected ?? reportUnexpected,
   });
   await app.register(healthRoutes, { env });
+  await app.register(metaWebhookRoutes, { env, enqueue: deps.enqueue });
   await app.register(authRoutes, { env });
   await app.register(auditRoutes);
   await app.register(projectRoutes, { env });
   await app.register(leadRoutes);
   await app.register(contactRoutes);
   await app.register(reportRoutes);
+  await app.register(whatsappRoutes, { env });
   return app;
 }
 

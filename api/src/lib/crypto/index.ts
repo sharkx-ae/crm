@@ -1,6 +1,9 @@
 // Node built-in crypto only (no dependency). Passwords: scrypt; tokens: 256-bit random, only the sha256 is stored.
 import {
+  createCipheriv,
+  createDecipheriv,
   createHash,
+  createHmac,
   randomBytes,
   randomInt,
   scrypt as scryptCb,
@@ -87,4 +90,84 @@ export function safeEqual(a: string, b: string): boolean {
     createHash('sha256').update(a).digest(),
     createHash('sha256').update(b).digest(),
   );
+}
+
+/** HMAC-SHA256 over the exact bytes given (webhook signatures, `appsecret_proof`). */
+export const hmacSha256 = (key: string, data: Buffer | string): Buffer =>
+  createHmac('sha256', key).update(data).digest();
+
+// ---- Token sealing: AES-256-GCM with key ids (plan F3a §4.1) -------------------------------------------------------
+// `encValue = "v1." + iv + "." + ciphertext + "." + tag` (base64url). The key id travels with the row (`key_id`), so
+// rotation is: new current key, old one kept for decrypt only. The AAD binds a ciphertext to its own row.
+
+export type Keyring = { current: { id: string; key: Buffer }; old: Map<string, Buffer> };
+export type SealedToken = { encValue: string; keyId: string };
+
+const KEY_ID = /^[a-z0-9]{1,16}$/;
+const KEY_BYTES = 32;
+const IV_BYTES = 12;
+const TAG_BYTES = 16;
+const B64 = /^[A-Za-z0-9+/]+={0,2}$/;
+
+/** Never names a key, a value or what failed: the keys are secrets and the message may end up in logs. */
+export class KeyringError extends Error {}
+
+/** One generic error for every way a sealed value can fail to open (wrong key, tampered, wrong row). */
+export class TokenOpenError extends Error {
+  constructor() {
+    super('token could not be opened');
+    this.name = 'TokenOpenError';
+  }
+}
+
+function parseKey(entry: string): { id: string; key: Buffer } {
+  const at = entry.indexOf(':');
+  const id = at < 0 ? '' : entry.slice(0, at).trim();
+  const b64 = at < 0 ? '' : entry.slice(at + 1).trim();
+  if (!KEY_ID.test(id)) throw new KeyringError('key id must be 1-16 lowercase letters or digits');
+  const key = B64.test(b64) && b64.length % 4 === 0 ? Buffer.from(b64, 'base64') : null;
+  if (!key || key.length !== KEY_BYTES) throw new KeyringError('key must be 32 bytes, base64');
+  return { id, key };
+}
+
+/** `current` is `<id>:<base64 32 bytes>`; `old` is a comma list of the same (decrypt only). Ids are unique across both. */
+export function parseKeyring(current: string, old?: string): Keyring {
+  const cur = parseKey(current);
+  const olds = new Map<string, Buffer>();
+  for (const part of (old ?? '').split(',').filter((p) => p.trim() !== '')) {
+    const k = parseKey(part);
+    if (k.id === cur.id || olds.has(k.id)) throw new KeyringError('key ids must be unique');
+    olds.set(k.id, k.key);
+  }
+  return { current: cur, old: olds };
+}
+
+/** Seals with the current key and a fresh random IV. `aad` binds the value to its row; open needs the same one. */
+export function sealToken(ring: Keyring, plain: string, aad: string): SealedToken {
+  const iv = randomBytes(IV_BYTES);
+  const cipher = createCipheriv('aes-256-gcm', ring.current.key, iv, { authTagLength: TAG_BYTES });
+  cipher.setAAD(Buffer.from(aad));
+  const ct = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+  const enc = [iv, ct, cipher.getAuthTag()].map((b) => b.toString('base64url'));
+  return { encValue: `v1.${enc.join('.')}`, keyId: ring.current.id };
+}
+
+export function openToken(ring: Keyring, sealed: SealedToken, aad: string): string {
+  try {
+    const key = sealed.keyId === ring.current.id ? ring.current.key : ring.old.get(sealed.keyId);
+    const parts = sealed.encValue.split('.');
+    if (!key || parts.length !== 4 || parts[0] !== 'v1') throw new TokenOpenError();
+    const [iv, ct, tag] = parts.slice(1).map((p) => Buffer.from(p, 'base64url')) as [
+      Buffer,
+      Buffer,
+      Buffer,
+    ];
+    if (iv.length !== IV_BYTES || tag.length !== TAG_BYTES) throw new TokenOpenError();
+    const decipher = createDecipheriv('aes-256-gcm', key, iv, { authTagLength: TAG_BYTES });
+    decipher.setAAD(Buffer.from(aad));
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8');
+  } catch {
+    throw new TokenOpenError();
+  }
 }

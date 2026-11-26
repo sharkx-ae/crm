@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { getWebEnv } from './lib/env.ts';
 import { routing } from './lib/i18n/routing.ts';
-import { buildCsp, classifyPath, sessionCookieName } from './lib/security.ts';
+import { buildCsp, classifyPath, isMetaPath, sessionCookieName } from './lib/security.ts';
 
 const intl = createMiddleware(routing);
 
@@ -22,7 +22,10 @@ export default function proxy(request: NextRequest) {
 
   // Next reads the nonce from the CSP on the REQUEST and stamps its own scripts with it.
   const nonce = btoa(crypto.randomUUID());
-  const csp = buildCsp(nonce, env.NODE_ENV === 'development');
+  // The Facebook SDK (WhatsApp connect) is allowed on the integrations page only.
+  const csp = buildCsp(nonce, env.NODE_ENV === 'development', {
+    meta: isMetaPath(request.nextUrl.pathname, routing.locales),
+  });
   const headers = new Headers(request.headers);
   headers.set('x-nonce', nonce);
   headers.set('content-security-policy', csp);

@@ -1,9 +1,10 @@
-import { lt } from 'drizzle-orm';
+import { and, isNotNull, lt } from 'drizzle-orm';
 import { errorLog } from '../../lib/errors/schema.ts';
 import { rateLimits } from '../../lib/rate-limit/schema.ts';
 import { withSystem } from '../../lib/tenant/index.ts';
 import { changeFeed } from '../../lib/tenant/schema.ts';
 import { authTokens, sessions } from '../../modules/auth/schema.ts';
+import { webhookEvents } from '../../modules/webhooks/schema.ts';
 import type { JobHandler } from '../run-job.ts';
 
 const DAY = 86_400_000;
@@ -14,12 +15,15 @@ export type PruneResult = {
   sessions: number;
   errorLog: number;
   changeFeed: number;
+  webhookEvents: number;
 };
 
 /**
  * Daily prune (plan §4.1): rate-limit windows older than a day, tokens expired for over a week, expired sessions,
  * error_log older than 90 days, change_feed older than 7 days (through the `change_feed_prune` policy, which only
- * applies with no project context). `now` is injected so tests move the clock.
+ * applies with no project context), webhook_events processed over 30 days ago (F3a: the payloads hold phone numbers and
+ * message text; an unprocessed row is never pruned, so nothing is lost before F3b handles it). `now` is injected so
+ * tests move the clock.
  */
 export async function prune(now: Date = new Date()): Promise<PruneResult> {
   const ago = (ms: number) => new Date(now.getTime() - ms);
@@ -53,6 +57,14 @@ export async function prune(now: Date = new Date()): Promise<PruneResult> {
           .delete(changeFeed)
           .where(lt(changeFeed.at, ago(7 * DAY)))
           .returning({ id: changeFeed.id }),
+      ),
+      webhookEvents: await del(
+        tx
+          .delete(webhookEvents)
+          .where(
+            and(isNotNull(webhookEvents.processedAt), lt(webhookEvents.processedAt, ago(30 * DAY))),
+          )
+          .returning({ id: webhookEvents.id }),
       ),
     };
   });

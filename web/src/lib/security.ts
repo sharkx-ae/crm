@@ -26,20 +26,45 @@ export function clientIp(headers: HeaderReader): string | undefined {
   return real && isIP(real) !== 0 ? real : undefined;
 }
 
-/** Per-request CSP (plan §7). Dev adds 'unsafe-eval' for React's debugging features. */
-export function buildCsp(nonce: string, dev: boolean): string {
+// What the Facebook JS SDK (WhatsApp Embedded Signup) needs, and nothing more. Applied ONLY on the integrations page
+// (F3a plan §7.2); every other page keeps the strict policy. The signup itself runs in a popup, which our CSP does not
+// restrict. Trim this list to what the browser console actually reports (plan T8).
+const META_FRAMES = [
+  'https://www.facebook.com',
+  'https://web.facebook.com',
+  'https://staticxx.facebook.com',
+];
+
+/**
+ * Per-request CSP (plan §7). Dev adds 'unsafe-eval' for React's debugging features. `opts.meta` adds the Facebook SDK
+ * hosts (integrations page only). With 'strict-dynamic' the host in script-src is ignored by modern browsers (the SDK
+ * is loaded by a nonce-carrying script and trusts what that script injects); it is kept for CSP2-only browsers.
+ */
+export function buildCsp(nonce: string, dev: boolean, opts: { meta?: boolean } = {}): string {
+  const meta = opts.meta === true;
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${meta ? ' https://connect.facebook.net' : ''}${dev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob:${meta ? ' https://*.facebook.com https://*.fbcdn.net' : ''}`,
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${meta ? ' https://*.facebook.com https://graph.facebook.com' : ''}`,
+    ...(meta ? [`frame-src ${META_FRAMES.join(' ')}`] : []),
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
   ].join('; ');
+}
+
+/**
+ * True only for `/<locale>/p/<projectId>/integrations` (a trailing slash is fine, a sub path is not): the one page that
+ * loads the Facebook SDK. Sub pages added later (F14b) must be added here on purpose.
+ */
+export function isMetaPath(pathname: string, locales: readonly string[]): boolean {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] !== undefined && locales.includes(parts[0])) parts.shift();
+  return parts.length === 3 && parts[0] === 'p' && parts[1] !== '' && parts[2] === 'integrations';
 }
 
 /**

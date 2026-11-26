@@ -1,0 +1,2 @@
+# Webhook bodies are hashed byte for byte (signature tests): never convert line endings.
+* -text

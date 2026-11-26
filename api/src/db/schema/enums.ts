@@ -22,5 +22,5 @@ export const notificationKindEnum = pgEnum('notification_kind', v(c.notification
 export const userStatusEnum = pgEnum('user_status', v(c.userStatus.options));
 export const sessionStageEnum = pgEnum('session_stage', v(c.sessionStage.options));
 export const authTokenKindEnum = pgEnum('auth_token_kind', ['invite', 'reset', 'email_code']);
-export const waSyncStateEnum = pgEnum('wa_sync_state', ['none', 'syncing', 'done', 'missed']);
+export const waSyncStateEnum = pgEnum('wa_sync_state', v(c.waSyncState.options));
 export const conversionPlatformEnum = pgEnum('conversion_platform', ['meta', 'google']);

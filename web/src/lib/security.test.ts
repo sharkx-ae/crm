@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildCsp, classifyPath, clientIp, isSameOrigin, sessionCookieName } from './security.ts';
+import {
+  buildCsp,
+  classifyPath,
+  clientIp,
+  isMetaPath,
+  isSameOrigin,
+  sessionCookieName,
+} from './security.ts';
 
 const h = (o: Record<string, string>) => ({ get: (k: string) => o[k.toLowerCase()] ?? null });
 
@@ -41,6 +48,77 @@ describe('buildCsp', () => {
   it('allows unsafe-eval in development only', () => {
     expect(buildCsp('n', true)).toContain("'unsafe-eval'");
     expect(buildCsp('n', false)).not.toContain("'unsafe-eval'");
+  });
+
+  it('the default policy never mentions Facebook and has no frame-src', () => {
+    for (const csp of [buildCsp('n', false), buildCsp('n', true), buildCsp('n', false, {})]) {
+      expect(csp).not.toMatch(/facebook|fbcdn/);
+      expect(csp).not.toContain('frame-src');
+    }
+    expect(buildCsp('n', false, { meta: false })).toBe(buildCsp('n', false));
+  });
+
+  it('the Meta variant adds only the SDK, frame, connect and image hosts and keeps every lock-down', () => {
+    const csp = buildCsp('abc123', false, { meta: true });
+    expect(csp).toContain(
+      "script-src 'self' 'nonce-abc123' 'strict-dynamic' https://connect.facebook.net",
+    );
+    expect(csp).toContain(
+      'frame-src https://www.facebook.com https://web.facebook.com https://staticxx.facebook.com',
+    );
+    expect(csp).toContain("connect-src 'self' https://*.facebook.com https://graph.facebook.com");
+    expect(csp).toContain("img-src 'self' data: blob: https://*.facebook.com https://*.fbcdn.net");
+    for (const d of [
+      "default-src 'self'",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self'",
+    ]) {
+      expect(csp).toContain(d);
+    }
+    expect(csp).not.toContain('unsafe-eval');
+    // no wildcard host beyond the two Meta ones, and no bare scheme or star source
+    expect(csp.match(/[^\s;]*\*[^\s;]*/g)).toEqual([
+      'https://*.facebook.com',
+      'https://*.fbcdn.net',
+      'https://*.facebook.com',
+    ]);
+    expect(csp).not.toMatch(/ https?:( |;|$)/);
+  });
+});
+
+describe('isMetaPath', () => {
+  const locales = ['en', 'ar', 'fr'];
+  it('is true for the integrations page of a project, with or without a locale or trailing slash', () => {
+    for (const p of [
+      '/en/p/123/integrations',
+      '/ar/p/abc-1/integrations/',
+      '/p/123/integrations',
+    ]) {
+      expect(isMetaPath(p, locales), p).toBe(true);
+    }
+  });
+
+  it('is false for everything else, including other project pages and sub paths', () => {
+    for (const p of [
+      '/',
+      '/en',
+      '/en/login',
+      '/en/clients',
+      '/en/p/123/overview',
+      '/en/p/123/leads',
+      '/en/p/123/integrations/whatsapp',
+      '/en/p/integrations',
+      '/en/integrations',
+      '/en/q/123/integrations',
+      '/xx/p/123/integrations/extra/more',
+      '/en/p//integrations',
+    ]) {
+      expect(isMetaPath(p, locales), p).toBe(false);
+    }
   });
 });
 

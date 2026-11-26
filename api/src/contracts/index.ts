@@ -13,4 +13,5 @@ export * from './leads.ts';
 export * from './projects.ts';
 export * from './reports.ts';
 export * from './session.ts';
+export * from './whatsapp.ts';
 export const CONTRACTS_VERSION = '2.0.0';

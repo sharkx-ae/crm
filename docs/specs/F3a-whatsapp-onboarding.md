@@ -2,19 +2,21 @@
 Owner: A (Alex) · full stack (web + api + db + tests) · Days 9–9 · Release 2 · Tracker: F3.1, F3.2 · PRD: [F3](../PRD.md#f3)
 
 ## Goal
-A client's WhatsApp Business number connects by QR (Embedded Signup v4, Coexistence) and Meta webhooks are verified, stored and queued.
+A client's WhatsApp Business number connects by QR (Embedded Signup v5, Coexistence) and Meta webhooks are verified, stored and queued.
+
+> **Plan wins (2026-11-25, [technical plan](F3a-technical-plan.md)):** Embedded Signup **v5** (not v4); QR path only (`FINISH` for a new Cloud API number is refused); **no OAuth callback route**: the SDK returns the code in the browser, so it goes Server Action → internal api route (`POST /projects/:projectId/whatsapp/connect`). Webhook checks against Meta run in production (one callback URL per app).
 
 ## Acceptance criteria
 - [ ] Connect: analyst starts Embedded Signup; client scans QR in the WhatsApp Business app; several numbers per client; sync % shown.
 
 ## Data model / API / job changes
-- Meta app (dev mode) with Embedded Signup v4; Meta test number for development.
+- Meta app (dev mode) with Embedded Signup v5; Meta test number for development.
 - `wa_numbers` row per number; tokens in `integration_tokens` (AES-256-GCM).
 - `GET|POST /api/webhooks/meta`: verify token handshake, signature check → `webhook_events` (unique provider+external id) → 200 → `webhook.process`.
 - Starts `wa.history.sync` when the client approves history (handled in F3b).
 
 ## Files touched
-- A (Alex): src/modules/whatsapp/*, src/modules/webhooks/*, src/app/api/webhooks/meta/*, src/app/api/oauth/meta/*, tests/fixtures/whatsapp/*
+- A (Alex): src/modules/whatsapp/*, src/modules/webhooks/*, src/app/api/webhooks/meta/* (→ `api/src/routes/webhooks/meta.ts`), tests/fixtures/whatsapp/* (no `oauth/meta` route: see the note above)
 - B (John): none (temporary connect button until the F14b wizard renders the `qr` step)
 
 ## Dependencies

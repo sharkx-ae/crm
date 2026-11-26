@@ -81,13 +81,22 @@ export async function seedProject(clientId: string, staffId: string): Promise<Se
       externalFormId: randomUUID(),
       name: 'Form',
     });
-    await tx
-      .insert(s.integrationTokens)
-      .values({ projectId, integrationId: integration.id, encValue: 'enc', keyId: 'k1' });
+    await tx.insert(s.integrationTokens).values({
+      projectId,
+      integrationId: integration.id,
+      accountRef: `waba-${randomUUID()}`,
+      encValue: 'enc',
+      keyId: 'k1',
+    });
     const number = first(
       await tx
         .insert(s.waNumbers)
-        .values({ projectId, phoneE164: `+9714${digits(8)}` })
+        .values({
+          projectId,
+          phoneE164: `+9714${digits(8)}`,
+          phoneNumberId: `pn-${randomUUID()}`,
+          wabaId: `waba-${randomUUID()}`,
+        })
         .returning({ id: s.waNumbers.id }),
     );
     const conversation = first(

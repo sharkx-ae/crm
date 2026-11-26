@@ -180,7 +180,13 @@ const inserts: Record<Table, (tx: Tx, p: SeededProject) => Promise<unknown>> = {
   integration_tokens: (tx, p) =>
     tx
       .insert(s.integrationTokens)
-      .values({ projectId: p.projectId, integrationId: p.integrationId, encValue: 'x', keyId: 'k' })
+      .values({
+        projectId: p.projectId,
+        integrationId: p.integrationId,
+        accountRef: `waba-${randomUUID()}`,
+        encValue: 'x',
+        keyId: 'k',
+      })
       .onConflictDoNothing(),
   wa_numbers: (tx, p) =>
     tx
@@ -188,6 +194,8 @@ const inserts: Record<Table, (tx: Tx, p: SeededProject) => Promise<unknown>> = {
       .values({
         projectId: p.projectId,
         phoneE164: `+9714${Math.floor(1e7 + Math.random() * 9e7)}`,
+        phoneNumberId: `pn-${randomUUID()}`,
+        wabaId: `waba-${randomUUID()}`,
       })
       .onConflictDoNothing(),
   wa_conversations: (tx, p) =>

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "app_id": "1234567890",
+    "type": "SYSTEM_USER",
+    "application": "SHARKX Test",
+    "is_valid": true,
+    "scopes": [
+      "whatsapp_business_management",
+      "whatsapp_business_messaging"
+    ],
+    "granular_scopes": [
+      {
+        "scope": "whatsapp_business_management",
+        "target_ids": [
+          "100000000000001"
+        ]
+      },
+      {
+        "scope": "whatsapp_business_messaging",
+        "target_ids": [
+          "100000000000001"
+        ]
+      }
+    ],
+    "expires_at": 0,
+    "data_access_expires_at": 0
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": false },
-  "files": { "includes": ["**", "!src/db/migrations"] },
+  "files": { "includes": ["**", "!src/db/migrations", "!tests/fixtures/whatsapp"] },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "javascript": { "formatter": { "quoteStyle": "single" } },
   "linter": {

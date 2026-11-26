@@ -16,6 +16,7 @@ export const MESSAGE_MODULES = [
   'projects',
   'team',
   'reports',
+  'integrations',
 ] as const;
 
 // The modules the browser receives (NextIntlClientProvider). Add one when a client component starts using it.
@@ -30,6 +31,7 @@ export const CLIENT_MODULES = [
   'projects',
   'team',
   'reports',
+  'integrations',
 ] as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {

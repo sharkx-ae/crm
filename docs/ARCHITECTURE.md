@@ -111,7 +111,7 @@ Jobs (pg-boss; a `singletonKey` dedupes only inside a time window, so `enqueue()
 | task.reminder | delayed to due_at | 3× |
 | email.send | alerts and reminders (never invite, code or reset mails: they carry a secret and are sent directly) | 5×, 30 s backoff, kept 1 day |
 | csv.import | upload | none; row errors reported |
-| maintenance | cron daily 03:00 UTC: prune change_feed (7 d), rate_limits (1 d), auth_tokens (expired 7 d), sessions (expired), error_log (90 d) | none |
+| maintenance | cron daily 03:00 UTC: prune change_feed (7 d), rate_limits (1 d), auth_tokens (expired 7 d), sessions (expired), error_log (90 d), webhook_events (processed over 30 d ago; a row never processed is kept, however old) | none |
 
 Exhausted jobs → `error_log` + alert email.
 
@@ -140,14 +140,16 @@ Adapter (`modules/integrations/<platform>`): `connectDescriptor` (steps/fields f
 | Website | `POST /api/forms/[key]` | none | none | n/a |
 | CSV | upload (in memory) | none | none | n/a |
 
-- WhatsApp limits to design for: one history sync per onboarding within 24 h (else offboard and redo); the app must be opened about every 13–14 days or the link drops; groups not synced; companion apps unlink; Embedded Signup v4 (v2 deprecated). Unofficial WhatsApp tools are barred by the SOW.
+- WhatsApp limits to design for: one history sync per onboarding within 24 h (else offboard and redo); the app must be opened about every 13–14 days or the link drops; groups not synced; companion apps unlink; Unofficial WhatsApp tools are barred by the SOW.
+- WhatsApp onboarding (F3a): Embedded Signup **v5** (`extras: { setup: {}, version: 'v5' }`; v2/v3 deprecated 2026-10-15), **QR path only** (Coexistence): the number stays on the WhatsApp Business app, so there is no `/register` call, and a `FINISH` event (a new Cloud API number) is refused with `qr_only`. The v5 session info (`messaging_account_ids`, `phone_number_id`, `is_on_biz_app`) and the code come from the browser as hints; the api exchanges the code, checks every WABA id against the token (`debug_token` `granular_scopes`) and the phone id against the WABA's own number list, subscribes the app to the WABA, then stores one sealed business token per WABA. History sync (`smb_app_data`) must start within 24 h of onboarding (`wa_numbers.onboarded_at`, F3b). Coexistence needs Tech Provider status; until it is granted only people with a role on the Meta app can complete the flow. Meta allows one callback URL per app and needs public HTTPS, so webhook checks run in production (staging leaves the Meta variables unset and answers 404). An unverified business is limited to about 10 new customers per 7 days (figure from partner docs, not a Meta page: unconfirmed); the connect card shows a static notice while `META_ONBOARDING_LIMITED=true`.
+- Meta webhook receiver (`GET|POST /webhooks/meta`): the POST reads the raw bytes (a buffer parser scoped to that plugin only), verifies `X-Hub-Signature-256` (HMAC-SHA256 of those exact bytes with the app secret, constant time) before anything is stored, then inserts `webhook_events` with `external_id = sha256:<hex of the body>` (Meta sends no delivery id), queues `webhook.process` with the row id as `singletonKey`, and answers 200. A duplicate already processed is not queued again; a queue failure answers 500 so Meta retries and the retry queues it.
 - Google Ads API no longer accepts new offline-conversion adopters (2026-06-15), so conversions go through the Data Manager API only.
 - Hub labels each adapter Live / Fixture-verified / Awaiting access.
 - Connectors: super admin, managers and client users (own client) can connect and reconnect (`integration.manage`); every connect is audited with its actor. Whoever connects must hold the needed role on the platform itself (Page admin, Google Ads admin, Snapchat Org Admin…); the adapter explains a missing role in plain words.
 
 ## 8 Security, config, ops
 - Env: Railway variables per environment; `.env.example` committed; `lib/env.ts` Zod-validates at boot (fail fast).
-- Tokens: AES-256-GCM, key `TOKEN_ENC_KEY` (32-byte base64) with key-id prefix for rotation; decrypted only in adapters and senders.
+- Tokens: AES-256-GCM, key `TOKEN_ENC_KEY` = `<keyId>:<base64 of 32 bytes>` (id `[a-z0-9]{1,16}`); retired keys stay in `TOKEN_ENC_KEYS_OLD` (comma list, decrypt only). A row stores `enc_value = v1.<iv>.<ciphertext>.<tag>` (base64url, random 12-byte IV) and the key id in `key_id`; the AAD is `integration_tokens:<projectId>:<integrationId>:<accountRef>`, so a ciphertext copied to another row does not open. One token row per `(integration, account_ref)` (WhatsApp: one per WABA). Rotation: generate `k2`, set `TOKEN_ENC_KEY=k2:…`, move the old value into `TOKEN_ENC_KEYS_OLD`; old rows still open and are re-sealed on reconnect. Decrypted only in adapters and senders. Required on staging and production, and whenever the Meta variables are set.
 - Logging: JSON to stdout with request id, no PII. `error_log` table + alert email (rate-limited, one per fingerprint per hour) to the alert inbox.
 - `/api/health`: 200/503 JSON `{db, queue, integrations{platform: state}, lastWebhookAt}`; no secrets or PII.
 - `is_test` leads are excluded from reports, conversion and exports by default.

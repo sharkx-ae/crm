@@ -157,10 +157,15 @@ async function seedClient(
       .values(
         client.numbers.map((n) => {
           const p = normalisePhone(n.phone, client.city);
+          const phoneE164 = p?.valid ? p.e164 : n.phone;
+          const digits = phoneE164.replace(/\D/g, '');
           return {
             projectId,
-            phoneE164: p?.valid ? p.e164 : n.phone,
+            phoneE164,
             label: n.label,
+            // Demo-only Meta ids, derived from the (unique) number so a re-seed is repeatable.
+            phoneNumberId: `7${digits}`,
+            wabaId: `8${digits}`,
             syncState: 'done' as const,
             syncPct: 100,
           };
