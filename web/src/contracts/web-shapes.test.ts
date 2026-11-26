@@ -64,10 +64,18 @@ describe('client lead allowlist', () => {
 });
 
 describe('leadsQuery', () => {
-  it('defaults the tab and page size, and caps the limit at 200', () => {
-    expect(leadsQuery.parse({ projectId: ID })).toMatchObject({ tab: 'all', limit: 20 });
-    expect(leadsQuery.safeParse({ projectId: ID, limit: '201' }).success).toBe(false);
-    expect(leadsQuery.parse({ projectId: ID, limit: '40', owner: 'unassigned' }).limit).toBe(40);
+  it('defaults the tab, the page and the page size; the size is 10, 20, 50 or 100', () => {
+    expect(leadsQuery.parse({ projectId: ID })).toMatchObject({ tab: 'all', page: 1, limit: 20 });
+    for (const limit of ['10', '20', '50', '100']) {
+      expect(leadsQuery.parse({ projectId: ID, limit }).limit).toBe(Number(limit));
+    }
+    for (const limit of ['0', '5', '40', '101', '200', 'x']) {
+      expect(leadsQuery.safeParse({ projectId: ID, limit }).success, limit).toBe(false);
+    }
+    expect(leadsQuery.parse({ projectId: ID, page: '3', owner: 'unassigned' }).page).toBe(3);
+    for (const page of ['0', '-1', '1.5', 'x']) {
+      expect(leadsQuery.safeParse({ projectId: ID, page }).success, page).toBe(false);
+    }
   });
 });
 
@@ -92,13 +100,15 @@ describe('F4b additions', () => {
   it('projectScope needs a client id; contactsQuery pages like the leads list', () => {
     expect(projectScope.safeParse({}).success).toBe(false);
     expect(projectScope.parse({ projectId: ID })).toEqual({ projectId: ID });
-    expect(contactsQuery.parse({ projectId: ID })).toEqual({ projectId: ID, limit: 20 });
-    expect(contactsQuery.parse({ projectId: ID, q: '  sara ', limit: '40' })).toEqual({
+    expect(contactsQuery.parse({ projectId: ID })).toEqual({ projectId: ID, page: 1, limit: 20 });
+    expect(contactsQuery.parse({ projectId: ID, q: '  sara ', page: '2', limit: '50' })).toEqual({
       projectId: ID,
       q: 'sara',
-      limit: 40,
+      page: 2,
+      limit: 50,
     });
-    expect(contactsQuery.safeParse({ projectId: ID, limit: '201' }).success).toBe(false);
+    expect(contactsQuery.safeParse({ projectId: ID, limit: '40' }).success).toBe(false);
+    expect(contactsQuery.safeParse({ projectId: ID, page: '0' }).success).toBe(false);
   });
 });
 
