@@ -178,6 +178,33 @@ const contacts: FixtureContact[] = [
   },
 ];
 
+// The Overview's chart data for Lumière (F13a): thirty days ending on the fixture's "today", 25 Nov in Dubai, and six
+// sources so the "Other" row shows. The tiles' rates and the waiting list come from the leads above (they change
+// when a spec marks one). Pearl has no leads: its Overview shows the empty states and the dashes.
+const OVERVIEW_TODAY = '2026-11-25';
+const overviewDays = [
+  1, 1, 0, 2, 1, 0, 3, 1, 1, 0, 2, 4, 1, 0, 1, 2, 0, 1, 3, 1, 0, 2, 1, 1, 0, 2, 3, 1, 2, 3,
+]; // 40 in all, the same as the six sources; the peak is 4 on 7 Nov
+const overview = {
+  lumiere: {
+    perDay: overviewDays.map((count, i) => ({
+      date: new Date(Date.parse(`${OVERVIEW_TODAY}T00:00:00Z`) - (29 - i) * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+      count,
+    })),
+    bySource: [
+      { source: 'meta', count: 14 },
+      { source: 'tiktok', count: 9 },
+      { source: 'google', count: 7 },
+      { source: 'whatsapp', count: 5 },
+      { source: 'snapchat', count: 3 },
+      { source: 'website', count: 2 },
+    ] satisfies { source: Source; count: number }[],
+    medianFirstReplyMin: 19,
+  },
+};
+
 export const FIXTURE = {
   password: 'Correct-horse-1234',
   code: '123456',
@@ -185,6 +212,7 @@ export const FIXTURE = {
   projects,
   leads,
   contacts,
+  overview,
   ids: {
     lumiere: LUMIERE,
     pearl: PEARL,

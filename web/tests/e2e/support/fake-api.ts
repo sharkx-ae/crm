@@ -40,6 +40,7 @@ import {
   projectsHomeResponse,
   updateProjectSettingsRequest,
 } from '../../../src/contracts/projects.ts';
+import { overviewResponse } from '../../../src/contracts/reports.ts';
 import { FIXTURE, type FixtureLead } from './fixtures.ts';
 
 const port = Number(process.argv[2] ?? 4200);
@@ -316,6 +317,38 @@ const server = createServer(async (req, res) => {
       return true;
     });
 
+  // Overview (F13a): Lumière's chart data from the fixture, its tiles from the leads; every other client is empty.
+  if (route === 'GET /reports/overview') {
+    const parsed = projectScope.safeParse(Object.fromEntries(url.searchParams));
+    if (!parsed.success) return fail(res, 422, 'VALIDATION');
+    const denied = seeProject(parsed.data.projectId);
+    if (denied) return denied;
+    const mine = FIXTURE.leads.filter((l) => l.projectId === parsed.data.projectId);
+    const lum = parsed.data.projectId === FIXTURE.ids.lumiere;
+    const days = lum
+      ? FIXTURE.overview.lumiere.perDay
+      : FIXTURE.overview.lumiere.perDay.map((d) => ({ date: d.date, count: 0 }));
+    const leads30 = days.reduce((n, d) => n + d.count, 0);
+    const share = (f: (l: FixtureLead) => boolean) =>
+      mine.length ? mine.filter(f).length / mine.length : null;
+    const kpis = {
+      leads30,
+      newToday: days.at(-1)?.count ?? 0,
+      medianFirstReplyMin: lum ? FIXTURE.overview.lumiere.medianFirstReplyMin : null,
+      mqlRate: share((l) => l.status === 'mql' || l.status === 'sql'),
+      sqlRate: share((l) => l.status === 'sql'),
+    };
+    const series = { perDay: days, bySource: lum ? FIXTURE.overview.lumiere.bySource : [] };
+    if (session.user.role !== 'client')
+      return ok(res, overviewResponse, { view: 'staff', kpis, ...series });
+    const waiting = mine.filter((l) => l.status === 'new').sort(byNewest);
+    return ok(res, overviewResponse, {
+      view: 'client',
+      kpis: { ...kpis, waiting: waiting.length },
+      ...series,
+      waiting: waiting.slice(0, 5).map(clientRow),
+    });
+  }
   if (route === 'GET /leads') {
     const parsed = leadsQuery.safeParse(Object.fromEntries(url.searchParams));
     if (!parsed.success) return fail(res, 422, 'VALIDATION');
