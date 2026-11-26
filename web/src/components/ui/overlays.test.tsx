@@ -475,10 +475,10 @@ describe('Tabs', () => {
   });
 });
 
-function Pusher({ text }: { text: string }) {
+function Pusher({ text, tone }: { text: string; tone?: 'success' | 'error' }) {
   const { toast } = useToast();
   return (
-    <button type="button" onClick={() => toast(text)}>
+    <button type="button" onClick={() => toast(text, tone ? { tone } : undefined)}>
       Mark
     </button>
   );
@@ -498,7 +498,20 @@ describe('Toast', () => {
     expect(document.querySelector('[aria-live="assertive"]')).toBeNull();
   });
 
-  it('goes away by itself after 3.4 seconds', async () => {
+  it('an error is announced assertively; a success politely', async () => {
+    renderIntl(
+      <ToastProvider>
+        <Pusher text="Could not save" tone="error" />
+      </ToastProvider>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Mark' }));
+    expect(document.querySelector('[aria-live="assertive"]')).not.toBeNull();
+    expect(document.querySelector('[aria-live="polite"]')).toBeNull();
+    // The red-mid icon on black is the alert glyph for an error, the check for a success.
+    expect(document.querySelector('li svg.text-sx-red-mid')).not.toBeNull();
+  });
+
+  it('goes away by itself after 4 seconds', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     renderIntl(
       <ToastProvider>
@@ -510,27 +523,58 @@ describe('Toast', () => {
       .click(screen.getByRole('button', { name: 'Mark' }));
     expect(screen.getAllByText('Saved').length).toBeGreaterThan(0);
     await act(async () => {
-      vi.advanceTimersByTime(3600);
+      vi.advanceTimersByTime(3500);
+    });
+    expect(screen.getAllByText('Saved').length).toBeGreaterThan(0);
+    await act(async () => {
+      vi.advanceTimersByTime(700);
     });
     await waitFor(() => expect(screen.queryAllByText('Saved')).toHaveLength(0));
   });
 
-  it('stacks several messages', async () => {
+  it('can be closed with its button', async () => {
     renderIntl(
       <ToastProvider>
-        <Pusher text="First" />
+        <Pusher text="Saved" />
       </ToastProvider>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Mark' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Mark' }));
-    expect(document.querySelectorAll('li').length).toBe(2);
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(document.querySelectorAll('li')).toHaveLength(0));
   });
 
-  it('is centred with a mirrored offset for RTL', () => {
+  it('stacks several messages, three at most: the oldest leave first', async () => {
+    let n = 0;
+    function Numbered() {
+      const { toast } = useToast();
+      return (
+        <button type="button" onClick={() => toast(`Message ${++n}`)}>
+          Mark
+        </button>
+      );
+    }
+    renderIntl(
+      <ToastProvider>
+        <Numbered />
+      </ToastProvider>,
+    );
+    for (let i = 0; i < 4; i++) await userEvent.click(screen.getByRole('button', { name: 'Mark' }));
+    const shown = [...document.querySelectorAll('li')].map((li) => li.textContent);
+    expect(shown).toHaveLength(3);
+    expect(shown.join('|')).not.toContain('Message 1');
+    expect(shown.join('|')).toContain('Message 4');
+    // The viewport stacks upward from the bottom, so the newest (last in the DOM) is on top.
+    const viewport = screen.getByRole('region', { name: 'Notifications' }).querySelector('ol');
+    expect(viewport?.className).toContain('flex-col-reverse');
+  });
+
+  it('sits at the bottom inline end: logical offsets, so it mirrors to the left in Arabic', () => {
     renderIntl(<ToastProvider>x</ToastProvider>);
     const viewport = screen.getByRole('region', { name: 'Notifications' }).querySelector('ol');
-    expect(viewport?.className).toContain('-translate-x-1/2');
-    expect(viewport?.className).toContain('rtl:translate-x-1/2');
+    expect(viewport?.className).toContain('end-4');
+    expect(viewport?.className).toContain('bottom-4');
+    expect(viewport?.className).toContain('w-[min(420px,calc(100vw-32px))]');
+    expect(viewport?.className).not.toMatch(/translate-x|start-1\/2/);
   });
 
   it('refuses to work without its provider', () => {

@@ -1,40 +1,115 @@
 'use client';
 
-import type { SelectHTMLAttributes } from 'react';
+import { Select as RadixSelect } from 'radix-ui';
 import { cx } from '../../lib/cx.ts';
 import { useControlA11y } from './field.tsx';
-import { CONTROL, CONTROL_HEIGHT, type FieldSize } from './input.tsx';
+import { Icon } from './icons.tsx';
+import { CONTROL_BASE, CONTROL_HEIGHT, type FieldSize } from './input.tsx';
+import { MENU_ITEM, MENU_SURFACE } from './menu-styles.ts';
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 
-// A native <select>, as in the mockup: reliable on phones and in RTL, unlike a custom listbox.
+// Radix refuses an item whose value is "" (that is how it shows the placeholder). Filters need exactly that value
+// ("All sources"), so an empty option travels as this token inside the wrapper and is mapped back on the way out.
+const EMPTY = '__all__';
+
+/**
+ * The list is a Radix Select: the same surface and rows as the other menus, keyboard and typeahead, and correct in RTL
+ * (the locale layout gives Radix its direction). Full width by default (forms); `fit` is the toolbar width (150px
+ * and up, as wide as its text). The props are the old native select's: `options`, `value`, `onValueChange`, `size`.
+ */
 export function Select({
   options,
   value,
   onValueChange,
   size = 'md',
+  fit = false,
+  placeholder,
+  disabled,
+  name,
+  required,
   className,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...rest
-}: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size' | 'value' | 'onChange' | 'children'> & {
+}: {
   options: readonly SelectOption[];
   value: string;
   onValueChange: (value: string) => void;
   size?: FieldSize;
+  /** Toolbar width instead of full width. */
+  fit?: boolean;
+  /** Shown while `value` is "" and no option has that value. */
+  placeholder?: string;
+  disabled?: boolean | undefined;
+  name?: string | undefined;
+  required?: boolean | undefined;
+  className?: string | undefined;
+  id?: string | undefined;
+  'aria-label'?: string | undefined;
+  'aria-labelledby'?: string | undefined;
+  'aria-describedby'?: string | undefined;
+  'aria-invalid'?: boolean | 'true' | 'false' | 'grammar' | 'spelling' | undefined;
 }) {
   const a11y = useControlA11y(rest);
+  const hasEmptyOption = options.some((o) => o.value === '');
+  const toRadix = (v: string) => (v === '' && hasEmptyOption ? EMPTY : v);
+  const fromRadix = (v: string) => (v === EMPTY ? '' : v);
+
   return (
-    <select
-      {...rest}
-      {...a11y}
-      value={value}
-      onChange={(e) => onValueChange(e.target.value)}
-      className={cx(CONTROL, CONTROL_HEIGHT[size], 'cursor-pointer', className)}
+    <RadixSelect.Root
+      value={toRadix(value)}
+      onValueChange={(v) => onValueChange(fromRadix(v))}
+      disabled={disabled}
+      name={name}
+      required={required}
     >
-      {options.map((o) => (
-        <option key={o.value} value={o.value} disabled={o.disabled}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+      <RadixSelect.Trigger
+        {...a11y}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        className={cx(
+          CONTROL_BASE,
+          CONTROL_HEIGHT[size],
+          'flex cursor-pointer items-center justify-between gap-2 text-start transition-colors duration-150 hover:border-sx-black disabled:hover:border-sx-line',
+          fit ? 'w-auto min-w-[150px]' : 'w-full min-w-0',
+          className,
+        )}
+      >
+        <span className="min-w-0 flex-1 truncate">
+          <RadixSelect.Value placeholder={placeholder} />
+        </span>
+        <RadixSelect.Icon asChild>
+          <Icon name="down" size="sm" className="text-sx-muted" />
+        </RadixSelect.Icon>
+      </RadixSelect.Trigger>
+      <RadixSelect.Portal>
+        <RadixSelect.Content
+          position="popper"
+          sideOffset={6}
+          collisionPadding={8}
+          className={cx(
+            MENU_SURFACE,
+            'min-w-(--radix-select-trigger-width) max-h-[min(320px,var(--radix-select-content-available-height))] max-w-[min(360px,calc(100vw-16px))]',
+          )}
+        >
+          <RadixSelect.Viewport>
+            {options.map((o) => (
+              <RadixSelect.Item
+                key={o.value}
+                value={toRadix(o.value)}
+                disabled={o.disabled}
+                className={cx(MENU_ITEM, 'data-[state=checked]:font-semibold')}
+              >
+                <RadixSelect.ItemText>{o.label}</RadixSelect.ItemText>
+                <RadixSelect.ItemIndicator className="ms-auto flex-none">
+                  <Icon name="check" size="sm" className="text-sx-red" />
+                </RadixSelect.ItemIndicator>
+              </RadixSelect.Item>
+            ))}
+          </RadixSelect.Viewport>
+        </RadixSelect.Content>
+      </RadixSelect.Portal>
+    </RadixSelect.Root>
   );
 }

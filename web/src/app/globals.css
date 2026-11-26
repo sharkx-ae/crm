@@ -58,6 +58,11 @@
   --animate-sx-slide: sx-slide 0.18s ease-out;
   --animate-sx-slide-rtl: sx-slide-rtl 0.18s ease-out;
   --animate-sx-rise: sx-rise 0.18s ease-out;
+  /* The toast enters from the inline end (bottom right in English, bottom left in Arabic). */
+  --animate-sx-toast-in: sx-toast-in 0.18s ease-out;
+  --animate-sx-toast-in-rtl: sx-toast-in-rtl 0.18s ease-out;
+  --animate-sx-toast-out: sx-toast-out 0.12s ease-in forwards;
+  --animate-sx-toast-swipe-out: sx-toast-swipe-out 0.12s ease-out forwards;
   @keyframes sx-slide {
     from {
       transform: translateX(28px);
@@ -76,6 +81,44 @@
     to {
       transform: none;
       opacity: 1;
+    }
+  }
+  @keyframes sx-toast-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-toast-in-rtl {
+    from {
+      transform: translateX(-24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-toast-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes sx-toast-swipe-out {
+    from {
+      translate: var(--radix-toast-swipe-end-x) 0;
+      opacity: 1;
+    }
+    to {
+      translate: var(--radix-toast-swipe-end-x) 0;
+      opacity: 0;
     }
   }
   @keyframes sx-rise {

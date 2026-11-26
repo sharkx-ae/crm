@@ -45,10 +45,14 @@ export function LanguageMenu() {
           type="button"
           aria-label={t('label')}
           aria-busy={pending || undefined}
-          className="focus-ring flex h-10 cursor-pointer items-center gap-1.5 rounded-field ps-2.5 pe-2.5 font-label text-sx-black hover:bg-sx-shell"
+          className="focus-ring flex h-10 flex-none cursor-pointer items-center gap-1.5 rounded-field ps-2.5 pe-2.5 font-label text-sx-black transition-colors duration-150 hover:bg-sx-shell"
         >
           <Icon name="globe" />
-          <span className="hidden sm:inline">{t(active)}</span>
+          {/* The language name from 900px up; under it the short code (EN, AR, FR), so the 360px bar keeps room for the client. */}
+          <span className="hidden rail:inline">{t(active)}</span>
+          <span dir="ltr" className="rail:hidden">
+            {active.toUpperCase()}
+          </span>
         </button>
       }
     >
@@ -75,7 +79,7 @@ export function MeBlock() {
   const { me } = useShell();
   const [pending, start] = useTransition();
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex flex-none items-center gap-2.5">
       <Avatar name={me.name} />
       <div className="hidden min-w-0 leading-tight wide:block">
         <p className="truncate font-label text-sx-black">

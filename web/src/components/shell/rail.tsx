@@ -45,20 +45,25 @@ export function Rail({
         'desk:visible desk:w-(--rail-w) desk:translate-x-0 rtl:desk:translate-x-0 desk:hover:w-(--side-w) desk:focus-within:w-(--side-w)',
       )}
     >
-      <div className="flex h-(--top-h) flex-none items-center ps-[22px]">
+      {/* 56px brand row. The collapsed 72px rail shows the 32px icon centred (20 + 32 + 20); the open rail shows the
+          wordmark at 26px high. The wordmark is the official logo with its transparent padding cropped (scripts/trim-logo.mjs),
+          so the letters really are 26px tall and start where the icon did. */}
+      <div className="flex h-(--top-h) flex-none items-center ps-5">
         <Image
           src="/brand/icon-red-white-x.png"
           alt={t('brand.logoAlt')}
-          width={28}
-          height={28}
-          className="hidden size-7 desk:block desk:group-hover/rail:hidden desk:group-focus-within/rail:hidden"
+          width={32}
+          height={32}
+          className="hidden size-8 rounded-[9px] desk:block desk:group-hover/rail:hidden desk:group-focus-within/rail:hidden"
         />
-        <Image
-          src="/brand/logo-red-on-white-compact.png"
+        {/* biome-ignore lint/performance/noImgElement: both densities are local files, so the browser picks 1x or 2x itself */}
+        <img
+          src="/brand/logo-red-wordmark-trim.png"
+          srcSet="/brand/logo-red-wordmark-trim.png 1x, /brand/logo-red-wordmark-trim-2x.png 2x"
           alt={t('brand.logoAlt')}
-          width={160}
-          height={20}
-          className="h-5 w-40 desk:hidden desk:group-hover/rail:block desk:group-focus-within/rail:block"
+          width={147}
+          height={26}
+          className="block h-[26px] w-auto desk:hidden desk:group-hover/rail:block desk:group-focus-within/rail:block"
         />
       </div>
       <nav aria-label={t('nav.label')} className="flex-1 overflow-y-auto px-3 pb-4">

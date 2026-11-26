@@ -23,3 +23,16 @@ export function Card({
     />
   );
 }
+
+/**
+ * The row of filters at the top of a flush card (mockup `.card > .toolbar`): search first, then selects, wrapping.
+ * 16px 24px, 12px 16px under 900px, so it lines up with the table's first and last cells below it.
+ */
+export function CardToolbar({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      {...rest}
+      className={cx('flex flex-wrap items-center gap-3 px-4 py-3 rail:px-6 rail:py-4', className)}
+    />
+  );
+}

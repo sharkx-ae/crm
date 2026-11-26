@@ -8,8 +8,10 @@ export type FieldSize = 'md' | 'sm';
 
 // Shared by Input, Textarea and Select: 40px (34 small), 10px radius, a strong hairline, 3px red focus ring.
 // Placeholder uses sx-muted: the brand does not allow #a49f9f for text on white.
-export const CONTROL =
-  'focus-ring block w-full min-w-0 rounded-field border border-sx-line bg-sx-paper px-3 text-body text-sx-black placeholder:text-sx-muted focus-visible:border-sx-black disabled:cursor-not-allowed disabled:opacity-60';
+// CONTROL_BASE has no width: the Select sets its own (full, or `fit` for a toolbar), since classes do not merge.
+export const CONTROL_BASE =
+  'focus-ring rounded-field border border-sx-line bg-sx-paper px-3 text-body text-sx-black placeholder:text-sx-muted focus-visible:border-sx-black disabled:cursor-not-allowed disabled:opacity-60';
+export const CONTROL = `block w-full min-w-0 ${CONTROL_BASE}`;
 export const CONTROL_HEIGHT: Record<FieldSize, string> = {
   md: 'h-10',
   sm: 'h-[34px] text-label',

@@ -174,7 +174,7 @@ describe('Field', () => {
       </Field>,
     );
     const select = screen.getByLabelText('City');
-    expect(select.tagName.toLowerCase()).toBe('select');
+    expect(select.getAttribute('role')).toBe('combobox');
     expect(select.getAttribute('aria-invalid')).toBe('true');
   });
 });
@@ -234,27 +234,123 @@ describe('Select', () => {
     { value: 'ma', label: 'Morocco', disabled: true },
   ];
 
-  it('is a native select with the options', () => {
+  it('is a combobox button showing the selected label; the list opens with the keyboard', async () => {
     renderIntl(<Select aria-label="City" options={options} value="abu" onValueChange={() => {}} />);
-    const s = screen.getByRole('combobox', { name: 'City' }) as HTMLSelectElement;
-    expect(s.value).toBe('abu');
+    const trigger = screen.getByRole('combobox', { name: 'City' });
+    expect(trigger.tagName.toLowerCase()).toBe('button');
+    expect(trigger.textContent).toBe('Abu Dhabi');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByRole('listbox')).not.toBeNull();
     expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
       'Dubai',
       'Abu Dhabi',
       'Morocco',
     ]);
-    expect((screen.getByRole('option', { name: 'Morocco' }) as HTMLOptionElement).disabled).toBe(
-      true,
+    expect(screen.getByRole('option', { name: 'Abu Dhabi' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(screen.getByRole('option', { name: 'Morocco' }).getAttribute('aria-disabled')).toBe(
+      'true',
     );
   });
 
-  it('reports the chosen value, not the event', async () => {
+  it('reports the chosen value, not an event, and Escape closes without choosing', async () => {
     const onValueChange = vi.fn();
     renderIntl(
       <Select aria-label="City" options={options} value="dubai" onValueChange={onValueChange} />,
     );
-    await userEvent.selectOptions(screen.getByLabelText('City'), 'abu');
+    const trigger = screen.getByRole('combobox', { name: 'City' });
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith('abu');
+
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByRole('listbox')).not.toBeNull();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('typeahead jumps to the matching option', async () => {
+    const onValueChange = vi.fn();
+    renderIntl(
+      <Select aria-label="City" options={options} value="dubai" onValueChange={onValueChange} />,
+    );
+    screen.getByRole('combobox', { name: 'City' }).focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('Ab{Enter}');
+    expect(onValueChange).toHaveBeenCalledWith('abu');
+  });
+
+  it('an empty value is a real choice ("All sources"): it round-trips as ""', async () => {
+    const onValueChange = vi.fn();
+    const filter = [
+      { value: '', label: 'All sources' },
+      { value: 'meta', label: 'Meta' },
+    ];
+    const { rerender } = renderIntl(
+      <Select aria-label="Source" options={filter} value="" onValueChange={onValueChange} />,
+    );
+    const trigger = screen.getByRole('combobox', { name: 'Source' });
+    expect(trigger.textContent).toBe('All sources');
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByRole('option', { name: 'All sources' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(onValueChange).toHaveBeenLastCalledWith('meta');
+
+    rerender(
+      <Select aria-label="Source" options={filter} value="meta" onValueChange={onValueChange} />,
+    );
+    screen.getByRole('combobox', { name: 'Source' }).focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{ArrowUp}{Enter}');
+    expect(onValueChange).toHaveBeenLastCalledWith('');
+  });
+
+  it('shows the placeholder while nothing is chosen', () => {
+    renderIntl(
+      <Select
+        aria-label="City"
+        placeholder="Choose a city"
+        options={options}
+        value=""
+        onValueChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole('combobox', { name: 'City' }).textContent).toBe('Choose a city');
+  });
+
+  it('is full width unless asked to fit; disabled blocks opening', async () => {
+    renderIntl(
+      <>
+        <Select aria-label="Wide" options={options} value="dubai" onValueChange={() => {}} />
+        <Select aria-label="Fit" fit options={options} value="dubai" onValueChange={() => {}} />
+        <Select
+          aria-label="Off"
+          disabled
+          options={options}
+          value="dubai"
+          onValueChange={() => {}}
+        />
+      </>,
+    );
+    expect(screen.getByRole('combobox', { name: 'Wide' }).className).toContain('w-full');
+    const fit = screen.getByRole('combobox', { name: 'Fit' }).className;
+    expect(fit).toContain('w-auto');
+    expect(fit).toContain('min-w-[150px]');
+    expect(fit).not.toContain('w-full');
+    const off = screen.getByRole('combobox', { name: 'Off' });
+    off.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect((off as HTMLButtonElement).disabled).toBe(true);
   });
 });
 

@@ -57,7 +57,8 @@ export function Td({
     <td
       {...rest}
       className={cx(
-        'border-b border-sx-border px-4 py-2.5 align-middle',
+        // Under 900px a row never wraps: the card's table scrolls sideways instead of stacking a name on three lines.
+        'border-b border-sx-border px-4 py-2.5 align-middle max-rail:whitespace-nowrap',
         num && 'text-end tabular-nums first:text-start',
         strong && 'font-heading',
         className,

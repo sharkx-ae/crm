@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import errors from '../../../messages/en/errors.json';
 import leads from '../../../messages/en/leads.json';
 import { renderIntl } from '../../test/render.tsx';
+import { chooseOption, optionLabels } from '../../test/select.ts';
 import { ToastProvider } from '../ui/toast.tsx';
 import { MarkControl } from './mark-control.tsx';
 
@@ -95,7 +96,7 @@ describe('MarkControl', () => {
     await userEvent.click(screen.getByRole('button', { name: /as Not qualified/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Why is this lead not qualified?' });
     expect(markLead).not.toHaveBeenCalled();
-    await userEvent.selectOptions(screen.getByLabelText('Reason'), 'Wrong location');
+    await chooseOption(screen.getByLabelText('Reason'), 'Wrong location');
     await userEvent.click(screen.getByRole('button', { name: 'Mark not qualified' }));
     await waitFor(() =>
       expect(markLead).toHaveBeenCalledWith({
@@ -122,7 +123,7 @@ describe('MarkControl', () => {
     expect(leadReasons).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /as Not qualified/ }));
     await waitFor(() => expect(leadReasons).toHaveBeenCalledWith({ projectId: P, leadId: L }));
-    expect(await screen.findByRole('option', { name: 'No budget' })).toBeTruthy();
+    expect(await optionLabels(await screen.findByLabelText('Reason'))).toContain('No budget');
   });
 
   it('an api error shows its translated message and does not refresh', async () => {

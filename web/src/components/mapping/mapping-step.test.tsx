@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import leads from '../../../messages/en/leads.json';
 import type { MappingTarget } from '../../contracts/leads.ts';
 import { renderIntl } from '../../test/render.tsx';
+import { chooseOption, optionLabels } from '../../test/select.ts';
 import { MappingStep } from './mapping-step.tsx';
 
 const QUESTIONS = [
@@ -39,30 +40,26 @@ describe('MappingStep', () => {
     expect(screen.getByRole('table', { name: 'Form fields' })).toBeTruthy();
     expect(screen.getByText('Mobile')).toBeTruthy();
     expect(screen.getByText('055 300 8812')).toBeTruthy();
-    const name = screen.getByRole('combobox', {
-      name: 'Lead field: Full name',
-    }) as HTMLSelectElement;
-    expect(name.value).toBe('name');
+    expect(screen.getByRole('combobox', { name: 'Lead field: Full name' }).textContent).toBe(
+      'Name',
+    );
     // Without a saved choice a question stays a custom field (nothing is dropped silently).
-    expect(
-      (screen.getByRole('combobox', { name: 'Lead field: Mobile' }) as HTMLSelectElement).value,
-    ).toBe('custom');
+    expect(screen.getByRole('combobox', { name: 'Lead field: Mobile' }).textContent).toBe(
+      'Custom field',
+    );
   });
 
-  it('offers the six targets in words', () => {
+  it('offers the six targets in words', async () => {
     render();
-    const options = Array.from(
-      (screen.getByRole('combobox', { name: 'Lead field: Mobile' }) as HTMLSelectElement).options,
-    ).map((o) => o.textContent);
+    const options = await optionLabels(
+      screen.getByRole('combobox', { name: 'Lead field: Mobile' }),
+    );
     expect(options).toEqual(['Name', 'Phone', 'Email', 'Custom field', 'Note', 'Ignore']);
   });
 
   it('reports the whole mapping on change', async () => {
     const onSave = render();
-    await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: 'Lead field: Mobile' }),
-      'phone',
-    );
+    await chooseOption(screen.getByRole('combobox', { name: 'Lead field: Mobile' }), 'Phone');
     expect(onSave).toHaveBeenLastCalledWith({ 'Full name': 'name', Mobile: 'phone' });
   });
 

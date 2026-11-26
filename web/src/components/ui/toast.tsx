@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Toast } from 'radix-ui';
+import { Direction, Toast } from 'radix-ui';
 import {
   createContext,
   type ReactNode,
@@ -13,11 +13,14 @@ import {
 } from 'react';
 import { Icon } from './icons.tsx';
 
-// A short confirmation at the bottom centre ("Marked Lina as MQL"). Announced politely to screen readers, gone
-// after 3.4 s, paused while hovered or focused. Mounted once in the locale layout; call `useToast().toast(text)`.
-const DURATION_MS = 3400;
+// A short message at the bottom inline end ("Marked Lina as MQL"): bottom right in English, bottom left in Arabic.
+// Newest on top, three at most. Gone after 4 s, paused while hovered or focused, and it can be closed. A success is
+// announced politely, an error assertively. Mounted once in the locale layout; call `useToast().toast(text, opts?)`.
+const DURATION_MS = 4000;
+const MAX_VISIBLE = 3;
 
-type ToastApi = { toast: (message: string) => void };
+export type ToastTone = 'success' | 'error';
+type ToastApi = { toast: (message: string, options?: { tone?: ToastTone }) => void };
 const ToastContext = createContext<ToastApi | null>(null);
 
 export function useToast(): ToastApi {
@@ -26,36 +29,57 @@ export function useToast(): ToastApi {
   return api;
 }
 
+type Item = { id: number; text: string; tone: ToastTone };
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const t = useTranslations('ui');
-  const [items, setItems] = useState<{ id: number; text: string }[]>([]);
+  const dir = Direction.useDirection();
+  const [items, setItems] = useState<Item[]>([]);
   const nextId = useRef(0);
-  const toast = useCallback((text: string) => {
+  const toast = useCallback((text: string, options?: { tone?: ToastTone }) => {
     const id = nextId.current++;
-    setItems((current) => [...current, { id, text }]);
+    const tone = options?.tone ?? 'success';
+    // The oldest leave first once a fourth arrives.
+    setItems((current) => [...current, { id, text, tone }].slice(-MAX_VISIBLE));
   }, []);
   const api = useMemo(() => ({ toast }), [toast]);
 
   return (
     <ToastContext.Provider value={api}>
-      <Toast.Provider duration={DURATION_MS} label={t('notification')}>
+      <Toast.Provider
+        duration={DURATION_MS}
+        label={t('notification')}
+        swipeDirection={dir === 'rtl' ? 'left' : 'right'}
+      >
         {children}
         {items.map((item) => (
           <Toast.Root
             key={item.id}
-            type="background"
+            type={item.tone === 'error' ? 'foreground' : 'background'}
             onOpenChange={(open) => {
               if (!open) setItems((current) => current.filter((i) => i.id !== item.id));
             }}
-            className="flex max-w-[min(520px,92vw)] animate-sx-rise items-center gap-3 rounded-btn bg-sx-black px-4 py-3 font-label text-white shadow-sx-md"
+            className="flex w-full animate-sx-toast-in items-start gap-3 rounded-btn bg-sx-black py-3 ps-4 pe-3 font-label text-white shadow-sx-md rtl:animate-sx-toast-in-rtl data-[state=closed]:animate-sx-toast-out data-[swipe=cancel]:[translate:0] data-[swipe=cancel]:transition-[translate] data-[swipe=cancel]:duration-200 data-[swipe=end]:animate-sx-toast-swipe-out data-[swipe=move]:[translate:var(--radix-toast-swipe-move-x)_0]"
           >
-            <Icon name="check" size="sm" className="text-sx-red-mid" />
-            <Toast.Description>{item.text}</Toast.Description>
+            <Icon
+              name={item.tone === 'error' ? 'alert' : 'check'}
+              size="sm"
+              className="mt-[3px] text-sx-red-mid"
+            />
+            <Toast.Description className="min-w-0 flex-1 break-words">
+              {item.text}
+            </Toast.Description>
+            <Toast.Close
+              aria-label={t('close')}
+              className="focus-ring grid size-6 flex-none cursor-pointer place-items-center rounded-lg text-white/70 transition-colors duration-150 hover:text-white"
+            >
+              <Icon name="x" size="sm" />
+            </Toast.Close>
           </Toast.Root>
         ))}
         <Toast.Viewport
           label={t('notifications')}
-          className="fixed start-1/2 bottom-5 z-120 m-0 flex w-max max-w-[92vw] -translate-x-1/2 list-none flex-col items-center gap-2 p-0 outline-none rtl:translate-x-1/2"
+          className="fixed end-4 bottom-4 z-120 m-0 flex w-[min(420px,calc(100vw-32px))] list-none flex-col-reverse gap-2 p-0 outline-none sm:end-5 sm:bottom-5"
         />
       </Toast.Provider>
     </ToastContext.Provider>

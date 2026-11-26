@@ -54,7 +54,7 @@ export function AppShell({
 
   return (
     <ShellProvider value={{ me, options }}>
-      <div className="min-h-dvh bg-sx-page desk:ps-(--rail-w) desk:has-[>aside:hover]:ps-(--side-w) desk:has-[>aside:focus-within]:ps-(--side-w) desk:transition-[padding] desk:duration-150">
+      <div className="flex min-h-dvh flex-col bg-sx-page desk:ps-(--rail-w) desk:has-[>aside:hover]:ps-(--side-w) desk:has-[>aside:focus-within]:ps-(--side-w) desk:transition-[padding] desk:duration-150">
         <a
           href="#main"
           className="focus-ring sr-only z-99 rounded-btn bg-sx-paper ps-4 pe-4 py-2 font-label text-sx-black focus:not-sr-only focus:fixed focus:start-3 focus:top-3"
@@ -77,26 +77,31 @@ export function AppShell({
           onToggleRail={() => setOpen((v) => !v)}
           projectId={projectId}
         />
+        {/* Mockup .content + .wrap: 32px 40px 24px (20px 16px 16px under 900px); the page starts at the inline start,
+            up to 80rem wide, so the KPI strip, cards and tables share one left edge. The footer is pinned to the bottom
+            of a short page by the flex column. */}
         <main
           id="main"
           tabIndex={-1}
-          className="mx-auto w-full max-w-7xl ps-4 pe-4 pt-6 pb-6 outline-none rail:ps-10 rail:pe-10 rail:pt-8"
+          className="flex flex-1 flex-col px-4 pt-5 pb-4 outline-none rail:px-10 rail:pt-8 rail:pb-6"
         >
-          {children}
+          <div className="flex w-full max-w-[80rem] flex-1 flex-col">
+            <div className="flex flex-1 flex-col">{children}</div>
+            <footer className="mt-10 flex flex-wrap justify-between gap-2 border-t border-sx-border pt-3 text-label text-sx-muted">
+              {/* The date is isolated so an Arabic month does not reorder the Latin text around it. */}
+              <span>
+                {t.rich('footer.line', { date: footerDate, d: (chunks) => <bdi>{chunks}</bdi> })}
+              </span>
+              <span>
+                {t.rich('footer.user', {
+                  name: me.name,
+                  role: tRole(me.role),
+                  n: (chunks) => <UserText>{chunks}</UserText>,
+                })}
+              </span>
+            </footer>
+          </div>
         </main>
-        <footer className="mx-auto flex w-full max-w-7xl flex-wrap justify-between gap-2 ps-4 pe-4 pb-6 text-label text-sx-muted rail:ps-10 rail:pe-10">
-          {/* The date is isolated so an Arabic month does not reorder the Latin text around it. */}
-          <span>
-            {t.rich('footer.line', { date: footerDate, d: (chunks) => <bdi>{chunks}</bdi> })}
-          </span>
-          <span>
-            {t.rich('footer.user', {
-              name: me.name,
-              role: tRole(me.role),
-              n: (chunks) => <UserText>{chunks}</UserText>,
-            })}
-          </span>
-        </footer>
       </div>
     </ShellProvider>
   );

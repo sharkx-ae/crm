@@ -8,6 +8,7 @@ import leads from '../../../messages/en/leads.json';
 import type { ClientLeadRow, LeadsPage, StaffLeadRow } from '../../contracts/leads.ts';
 import { DEFAULT_FILTERS, type LeadFilters } from '../../lib/leads-url.ts';
 import { renderIntl } from '../../test/render.tsx';
+import { chooseOption, optionLabels } from '../../test/select.ts';
 import { ProjectProvider } from '../shell/project-context.tsx';
 import { ToastProvider } from '../ui/toast.tsx';
 import { ClientMarkCell } from './client-mark-cell.tsx';
@@ -109,19 +110,18 @@ describe('LeadsScreen, staff', () => {
     expect(screen.getAllByText('5 min ago', { selector: 'td' })).toHaveLength(2);
   });
 
-  it('toolbar: source and owner selects (with Unassigned); no inline mark column', () => {
+  it('toolbar: source and owner selects (with Unassigned); no inline mark column', async () => {
     setup(staffPage());
-    const owner = screen.getByLabelText('Owner');
-    expect(
-      within(owner)
-        .getAllByRole('option')
-        .map((o) => o.textContent),
-    ).toEqual(['All owners', 'Unassigned', 'Aisha Rahman']);
-    expect(
-      within(screen.getByLabelText('Source'))
-        .getAllByRole('option')
-        .map((o) => o.textContent),
-    ).toEqual(['All sources', 'Meta Lead Ads', 'Google Ads']);
+    expect(await optionLabels(screen.getByLabelText('Owner'))).toEqual([
+      'All owners',
+      'Unassigned',
+      'Aisha Rahman',
+    ]);
+    expect(await optionLabels(screen.getByLabelText('Source'))).toEqual([
+      'All sources',
+      'Meta Lead Ads',
+      'Google Ads',
+    ]);
     expect(screen.queryByText('Mark as')).toBeNull();
   });
 
@@ -129,7 +129,7 @@ describe('LeadsScreen, staff', () => {
     setup(staffPage());
     await userEvent.click(screen.getByRole('tab', { name: /MQL/ }));
     expect(onChange).toHaveBeenCalledWith({ tab: 'mql' });
-    await userEvent.selectOptions(screen.getByLabelText('Owner'), 'unassigned');
+    await chooseOption(screen.getByLabelText('Owner'), 'Unassigned');
     expect(onChange).toHaveBeenCalledWith({ owner: 'unassigned' });
     // two rows were given, two are shown, whatever the tab says
     expect(screen.getAllByRole('row')).toHaveLength(3);

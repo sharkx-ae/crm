@@ -11,6 +11,9 @@ const STUB_API_PORT = 4200;
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Traces and failure artifacts only: Playwright empties this folder on every run, so the review screenshots
+  // (test-results/screens) live next to it and survive.
+  outputDir: './test-results/artifacts',
   timeout: 30_000,
   retries: 0,
   reporter: 'list',

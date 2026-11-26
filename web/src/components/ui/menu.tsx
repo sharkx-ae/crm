@@ -3,11 +3,11 @@
 import { DropdownMenu } from 'radix-ui';
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react';
 import { cx } from '../../lib/cx.ts';
+import { MENU_ITEM, MENU_SIZE, MENU_SURFACE } from './menu-styles.ts';
 
 // Arrow-key menu semantics (the project switcher, the language menu). A menu is not a popover: use Popover for
-// arbitrary content. The surface matches the mockup's `.pop`: white, hairline, 12px radius, 6px padding.
-const SURFACE =
-  'z-97 max-h-[70dvh] min-w-[240px] max-w-[360px] overflow-auto rounded-xl border border-sx-border bg-sx-paper p-1.5 shadow-sx-md';
+// arbitrary content. Surface and rows come from menu-styles.ts, shared with Select and Popover.
+const SURFACE = cx(MENU_SURFACE, MENU_SIZE);
 
 export function Menu({
   trigger,
@@ -42,10 +42,7 @@ export function MenuItem({
   return (
     <DropdownMenu.Item
       {...rest}
-      className={cx(
-        'focus-ring flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-start font-label text-sx-black no-underline outline-none data-disabled:cursor-default data-disabled:opacity-45 data-highlighted:bg-sx-shell',
-        className,
-      )}
+      className={cx(MENU_ITEM, className)}
     />
   );
 }
