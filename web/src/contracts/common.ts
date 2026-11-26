@@ -84,7 +84,8 @@ export const errorCode = z.enum(errorCodes);
 // Server-side paging (F4b, replaces "Show 20 more"): `page` is 1-based, `limit` is the page size. Shared by every
 // paged list; a size outside the set is a VALIDATION error, never silently clamped.
 export const PAGE_SIZES = [10, 20, 50, 100] as const;
-export const pageNumber = z.coerce.number().int().min(1).default(1);
+// Capped so an absurd page is a VALIDATION error, not an offset past what Postgres accepts.
+export const pageNumber = z.coerce.number().int().min(1).max(1_000_000).default(1);
 export const pageSize = z.coerce
   .number()
   .pipe(z.union([z.literal(10), z.literal(20), z.literal(50), z.literal(100)]))

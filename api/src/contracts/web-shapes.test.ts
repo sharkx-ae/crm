@@ -72,7 +72,7 @@ describe('leadsQuery', () => {
       expect(leadsQuery.safeParse({ projectId: ID, limit }).success, limit).toBe(false);
     }
     expect(leadsQuery.parse({ projectId: ID, page: '3', owner: 'unassigned' }).page).toBe(3);
-    for (const page of ['0', '-1', '1.5', 'x']) {
+    for (const page of ['0', '-1', '1.5', 'x', '1000001', '99999999999999999999']) {
       expect(leadsQuery.safeParse({ projectId: ID, page }).success, page).toBe(false);
     }
   });
