@@ -109,7 +109,8 @@ describe('seed (database)', () => {
           overdueTasks: Number(row?.overdue),
         },
         c.name,
-      ).toEqual(e);
+        // The Overview numbers (e.overview) are checked against the database by modules/reports/overview.test.ts.
+      ).toEqual({ ...e, overview: undefined });
     }
   });
 

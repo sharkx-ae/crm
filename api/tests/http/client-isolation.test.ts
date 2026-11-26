@@ -287,3 +287,33 @@ describe('F4b leads routes: a client user of A', () => {
     }
   });
 });
+
+describe('F13a overview: a client user of A', () => {
+  it("reads A's Overview, client-safe; B's is 404", async () => {
+    const own = await call('GET', `/reports/overview?projectId=${lumiere}`, lina.token);
+    expect(own.statusCode).toBe(200);
+    expect(own.json().view).toBe('client');
+    expectClientSafe(own.body);
+    expect((await call('GET', `/reports/overview?projectId=${pearl}`, lina.token)).statusCode).toBe(
+      404,
+    );
+  });
+
+  it("reads none of B's WhatsApp messages in the database", async () => {
+    const rows = await withTenant({ userId: lina.userId, role: 'client' }, (tx) =>
+      tx
+        .select({ id: s.waMessages.id })
+        .from(s.waMessages)
+        .where(eq(s.waMessages.projectId, pearl)),
+    );
+    expect(rows).toEqual([]);
+  });
+
+  it("staff read every client's Overview (staff shape)", async () => {
+    for (const projectId of [lumiere, pearl]) {
+      const res = await call('GET', `/reports/overview?projectId=${projectId}`, managerToken);
+      expect(res.statusCode, projectId).toBe(200);
+      expect(res.json().view).toBe('staff');
+    }
+  });
+});

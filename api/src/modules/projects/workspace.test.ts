@@ -154,6 +154,47 @@ describe('clients home (GET /projects)', () => {
     ]);
     expect((await call('GET', '/projects', clientToken)).statusCode).toBe(403);
   });
+
+  // F13a S4: the agency view's definitions hold when a test lead has an unanswered chat and an overdue task.
+  it("a test lead's unreplied chat and overdue task count nowhere", async () => {
+    const { rows } = await db.query<{ id: string; contact_id: string }>(
+      'select id, contact_id from leads where project_id = $1 and is_test',
+      [lumiere],
+    );
+    const testLead = rows[0];
+    if (!testLead) throw new Error('the seed has a test lead in Lumière');
+    const number = await db.query<{ id: string }>(
+      'select id from wa_numbers where project_id = $1 limit 1',
+      [lumiere],
+    );
+    // The seed gives test leads no chat, so this is the test lead's only conversation.
+    const conv = await db.query<{ id: string }>(
+      `insert into wa_conversations (project_id, number_id, contact_id) values ($1, $2, $3) returning id`,
+      [lumiere, number.rows[0]?.id, testLead.contact_id],
+    );
+    const convId = conv.rows[0]?.id;
+    const task = await db.query<{ id: string }>(
+      `insert into tasks (project_id, lead_id, assignee_id, title, due_at)
+       values ($1, $2, $3, 'Call back', $4) returning id`,
+      [lumiere, testLead.id, staff.userId, new Date(NOW.getTime() - 3_600_000)],
+    );
+    try {
+      await db.query(
+        `insert into wa_messages (project_id, conversation_id, wa_message_id, direction, origin, ts)
+         values ($1, $2, $3, 'in', 'customer', $4)`,
+        [lumiere, convId, `f13a-test-${Date.now()}`, new Date(NOW.getTime() - 60_000)],
+      );
+      const row = (await projectsHome(staff, undefined, NOW)).rows.find((r) => r.id === lumiere);
+      expect({ unreplied: row?.unreplied, overdue: row?.overdue }).toEqual({
+        unreplied: expected.clients.lum?.unreplied,
+        overdue: expected.clients.lum?.overdueTasks,
+      });
+    } finally {
+      // Leave the seed as the next tests expect it (the conversation's messages go with it).
+      await db.query('delete from tasks where id = $1', [task.rows[0]?.id]);
+      await db.query('delete from wa_conversations where id = $1', [convId]);
+    }
+  });
 });
 
 describe('create client (POST /projects)', () => {

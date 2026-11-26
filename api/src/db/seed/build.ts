@@ -154,6 +154,55 @@ export function buildSeed(now: Date): SeedPlan {
 const localDay = (d: Date, timeZone: string) =>
   new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 
+/** `YYYY-MM-DD` shifted by whole days (calendar arithmetic, no time zone involved). */
+const addDays = (day: string, n: number) =>
+  new Date(Date.parse(`${day}T00:00:00Z`) + n * DAY).toISOString().slice(0, 10);
+
+/**
+ * The Overview numbers (F13a), worked out from the plan the way a person would: the window is the last 30 calendar
+ * days in the client's zone (today included), rates over that window, and first reply = the first outbound message
+ * after the first inbound one, measured on the chat itself (not on `firstReplyAt`). True median; whole minutes.
+ */
+function overviewOf(real: SeedLead[], timeZone: string, now: Date) {
+  const today = localDay(now, timeZone);
+  const days = Array.from({ length: 30 }, (_, i) => addDays(today, i - 29));
+  const inWindow = real.filter((l) => localDay(l.createdAt, timeZone) >= (days[0] as string));
+  const n = inWindow.length;
+  const qualified = inWindow.filter((l) => l.status === 'mql' || l.status === 'sql').length;
+  const sql = inWindow.filter((l) => l.status === 'sql').length;
+  const replies = inWindow
+    .map((l) => {
+      const firstIn = l.chat.find((m) => m.dir === 'in');
+      const firstOut = firstIn && l.chat.find((m) => m.dir === 'out' && m.ts > firstIn.ts);
+      return firstIn && firstOut ? (firstOut.ts.getTime() - firstIn.ts.getTime()) / 1000 : null;
+    })
+    .filter((s): s is number => s !== null)
+    .sort((a, b) => a - b);
+  const mid = replies.length / 2;
+  const medianS =
+    replies.length === 0
+      ? null
+      : replies.length % 2
+        ? (replies[Math.floor(mid)] as number)
+        : ((replies[mid - 1] as number) + (replies[mid] as number)) / 2;
+  const perDay = days.map(
+    (d) => inWindow.filter((l) => localDay(l.createdAt, timeZone) === d).length,
+  );
+  const peak = Math.max(...perDay);
+  const bySource: Record<string, number> = {};
+  for (const l of inWindow) bySource[l.source] = (bySource[l.source] ?? 0) + 1;
+  const round4 = (x: number) => Math.round(x * 10_000) / 10_000;
+  return {
+    leads30: n,
+    mqlRate: n ? round4(qualified / n) : null,
+    sqlRate: n ? round4(sql / n) : null,
+    medianFirstReplyMin: medianS === null ? null : Math.round(medianS / 60),
+    replied: replies.length,
+    bySource,
+    peak: { date: days[perDay.indexOf(peak)] as string, count: peak },
+  };
+}
+
 /** The numbers a person would check on screen, per client, for a given `now` (tests and expected.json). */
 export function summarise(plan: SeedPlan, now: Date) {
   const t = now.getTime();
@@ -175,6 +224,7 @@ export function summarise(plan: SeedPlan, now: Date) {
           withChat: real.filter((l) => l.chat.length > 0).length,
           unreplied: real.filter((l) => l.chat.at(-1)?.dir === 'in').length,
           overdueTasks: tasks.filter((k) => !k.done && k.dueAt.getTime() < t).length,
+          overview: overviewOf(real, client.timezone, now),
         },
       ];
     }),
