@@ -8,7 +8,9 @@ import { connectWhatsApp } from '../../lib/actions/whatsapp.ts';
 import { useRouter } from '../../lib/i18n/navigation.ts';
 import {
   ES_EXTRAS,
+  isMetaOrigin,
   isQrPath,
+  looksLikeSignup,
   PAIRING_TIMEOUT_MS,
   type Pairing,
   pairingReady,
@@ -23,12 +25,7 @@ import { useErrorToast } from '../ui/use-error-toast.ts';
 // The Facebook JS SDK, as much of it as we call.
 type FbLoginResponse = { authResponse?: { code?: string } | null };
 type FbSdk = {
-  init(options: {
-    appId: string;
-    autoLogAppEvents: boolean;
-    xfbml: boolean;
-    version: string;
-  }): void;
+  init(options: { appId: string; xfbml: boolean; version: string }): void;
   login(callback: (response: FbLoginResponse) => void, options: Record<string, unknown>): void;
 };
 declare global {
@@ -128,7 +125,10 @@ export function WhatsAppConnect({
     } else {
       const reason = res.error.details?.reason;
       if (isReason(reason)) setMessage(t(`reasons.${reason}`));
-      else showError(res.error);
+      // An api answer without a known reason: the generic toast text for these codes is about email, so say it here.
+      else if (res.error.code === 'INTEGRATION_ERROR' || res.error.code === 'CONFLICT') {
+        setMessage(t('reasons.generic'));
+      } else showError(res.error);
     }
     move('idle');
   }, [projectId, disarm, move, toast, t, router, onConnected, showError]);
@@ -154,25 +154,47 @@ export function WhatsAppConnect({
     [t],
   );
 
-  // The popup's answer. Only Meta's two origins are read; anything else is ignored.
+  // The popup's answer. Only Meta's origins (https, facebook.com and its subdomains) are read; anything else is ignored.
+  const onMessage = (e: MessageEvent) => {
+    if (!isMetaOrigin(e.origin)) {
+      // A signup message from an origin we do not trust would otherwise vanish and end in the timeout: leave a trace
+      // (the origin only, never the payload).
+      if (looksLikeSignup(e.data)) {
+        console.warn(
+          JSON.stringify({
+            level: 'warn',
+            msg: 'signup message from an unexpected origin',
+            origin: e.origin,
+          }),
+        );
+      }
+      return;
+    }
+    const m = parseSignupMessage(e.origin, e.data);
+    if (!m || phaseRef.current !== 'popup') return;
+    if (m.kind === 'cancel') return stop(t('cancelled'));
+    if (m.kind === 'error' || m.kind === 'unexpected') return stop(explain(m));
+    // A new Cloud API number is not the QR path: refused here and again by the api.
+    if (!isQrPath(m.session)) return stop(t('reasons.qr_only'));
+    pairing.current = { ...pairing.current, session: m.session };
+    armTimeout();
+    void submit();
+  };
+  // The listener is added once and always calls the latest handler. Re-subscribing on every render would run the cleanup
+  // each time, and the cleanup cancels the pairing timeout: a re-render (router.refresh, a parent update) while the
+  // popup is open would then leave the button disabled for good.
+  const latestOnMessage = useRef(onMessage);
   useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      const m = parseSignupMessage(e.origin, e.data);
-      if (!m || phaseRef.current !== 'popup') return;
-      if (m.kind === 'cancel') return stop(t('cancelled'));
-      if (m.kind === 'error' || m.kind === 'unexpected') return stop(explain(m));
-      // A new Cloud API number is not the QR path: refused here and again by the api.
-      if (!isQrPath(m.session)) return stop(t('reasons.qr_only'));
-      pairing.current = { ...pairing.current, session: m.session };
-      armTimeout();
-      void submit();
-    };
-    window.addEventListener('message', onMessage);
+    latestOnMessage.current = onMessage;
+  });
+  useEffect(() => {
+    const listener = (e: MessageEvent) => latestOnMessage.current(e);
+    window.addEventListener('message', listener);
     return () => {
-      window.removeEventListener('message', onMessage);
+      window.removeEventListener('message', listener);
       disarm();
     };
-  }, [stop, t, explain, armTimeout, submit, disarm]);
+  }, [disarm]);
 
   const start = () => {
     const fb = window.FB;
@@ -205,7 +227,7 @@ export function WhatsAppConnect({
         strategy="afterInteractive"
         onReady={() => {
           if (!window.FB) return setSdk('failed');
-          window.FB.init({ appId, autoLogAppEvents: true, xfbml: false, version: graphVersion });
+          window.FB.init({ appId, xfbml: false, version: graphVersion }); // no autoLogAppEvents: nothing is sent to Meta analytics
           setSdk('ready');
         }}
         onError={() => setSdk('failed')}

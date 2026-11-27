@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, or } from 'drizzle-orm';
 import type { WaConnectRequest, WaNumber, WaNumbersResponse } from '../../contracts/whatsapp.ts';
 import { type Keyring, parseKeyring, sealToken } from '../../lib/crypto/index.ts';
 import { type ApiEnv, type MetaEnv, metaEnvOf } from '../../lib/env.ts';
@@ -83,9 +83,17 @@ async function graph<T>(
   }
 }
 
-const isUniqueViolation = (err: unknown): boolean => {
-  const e = err as { code?: string; cause?: { code?: string } } | null;
-  return e?.code === '23505' || e?.cause?.code === '23505';
+// Only these two keys mean "this number belongs to another client". Any other unique violation is a bug or a race and
+// must surface as one, not as a misleading `number_taken`.
+const NUMBER_KEYS = new Set(['wa_numbers_phone_number_id_unique', 'wa_numbers_phone_e164_unique']);
+const isNumberTaken = (err: unknown): boolean => {
+  const e = err as {
+    code?: string;
+    constraint?: string;
+    cause?: { code?: string; constraint?: string };
+  } | null;
+  const pg = e?.code === '23505' ? e : e?.cause?.code === '23505' ? e.cause : null;
+  return pg?.constraint !== undefined && NUMBER_KEYS.has(pg.constraint);
 };
 
 type NumberRow = typeof waNumbers.$inferSelect;
@@ -224,10 +232,18 @@ export async function connectWhatsApp(
         });
 
       // Another client's row is invisible here (RLS); the unique keys still catch it (caught below as number_taken).
-      const [existing] = await tx
+      // This client's own row: same Meta number id, or the same phone number under a new id (Meta issues a new
+      // phone_number_id when a number is re-onboarded into another WABA). The id match wins.
+      const mine = await tx
         .select()
         .from(waNumbers)
-        .where(and(eq(waNumbers.projectId, projectId), eq(waNumbers.phoneNumberId, number.id)));
+        .where(
+          and(
+            eq(waNumbers.projectId, projectId),
+            or(eq(waNumbers.phoneNumberId, number.id), eq(waNumbers.phoneE164, phoneE164)),
+          ),
+        );
+      const existing = mine.find((r) => r.phoneNumberId === number.id) ?? mine[0];
       const fresh = { syncState: 'none' as const, syncPct: 0, onboardedAt: new Date() };
       const [row] = existing
         ? await tx
@@ -236,6 +252,7 @@ export async function connectWhatsApp(
               ...fresh,
               wabaId,
               phoneE164,
+              phoneNumberId: number.id,
               label: existing.label ?? number.verifiedName,
             })
             .where(eq(waNumbers.id, existing.id))
@@ -266,7 +283,7 @@ export async function connectWhatsApp(
     });
   } catch (err) {
     // phone_number_id or phone_e164 already belongs to another client. Nothing about that client is revealed.
-    if (isUniqueViolation(err)) {
+    if (isNumberTaken(err)) {
       log.warn(
         { route: 'whatsapp.connect', step: 'store', reason: 'number_taken' },
         'whatsapp connect failed',

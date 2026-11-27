@@ -117,7 +117,7 @@ describe('POST /webhooks/meta (receiver)', () => {
     const before = await totalRows();
     for (const headers of [
       { 'x-hub-signature-256': sign(body, 'wrong-secret') },
-      { 'x-hub-signature-256': 'sha256=' + 'a'.repeat(64) },
+      { 'x-hub-signature-256': `sha256=${'a'.repeat(64)}` },
       { 'x-hub-signature-256': 'sha1=abc' },
       { 'x-hub-signature-256': '' },
     ]) {
@@ -267,6 +267,35 @@ describe('POST /webhooks/meta (receiver)', () => {
     expect(await rowsFor(body)).toHaveLength(0);
   });
 
+  it('a signed body between 1 and 5 MiB is accepted: the scoped limit is 5 MiB, not Fastify’s 1 MiB', async () => {
+    // history webhooks can be large; only this proves the per-plugin limit is in force
+    for (const mib of [1.5, 4.9]) {
+      const pad = 'x'.repeat(Math.floor(mib * 1024 * 1024));
+      const body = Buffer.from(
+        JSON.stringify({ object: 'whatsapp_business_account', entry: [], pad, n: randomUUID() }),
+      );
+      expect(body.length).toBeGreaterThan(1024 * 1024);
+      const res = await deliver(app, body);
+      expect(res.statusCode, `${mib} MiB`).toBe(200);
+      expect(await rowsFor(body), `${mib} MiB`).toHaveLength(1);
+    }
+  });
+
+  it('a signed payload with a NUL character is stored without it (jsonb cannot hold U+0000) and queued', async () => {
+    const body = Buffer.from(
+      String.raw`{"object":"whatsapp_business_account","entry":[{"id":"1","changes":[{"field":"messages","value":{"text":"a\u0000b","n":"` +
+        randomUUID() +
+        '"}}]}]}',
+    );
+    enqueue.mockClear();
+    const res = await deliver(app, body);
+    expect(res.statusCode).toBe(200);
+    const [row] = await rowsFor(body);
+    expect(JSON.stringify(row?.payload)).toContain('"text":"ab"');
+    expect(JSON.stringify(row?.payload)).not.toContain('\\u0000');
+    expect(enqueue).toHaveBeenCalledTimes(1);
+  });
+
   it('a body over 5 MiB is refused and stores nothing', async () => {
     const big = Buffer.alloc(5 * 1024 * 1024 + 1, 0x20);
     const before = await totalRows();
@@ -283,16 +312,85 @@ describe('POST /webhooks/meta (receiver)', () => {
   });
 });
 
+describe('throttle on rejected requests (never on valid ones)', () => {
+  // The api trusts one proxy hop, so x-forwarded-for gives each test its own client address (and its own counter).
+  const from = (ip: string) => ({ 'x-forwarded-for': ip });
+  const LIMIT = 20;
+
+  it('after 20 bad signatures from one address the next request is 429 before anything is read or stored', async () => {
+    const ip = '203.0.113.50';
+    for (let i = 0; i < LIMIT; i++) {
+      const res = await deliver(app, freshBody(), {
+        ...from(ip),
+        'x-hub-signature-256': sign(freshBody(), 'wrong-secret'),
+      });
+      expect(res.statusCode, `attempt ${i + 1}`).toBe(401);
+    }
+    enqueue.mockClear();
+    const before = await totalRows();
+    const valid = freshBody();
+    const blocked = await deliver(app, valid, from(ip)); // even a valid delivery from that address waits
+    expect(blocked.statusCode).toBe(429);
+    expect(blocked.json().error.code).toBe('RATE_LIMITED');
+    expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
+    expect(await totalRows()).toBe(before);
+    expect(enqueue).not.toHaveBeenCalled();
+
+    // another address is untouched
+    expect((await deliver(app, freshBody(), from('203.0.113.51'))).statusCode).toBe(200);
+  });
+
+  it('valid deliveries are never counted: 30 in a row from one address are all accepted', async () => {
+    const ip = '203.0.113.60';
+    for (let i = 0; i < LIMIT + 10; i++) {
+      expect((await deliver(app, freshBody(), from(ip))).statusCode, `delivery ${i + 1}`).toBe(200);
+    }
+  });
+
+  it('wrong verify tokens at the handshake count too, and then the right token waits', async () => {
+    const ip = '203.0.113.70';
+    const q = (token: string) =>
+      new URLSearchParams({
+        'hub.mode': 'subscribe',
+        'hub.verify_token': token,
+        'hub.challenge': '1158201444',
+      }).toString();
+    for (let i = 0; i < LIMIT; i++) {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/webhooks/meta?${q(`guess-${i}`)}`,
+        headers: from(ip),
+      });
+      expect(res.statusCode, `guess ${i + 1}`).toBe(403);
+    }
+    const right = await app.inject({
+      method: 'GET',
+      url: `/webhooks/meta?${q(TEST_VERIFY_TOKEN)}`,
+      headers: from(ip),
+    });
+    expect(right.statusCode).toBe(429);
+  });
+
+  it('does nothing when Meta is not configured (404, no counter)', async () => {
+    const res = await deliver(off, freshBody(), {
+      ...from('203.0.113.80'),
+      'x-hub-signature-256': 'sha256=bad',
+    });
+    expect(res.statusCode).toBe(404);
+  });
+});
+
 describe('the raw-body parser does not leak to other routes', () => {
-  it('/auth/login still parses JSON normally (a bad body is a validation error, not a buffer)', async () => {
+  it('/auth/login still parses JSON normally: a well-formed body for an unknown user is exactly 401', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/auth/login',
-      payload: { email: 'nobody@test.local', password: 'wrong' },
+      payload: { email: 'nobody@test.local', password: 'a-long-enough-pass-1' },
       headers: { 'x-internal-token': 'test-internal-token-0123456789abcdef-test' },
     });
-    // 422 (validation: password too short) or 401, but never a crash from a Buffer body
-    expect([401, 422, 429]).toContain(res.statusCode);
+    // If the JSON parser were gone this would be 415, which the error handler turns into 422: so 401 is the proof.
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toEqual({ error: { code: 'UNAUTHENTICATED' } });
   });
 });
 

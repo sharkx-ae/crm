@@ -20,6 +20,22 @@ export type StoredWebhook = {
 };
 
 /**
+ * Postgres `jsonb` cannot hold U+0000 in a string: an insert fails (22P05) and Meta would retry the same signed body for
+ * 7 days. The NUL is dropped from the stored copy (keys and values, nested); the dedupe key still hashes the raw bytes.
+ */
+export function withoutNul(value: unknown): unknown {
+  if (typeof value === 'string')
+    return value.includes('\u0000') ? value.replaceAll('\u0000', '') : value;
+  if (Array.isArray(value)) return value.map(withoutNul);
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [withoutNul(k) as string, withoutNul(v)]),
+    );
+  }
+  return value;
+}
+
+/**
  * Stores the raw event BEFORE any processing (a verified sender only: call after the signature check). One row per
  * `(provider, external_id)`; the payload is the parsed JSON, kept in the database only (it holds phone numbers and
  * message text, so it is never logged). `project_id` stays null until F3b routes the event.
@@ -33,7 +49,7 @@ export function storeWebhook(
   return withSystem(null, async (tx) => {
     const [inserted] = await tx
       .insert(webhookEvents)
-      .values({ provider, externalId, payload })
+      .values({ provider, externalId, payload: withoutNul(payload) })
       .onConflictDoNothing({ target: [webhookEvents.provider, webhookEvents.externalId] })
       .returning({ id: webhookEvents.id });
     if (inserted) return { id: inserted.id, duplicate: false, processed: false };

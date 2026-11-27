@@ -17,6 +17,9 @@ export const connectWhatsApp = defineAction(
     return apiCall(waConnectResponse, `/projects/${projectId}/whatsapp/connect`, {
       method: 'POST',
       body,
+      // The api makes four Graph calls in a row (10 s each at worst). Giving up sooner would show an error for a
+      // connection that then completes, and the single-use code could not be retried.
+      timeoutMs: 60_000,
     });
   },
 );

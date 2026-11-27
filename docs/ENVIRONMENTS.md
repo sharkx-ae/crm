@@ -29,6 +29,7 @@
 - On `api`, `META_APP_ID` + `META_APP_SECRET` + `META_WEBHOOK_VERIFY_TOKEN` are all-or-none; on `worker` the first two; on `web` `META_APP_ID` + `META_ES_CONFIG_ID`. All optional on every environment: with none set the webhook answers 404 and the connect card shows "Awaiting access".
 - The Meta callback URL points at the **production api** only (`https://<production-api>/webhooks/meta`; Meta allows one per app). Staging leaves the Meta variables unset.
 - Meta app settings: turn "Require app secret" on.
+- **Before the release that contains F3a (deploy-blocking):** `TOKEN_ENC_KEY` is required on `api` and `worker` on staging and production even when no Meta variable is set. Without it both services refuse to boot (`Invalid … environment`). Set a fresh `k1:<base64 of 32 bytes>` on each (different per environment) and check that no value in the old plain-base64 format (no `k1:` prefix) is already there: it is rejected too. Staging and production keep `META_*` unset until the Meta app is ready (webhook 404, connect shows "Awaiting access").
 
 ## Where secrets live
 - Railway variables, per environment and per service. This is the only source for staging/production.

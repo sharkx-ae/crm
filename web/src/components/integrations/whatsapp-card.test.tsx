@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import errors from '../../../messages/en/errors.json';
 import integrations from '../../../messages/en/integrations.json';
@@ -61,6 +61,26 @@ function setup(
     { extra: { integrations, errors } },
   );
   return { login };
+}
+
+/** The card inside a page that can render again (what `router.refresh()` or a parent update does). */
+function RerenderingPage() {
+  const [n, setN] = useState(0);
+  return (
+    <ToastProvider>
+      <button type="button" onClick={() => setN(n + 1)}>
+        bump
+      </button>
+      <WhatsAppCard
+        projectId={P}
+        numbers={[]}
+        connect={{ ready: true, limited: false }}
+        meta={META}
+        nonce={`n${n}`}
+        timeZone="Asia/Dubai"
+      />
+    </ToastProvider>
+  );
 }
 
 const popup = (type: string, event: string, data?: unknown) =>
@@ -135,8 +155,8 @@ describe('WhatsAppCard states', () => {
     setup();
     await waitFor(() => expect(connectButton()).toHaveProperty('disabled', false));
     expect(window.FB?.init).toHaveBeenCalledWith({
+      // exact object: no autoLogAppEvents
       appId: META.appId,
-      autoLogAppEvents: true,
       xfbml: false,
       version: 'v27.0',
     });
@@ -381,6 +401,99 @@ describe('connect flow', () => {
     expect(screen.getByText('WhatsApp took too long to answer. Try again.')).toBeTruthy();
     expect(connectWhatsApp).not.toHaveBeenCalled();
     expect(connectButton()).toHaveProperty('disabled', false);
+  });
+
+  it('still gives up after a minute when the page re-renders while waiting (router.refresh, a parent update)', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const login = vi.fn();
+    window.FB = { init: vi.fn(), login } as never;
+    renderIntl(<RerenderingPage />, { extra: { integrations, errors } });
+    await vi.waitFor(() => expect(connectButton()).toHaveProperty('disabled', false));
+    fireEvent.click(connectButton());
+    act(() => loginCallback(login)({ authResponse: { code: 'c' } }));
+    fireEvent.click(screen.getByRole('button', { name: 'bump' })); // the whole tree renders again
+    fireEvent.click(screen.getByRole('button', { name: 'bump' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61_000);
+    });
+    expect(screen.getByText('WhatsApp took too long to answer. Try again.')).toBeTruthy();
+    expect(connectButton()).toHaveProperty('disabled', false);
+  });
+
+  it('a re-render does not lose the popup answer that arrives afterwards', async () => {
+    const login = vi.fn();
+    window.FB = { init: vi.fn(), login } as never;
+    renderIntl(<RerenderingPage />, { extra: { integrations, errors } });
+    await waitFor(() => expect(connectButton()).toHaveProperty('disabled', false));
+    fireEvent.click(connectButton());
+    act(() => loginCallback(login)({ authResponse: { code: 'c' } }));
+    fireEvent.click(screen.getByRole('button', { name: 'bump' }));
+    finish();
+    await waitFor(() => expect(connectWhatsApp).toHaveBeenCalledTimes(1));
+  });
+
+  it('reads the session info from another Meta subdomain (business.facebook.com)', async () => {
+    const { login } = setup();
+    await waitFor(() => expect(connectButton()).toHaveProperty('disabled', false));
+    fireEvent.click(connectButton());
+    act(() => loginCallback(login)({ authResponse: { code: 'c' } }));
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          origin: 'https://business.facebook.com',
+          data: JSON.stringify({
+            type: 'WA_EMBEDDED_SIGNUP',
+            event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING',
+            data: { messaging_account_ids: ['1'], phone_number_id: '2', is_on_biz_app: true },
+          }),
+        }),
+      );
+    });
+    await waitFor(() => expect(connectWhatsApp).toHaveBeenCalledTimes(1));
+  });
+
+  it('logs the origin (never the payload) when a signup message comes from an origin it does not trust', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      setup();
+      await waitFor(() => expect(connectButton()).toHaveProperty('disabled', false));
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            origin: 'https://evil.example',
+            data: JSON.stringify({
+              type: 'WA_EMBEDDED_SIGNUP',
+              event: 'FINISH',
+              secret: 'SECRET-123',
+            }),
+          }),
+        );
+        window.dispatchEvent(
+          new MessageEvent('message', { origin: 'https://evil.example', data: 'unrelated' }),
+        );
+      });
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0]?.[0]);
+      expect(line).toContain('https://evil.example');
+      expect(line).not.toContain('SECRET-123');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('an api failure without a known reason says so in words, not with the email toast', async () => {
+    connectWhatsApp.mockResolvedValue({ ok: false, error: { code: 'INTEGRATION_ERROR' } });
+    const { login } = setup();
+    await waitFor(() => expect(connectButton()).toHaveProperty('disabled', false));
+    fireEvent.click(connectButton());
+    act(() => loginCallback(login)({ authResponse: { code: 'c' } }));
+    finish();
+    expect(
+      await screen.findByText(
+        'WhatsApp could not finish the connection. Try again in a few minutes.',
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText('Email not sent. Try again')).toBeNull();
   });
 
   it('renders under dir="rtl" with the phone number still isolated left-to-right', () => {

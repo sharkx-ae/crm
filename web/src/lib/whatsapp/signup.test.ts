@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   ES_EXTRAS,
+  isMetaOrigin,
   isQrPath,
-  META_ORIGINS,
+  looksLikeSignup,
   type Pairing,
   pairingReady,
   parseSignupMessage,
@@ -86,14 +87,36 @@ describe('parseSignupMessage', () => {
     for (const origin of [
       'https://evil.example',
       'https://www.facebook.com.evil.example',
-      'https://facebook.com',
       'http://www.facebook.com',
       'https://evilfacebook.com',
+      'https://facebook.com.evil.example',
+      'https://www.facebook.com:8443',
+      'https://user@www.facebook.com',
+      'null',
       '',
     ]) {
       expect(parseSignupMessage(origin, raw), origin).toBeNull();
     }
-    expect(META_ORIGINS).toEqual(['https://www.facebook.com', 'https://web.facebook.com']);
+  });
+
+  it('reads Meta hosts over https: facebook.com and its subdomains (www, web, business …)', () => {
+    const raw = fixture('session-info-v5-biz-app');
+    for (const origin of [
+      'https://www.facebook.com',
+      'https://web.facebook.com',
+      'https://business.facebook.com',
+      'https://facebook.com',
+    ]) {
+      expect(isMetaOrigin(origin), origin).toBe(true);
+      expect(parseSignupMessage(origin, raw), origin).not.toBeNull();
+    }
+  });
+
+  it('looksLikeSignup spots a signup message from any origin, for the dropped-message log', () => {
+    expect(looksLikeSignup('{"type":"WA_EMBEDDED_SIGNUP","event":"FINISH"}')).toBe(true);
+    expect(looksLikeSignup({ type: 'WA_EMBEDDED_SIGNUP' })).toBe(true);
+    expect(looksLikeSignup('hello')).toBe(false);
+    expect(looksLikeSignup(null)).toBe(false);
   });
 
   it('ignores what is not Embedded Signup or not JSON', () => {

@@ -5,11 +5,16 @@ import { type ApiEnv, metaEnvOf } from '../../lib/env.ts';
 import { AppError } from '../../lib/errors/index.ts';
 import { defineRoute } from '../../lib/http/route.ts';
 import { enqueue as defaultEnqueue } from '../../lib/queue/index.ts';
+import { hit, peek, type Rule, rateKey } from '../../lib/rate-limit/index.ts';
+import { withSystem } from '../../lib/tenant/index.ts';
 import { storeWebhook, verifyMetaSignature } from '../../modules/webhooks/index.ts';
 
 // F3a / F3.2: Meta's callback for WhatsApp now and Lead Ads later (`object` tells them apart; F3b dispatches on it).
 // Verify the signature → store the raw event (unique key) → queue → 200. No parsing of changes, no project lookup here.
 const MAX_BODY = 5 * 1024 * 1024; // history webhooks can be large; every other route keeps Fastify's 1 MiB
+/** Rejected requests per address (bad signature, bad verify token). Valid deliveries are never counted. */
+const BAD_REQUESTS: Rule = { limit: 20, windowSec: 10 * 60 };
+const badRequestKey = (ip: string) => rateKey('webhook-meta-rejected', ip);
 
 const handshakeQuery = z.object({
   'hub.mode': z.literal('subscribe'),
@@ -36,6 +41,23 @@ export const metaWebhookRoutes: FastifyPluginAsync<Deps> = async (app, { env, en
     (_req, body, done) => done(null, body),
   );
 
+  // Throttle the callers that fail, never the ones that pass: Meta's source addresses are not fixed and a burst of valid
+  // deliveries (history) must never be refused, so only rejected requests are counted (bad signature, bad verify
+  // token), per client address. Checked in onRequest, before the body (up to 5 MiB) is read, so a flood of bad
+  // requests stops costing memory and database writes after BAD_REQUESTS.limit.
+  app.addHook('onRequest', async (req) => {
+    if (!meta) return;
+    const r = await withSystem(null, (tx) => peek(tx, badRequestKey(req.sx.ip), BAD_REQUESTS));
+    if (!r.allowed) throw new AppError('RATE_LIMITED', { retryAfterSec: r.retryAfterSec });
+  });
+  const countRejected = async (ip: string): Promise<void> => {
+    try {
+      await withSystem(null, (tx) => hit(tx, badRequestKey(ip), BAD_REQUESTS));
+    } catch {
+      // the rejection must still be answered if the counter is unavailable
+    }
+  };
+
   // Handshake, once, when "Verify and save" is pressed in the Meta dashboard. Stores nothing.
   defineRoute(
     app,
@@ -47,10 +69,11 @@ export const metaWebhookRoutes: FastifyPluginAsync<Deps> = async (app, { env, en
       query: z.record(z.string(), z.unknown()),
       response: z.string(),
     },
-    async ({ query, reply }) => {
+    async ({ query, reply, req }) => {
       if (!meta?.webhookVerifyToken) throw new AppError('NOT_FOUND');
       const q = handshakeQuery.safeParse(query);
       if (!q.success || !safeEqual(q.data['hub.verify_token'], meta.webhookVerifyToken)) {
+        await countRejected(req.sx.ip);
         throw new AppError('FORBIDDEN');
       }
       reply.type('text/plain');
@@ -77,6 +100,7 @@ export const metaWebhookRoutes: FastifyPluginAsync<Deps> = async (app, { env, en
         !verifyMetaSignature(body, req.headers['x-hub-signature-256'], meta.appSecret)
       ) {
         req.log.warn({ route: '/webhooks/meta', reason: 'bad_signature' }, 'webhook rejected');
+        await countRejected(req.sx.ip);
         throw new AppError('UNAUTHENTICATED');
       }
 

@@ -317,6 +317,37 @@ describe('POST /projects/:projectId/whatsapp/connect', () => {
     expect(await state(w.b.projectId)).toEqual(before);
   });
 
+  it('the same client re-onboards the same phone number under a new WABA and phone_number_id: it updates its own row', async () => {
+    const sc = fresh();
+    stubGraph(sc);
+    const first = await connect(app, staffToken, w.a.projectId, body(sc));
+    expect(first.statusCode, first.body).toBe(200);
+    const id = first.json().numbers[0].id;
+    await raw.query(`update wa_numbers set label = 'Front desk' where id = $1`, [id]);
+    const before = await state(w.a.projectId);
+
+    const again = { ...fresh(), display: sc.display }; // same number, Meta issued new ids
+    stubGraph(again);
+    const second = await connect(app, staffToken, w.a.projectId, body(again));
+    expect(second.statusCode, second.body).toBe(200); // not "number_taken": it is this client's own number
+    expect(second.json().numbers[0]).toMatchObject({ id, label: 'Front desk', syncState: 'none' });
+
+    const row = (
+      await raw.query('select phone_number_id, waba_id from wa_numbers where id = $1', [id])
+    ).rows[0];
+    expect(row).toEqual({ phone_number_id: again.pnid, waba_id: again.waba });
+    const after = await state(w.a.projectId);
+    expect(after.numbers).toBe(before.numbers); // updated, not duplicated
+    expect(after.tokens).toBe(before.tokens + 1); // the new WABA has its own token row
+    const last = (
+      await raw.query(
+        `select meta from audit_log where project_id = $1 and action = 'integration.connected' order by at desc limit 1`,
+        [w.a.projectId],
+      )
+    ).rows[0];
+    expect(last.meta.reconnect).toBe(true);
+  });
+
   it('several numbers per client: a second connect adds a second number', async () => {
     const one = fresh();
     const two = fresh();
@@ -406,6 +437,38 @@ describe('POST /projects/:projectId/whatsapp/connect', () => {
         body(sc, { messagingAccountIds: ['999'] }),
       );
       expect(res.json().error.details.reason).toBe('waba_mismatch');
+    });
+
+    it('a token that is not valid, or that belongs to another Meta app, is waba_mismatch and writes nothing', async () => {
+      for (const patch of [{ is_valid: false }, { app_id: '999' }]) {
+        const sc = fresh();
+        const base = graphFixture<{ data: Record<string, unknown> }>('debug-token');
+        stubGraph({
+          ...sc,
+          step: {
+            debug: {
+              status: 200,
+              body: {
+                data: {
+                  ...base.data,
+                  app_id: TEST_APP_ID,
+                  is_valid: true,
+                  granular_scopes: [
+                    { scope: 'whatsapp_business_management', target_ids: [sc.waba] },
+                  ],
+                  ...patch,
+                },
+              },
+            },
+          },
+        });
+        const before = await state(w.a.projectId);
+        const res = await connect(app, staffToken, w.a.projectId, body(sc));
+        expect(res.statusCode, JSON.stringify(patch)).toBe(502);
+        expect(res.json().error.details.reason, JSON.stringify(patch)).toBe('waba_mismatch');
+        expect(calls).toEqual(['POST /oauth/access_token', 'GET /debug_token']); // never reaches the numbers
+        expect(await state(w.a.projectId)).toEqual(before);
+      }
     });
 
     it('a phone id that is not one of the WABA numbers is no_number', async () => {

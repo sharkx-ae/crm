@@ -14,6 +14,7 @@ Every message on a connected number (6-month history and live, both sides) is st
 - `recordMessage()` (CONTRACTS §4) → wa_conversations, wa_messages; unknown number → `ingestLead` (source whatsapp).
 - `wa.history.sync` job: resumable chunks, cursor stored, must finish within 24 h; `sync_state`/`sync_pct` on wa_numbers.
 - Health (WhatsApp adapter `health()`, run by F14a every 5 min): disconnect or inactivity webhooks, and a rejected token or removed permission (failed Meta API call, `account_update`; exact events pinned from recorded fixtures) set needs_attention + `notify` + alert email. Reconnect reuses the QR wizard step; a missed sync window also reads "Reconnect needed".
+- `webhook.process` must be idempotent on the `webhook_events` row (F3a review): F3a queues with `singletonKey = row id`, but pg-boss dedupes by fixed clock-hour bucket, not a sliding window. A retry across the hour boundary can queue a second job for the same event; a retry in the same hour after the first job already failed or completed gets no job at all (`send()` returns null, which the route ignores). So the handler skips rows with `processed_at` set, and the worker also re-queues `webhook_events WHERE processed_at IS NULL` that have no live job (a periodic sweep; unprocessed rows are never pruned). Rows it cannot route are marked processed with `error`, so the table does not grow without bound.
 - `emitChange('message', …)` for the inbox.
 - After this spec: record per-permission screencasts and submit App Review (target end of D9).
 

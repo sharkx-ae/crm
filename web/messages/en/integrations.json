@@ -48,7 +48,8 @@
       "no_number": "We could not find that number on the WhatsApp Business app. Check that it is active in the app, then try again.",
       "subscribe_failed": "Meta did not accept the connection. Try again in a few minutes.",
       "graph_unavailable": "WhatsApp (Meta) is not answering right now. Try again in a few minutes.",
-      "number_taken": "This number is already connected to another client in SharkX. Disconnect it there first."
+      "number_taken": "This number is already connected to another client in SharkX. Disconnect it there first.",
+      "generic": "WhatsApp could not finish the connection. Try again in a few minutes."
     }
   }
 }

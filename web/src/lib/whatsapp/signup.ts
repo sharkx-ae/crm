@@ -6,11 +6,31 @@ import { metaId, waSignupEvent } from '../../contracts/whatsapp.ts';
 /** One constant: v5 selects the session info below; the products come from the Facebook Login for Business configuration. */
 export const ES_EXTRAS = { setup: {}, version: 'v5' } as const;
 
-/** Meta's own check is `endsWith('facebook.com')`; we accept exactly the two hosts the popup posts from. */
-export const META_ORIGINS: readonly string[] = [
-  'https://www.facebook.com',
-  'https://web.facebook.com',
-];
+/**
+ * Meta's own check is `endsWith('facebook.com')`. We keep its reach (the popup may post from www., web., business. …)
+ * but only over https and only for facebook.com itself or a true subdomain, so `evilfacebook.com` and
+ * `facebook.com.evil.example` fail. Which host the popup really uses is confirmed in T10.
+ */
+export function isMetaOrigin(origin: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(origin);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:' || url.port !== '' || url.origin !== origin) return false;
+  return url.hostname === 'facebook.com' || url.hostname.endsWith('.facebook.com');
+}
+
+/** True for a message that says it is Embedded Signup's, whatever its origin (used to log a dropped one). */
+export function looksLikeSignup(raw: unknown): boolean {
+  if (typeof raw === 'string') return raw.includes('WA_EMBEDDED_SIGNUP');
+  return (
+    typeof raw === 'object' &&
+    raw !== null &&
+    (raw as { type?: unknown }).type === 'WA_EMBEDDED_SIGNUP'
+  );
+}
 
 /** Both halves must arrive (the code from FB.login, the session info from the message event) within this time. */
 export const PAIRING_TIMEOUT_MS = 60_000;
@@ -60,7 +80,7 @@ export type SignupMessage =
  * JSON): those are ignored without a trace. The browser's values are hints only; the api checks them against the token.
  */
 export function parseSignupMessage(origin: string, raw: unknown): SignupMessage | null {
-  if (!META_ORIGINS.includes(origin)) return null;
+  if (!isMetaOrigin(origin)) return null;
   let data: unknown = raw;
   if (typeof raw === 'string') {
     try {
