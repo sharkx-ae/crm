@@ -6,7 +6,7 @@ import { type Me, meResponse } from '../contracts/auth.ts';
 import { apiCall } from './api/client.ts';
 import { ApiError } from './api/error.ts';
 import { getWebEnv } from './env.ts';
-import { sessionCookieName } from './security.ts';
+import { deviceCookieName, sessionCookieName } from './security.ts';
 
 // The browser holds one opaque cookie; everything about the user comes from the api (GET /me).
 // Cookies are set and cleared only here, from Server Actions, never by the api.
@@ -59,6 +59,26 @@ export async function setSessionCookie(token: string, expiresAt: string | Date):
     path: '/',
     maxAge,
   });
+}
+
+/** The trusted-device cookie: set when the person ticks the box, refreshed (new Max-Age) on each trusted sign-in. */
+export async function setDeviceCookie(token: string, expiresAt: string | Date): Promise<void> {
+  const maxAge = Math.max(1, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  (await cookies()).set(deviceCookieName(getWebEnv().APP_ENV), token, {
+    httpOnly: true,
+    secure: getWebEnv().APP_ENV !== 'local',
+    sameSite: 'lax',
+    path: '/',
+    maxAge,
+  });
+}
+
+export async function getDeviceToken(): Promise<string | undefined> {
+  return (await cookies()).get(deviceCookieName(getWebEnv().APP_ENV))?.value;
+}
+
+export async function clearDeviceCookie(): Promise<void> {
+  (await cookies()).delete(deviceCookieName(getWebEnv().APP_ENV));
 }
 
 export async function clearSessionCookie(): Promise<void> {

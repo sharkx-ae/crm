@@ -15,6 +15,8 @@ const address = (chunks: ReactNode) => <bdi dir="ltr">{chunks}</bdi>;
 export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; loginHref: string }) {
   const t = useTranslations('auth.code');
   const [code, setCode] = useState('');
+  // Unchecked by default: a shared computer must not be trusted by accident.
+  const [trust, setTrust] = useState(false);
   const [error, setError] = useState<ActionError | null>(null);
   // The masked address the new code went to, once it is sent.
   const [notice, setNotice] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; logi
     setNotice(null);
     start(async () => {
       // On success the action swaps the cookie and redirects to the landing page.
-      const res = await verifyCode({ code: value });
+      const res = await verifyCode({ code: value, trustDevice: trust });
       if (res && !res.ok) {
         setError(res.error);
         setCode('');
@@ -82,6 +84,19 @@ export function CodeForm({ maskedEmail, loginHref }: { maskedEmail: string; logi
         describedBy={error ? 'code-error' : undefined}
       />
       <FormError id="code-error" error={codeMessage ? null : error} override={codeMessage} />
+      <label className="flex cursor-pointer items-start gap-2.5">
+        <input
+          type="checkbox"
+          checked={trust}
+          onChange={(e) => setTrust(e.target.checked)}
+          disabled={pending}
+          className="focus-ring mt-0.5 size-4 flex-none cursor-pointer accent-sx-red"
+        />
+        <span className="min-w-0">
+          <span className="block font-label text-body text-sx-black">{t('trust')}</span>
+          <span className="block text-label text-sx-muted">{t('trustHint')}</span>
+        </span>
+      </label>
       {notice ? (
         <p role="status" className="text-body font-label text-sx-black">
           {t.rich('resent', { email: notice, e: address })}

@@ -1,6 +1,6 @@
 window.TRACKER = {
 "now":"F10a built, awaiting review; Phase 3 complete",
-"lastActivity":{"time":"2026-11-26T17:52:39.960Z","file":"(turn finished)"},
+"lastActivity":{"time":"2026-11-27T14:50:51.914Z","file":"(turn finished)"},
 "features":[
 {"id":"F1","name":"Foundation and access","spec":"docs/PRD.md#f1","owner":"A","subs":[
 {"id":"F1.1","name":"Repo, CI, Railway staging and prod, env validation, health endpoint","status":"blocked","pct":0,"note":"Railway admin pending (unconfirmed); skipped for now","updated":"2026-11-22T17:13:00.618Z"},

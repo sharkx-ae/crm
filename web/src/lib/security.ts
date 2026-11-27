@@ -8,6 +8,10 @@ import { getWebEnv } from './env.ts';
 export const sessionCookieName = (appEnv: string): string =>
   appEnv === 'local' ? 'sharkx_session' : '__Host-sharkx_session';
 
+/** The "trust this device" cookie (spec F1c-remember-device); same `__Host-` rule as the session cookie. */
+export const deviceCookieName = (appEnv: string): string =>
+  appEnv === 'local' ? 'sharkx_device' : '__Host-sharkx_device';
+
 type HeaderReader = { get(name: string): string | null };
 
 /**

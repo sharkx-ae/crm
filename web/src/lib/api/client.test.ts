@@ -40,6 +40,18 @@ describe('callApi', () => {
     expect(init.body).toBe('{}');
   });
 
+  it('forwards the trusted-device cookie as x-device-token, and nothing when there is none', async () => {
+    const fetchMock = vi.fn(async () => json({ ok: true }));
+    await callApi(deps(asFetch(fetchMock), { deviceToken: 'D'.repeat(43) }), ok, '/auth/login', {
+      body: {},
+    });
+    const [, init] = fetchMock.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(init.headers).toMatchObject({ 'x-device-token': 'D'.repeat(43) });
+    await callApi(deps(asFetch(fetchMock)), ok, '/me');
+    const [, plain] = fetchMock.mock.calls[1] as unknown as [URL, RequestInit];
+    expect(plain.headers).not.toHaveProperty('x-device-token');
+  });
+
   it('sends no session or address header when there is none, and GET without a body', async () => {
     const fetchMock = vi.fn(async () => json({ ok: true }));
     await callApi(deps(asFetch(fetchMock)), ok, '/me');

@@ -7,6 +7,7 @@ import {
   activeSessionResponse,
   codeSentResponse,
   loginRequest,
+  loginResponse,
   type Me,
   meResponse,
   okResponse,
@@ -19,22 +20,40 @@ import {
 import { defineAction } from '../action.ts';
 import { apiCall } from '../api/client.ts';
 import { ApiError } from '../api/error.ts';
-import { clearSessionCookie, landingPath, setSessionCookie } from '../session.ts';
+import {
+  clearDeviceCookie,
+  clearSessionCookie,
+  getDeviceToken,
+  landingPath,
+  setDeviceCookie,
+  setSessionCookie,
+} from '../session.ts';
 
 // Every export here is a defineAction(...) (tests/structure: src/lib/actions/actions.test.ts).
 // Cookies are set only in these actions; the api never sets one.
 
 const empty = z.object({});
 
-/** Password step. On success the browser holds a 15-minute pending session and moves to the code screen. */
+/**
+ * Password step. Normally the browser holds a 15-minute pending session and moves to the code screen. On a trusted
+ * device (the person ticked the box at an earlier code step) the api answers with the active session at once and the
+ * code step is skipped. A device cookie the api did not accept (expired, revoked, another person's) is removed.
+ */
 export const login = defineAction(
   { input: loginRequest, auth: 'none' },
   async ({ input, locale }) => {
-    const res = await apiCall(pendingSessionResponse, '/auth/login', {
+    const device = await getDeviceToken();
+    const res = await apiCall(loginResponse, '/auth/login', {
       method: 'POST',
       body: input,
+      device: true,
     });
     await setSessionCookie(res.sessionToken, res.expiresAt);
+    if (res.stage === 'active') {
+      if (device && res.deviceExpiresAt) await setDeviceCookie(device, res.deviceExpiresAt);
+      redirect(landingPath(res.me, res.me.locale));
+    }
+    if (device) await clearDeviceCookie();
     redirect(`/${locale}/code`);
   },
 );
@@ -48,6 +67,9 @@ export const verifyCode = defineAction(
       body: input,
     });
     await setSessionCookie(res.sessionToken, res.expiresAt);
+    // "Don't ask for a code on this device" was ticked: remember this browser.
+    if (res.deviceToken && res.deviceExpiresAt)
+      await setDeviceCookie(res.deviceToken, res.deviceExpiresAt);
     // The saved language wins at sign-in (F2a: "language saved per user"); the URL locale only for this request.
     redirect(landingPath(res.me, res.me.locale));
   },

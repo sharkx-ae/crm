@@ -9,6 +9,7 @@ import {
   listUsersQuery,
   listUsersResponse,
   loginRequest,
+  loginResponse,
   meResponse,
   okResponse,
   pendingSessionResponse,
@@ -46,12 +47,17 @@ export const authRoutes: FastifyPluginAsync<{ env: ApiEnv }> = async (app, { env
       url: '/auth/login',
       access: 'anon',
       body: loginRequest,
-      response: pendingSessionResponse,
+      response: loginResponse,
       audit: 'one',
     },
     async ({ body, ip, req }) => {
       const old = req.headers['x-session-token'];
-      return login(body, { ip, forwardedSessionToken: typeof old === 'string' ? old : undefined });
+      const device = req.headers['x-device-token'];
+      return login(body, {
+        ip,
+        forwardedSessionToken: typeof old === 'string' ? old : undefined,
+        forwardedDeviceToken: typeof device === 'string' ? device : undefined,
+      });
     },
   );
 
@@ -65,7 +71,7 @@ export const authRoutes: FastifyPluginAsync<{ env: ApiEnv }> = async (app, { env
       response: activeSessionResponse,
       audit: 'one',
     },
-    async ({ body, session }) => verifyCode(session, body.code),
+    async ({ body, session }) => verifyCode(session, body.code, body.trustDevice),
   );
 
   defineRoute(

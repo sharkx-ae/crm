@@ -49,6 +49,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type User = (typeof FIXTURE.users)[number];
 type Session = { user: User; stage: 'pending_2fa' | 'active'; locale: Locale };
 const sessions = new Map<string, Session>();
+/** Trusted-device tokens → the email they belong to (spec F1c-remember-device). */
+const devices = new Map<string, string>();
 
 // Everyone the Team and Client users screens list: the fixture's managers and client users, then invites.
 const people: UserSummary[] = FIXTURE.users
@@ -109,6 +111,19 @@ const server = createServer(async (req, res) => {
     const user = FIXTURE.users.find((u) => u.email === body.email);
     if (!user || body.password !== FIXTURE.password) return fail(res, 401, 'UNAUTHENTICATED');
     const t = token();
+    // A trusted device (ticked at an earlier code step) skips the code, like the real api.
+    const rawDevice = req.headers['x-device-token'];
+    if (typeof rawDevice === 'string' && devices.get(rawDevice) === user.email) {
+      const active: Session = { user, stage: 'active', locale: user.locale };
+      sessions.set(t, active);
+      return ok(res, activeSessionResponse, {
+        stage: 'active',
+        sessionToken: t,
+        expiresAt: inMinutes(60 * 12),
+        me: me(active),
+        deviceExpiresAt: inMinutes(60 * 24 * 30),
+      });
+    }
     sessions.set(t, { user, stage: 'pending_2fa', locale: user.locale });
     return ok(res, pendingSessionResponse, {
       stage: 'pending_2fa',
@@ -128,11 +143,14 @@ const server = createServer(async (req, res) => {
     const t = token();
     const active: Session = { ...session, stage: 'active' };
     sessions.set(t, active);
+    const device = body.trustDevice === true ? token() : undefined;
+    if (device) devices.set(device, session.user.email);
     return ok(res, activeSessionResponse, {
       stage: 'active',
       sessionToken: t,
       expiresAt: inMinutes(60 * 12),
       me: me(active),
+      ...(device && { deviceToken: device, deviceExpiresAt: inMinutes(60 * 24 * 30) }),
     });
   }
   if (route === 'POST /auth/logout') {

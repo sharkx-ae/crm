@@ -3,7 +3,7 @@ import { cookies, headers } from 'next/headers';
 import type { z } from 'zod';
 import { errorBody } from '../../contracts/common.ts';
 import { getWebEnv } from '../env.ts';
-import { clientIp, sessionCookieName } from '../security.ts';
+import { clientIp, deviceCookieName, sessionCookieName } from '../security.ts';
 import { ApiError } from './error.ts';
 
 export { ApiError };
@@ -27,6 +27,8 @@ export type ApiDeps = {
   fetch: typeof fetch;
   requestId: string;
   sessionToken?: string;
+  /** The trusted-device cookie, sent only on sign-in so the api can skip the emailed code. */
+  deviceToken?: string;
   ip?: string;
 };
 
@@ -44,6 +46,7 @@ export async function callApi<S extends z.ZodType>(
     'x-request-id': deps.requestId,
   };
   if (deps.sessionToken) headers['x-session-token'] = deps.sessionToken;
+  if (deps.deviceToken) headers['x-device-token'] = deps.deviceToken;
   if (deps.ip) headers['x-client-ip'] = deps.ip;
   if (init.body !== undefined) headers['content-type'] = 'application/json';
 
@@ -77,6 +80,8 @@ export type ApiCallInit = ApiInit & {
   session?: 'forward' | 'none';
   /** A token just received from the api, before it is in a cookie. Wins over `session`. */
   token?: string;
+  /** Forward the trusted-device cookie (sign-in only). */
+  device?: boolean;
 };
 
 /** `callApi` with the environment, the visitor's cookie, address and request id filled in. */
@@ -91,6 +96,9 @@ export async function apiCall<S extends z.ZodType>(
   if (!sessionToken && init.session !== 'none') {
     sessionToken = (await cookies()).get(sessionCookieName(env.APP_ENV))?.value;
   }
+  const deviceToken = init.device
+    ? (await cookies()).get(deviceCookieName(env.APP_ENV))?.value
+    : undefined;
   return callApi(
     {
       apiUrl: env.API_URL,
@@ -98,6 +106,7 @@ export async function apiCall<S extends z.ZodType>(
       fetch,
       requestId: h.get('x-request-id') ?? randomUUID(),
       sessionToken,
+      deviceToken,
       ip: clientIp(h),
     },
     schema,

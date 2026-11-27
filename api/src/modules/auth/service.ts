@@ -2,8 +2,8 @@ import { eq } from 'drizzle-orm';
 import type {
   ActiveSessionResponse,
   CodeSentResponse,
+  LoginResponse,
   Me,
-  PendingSessionResponse,
 } from '../../contracts/auth.ts';
 import type { Locale } from '../../contracts/common.ts';
 import { DUMMY_HASH, hashPassword, needsRehash, verifyPassword } from '../../lib/crypto/index.ts';
@@ -12,8 +12,10 @@ import { AppError } from '../../lib/errors/index.ts';
 import type { ResolvedSession } from '../../lib/http/route.ts';
 import { hit, rateKey, release, rules } from '../../lib/rate-limit/index.ts';
 import { withSystem } from '../../lib/tenant/index.ts';
+import { projectMembers } from '../../lib/tenant/schema.ts';
 import { audit } from '../audit/index.ts';
 import { actorOf, maskEmail } from './actor.ts';
+import { createDevice, revokeAllDevices, useDevice } from './devices.ts';
 import { hashNewPassword } from './password.ts';
 import { users } from './schema.ts';
 import { createSession, revokeAllSessions, revokeByToken, revokeSession } from './sessions.ts';
@@ -57,9 +59,9 @@ async function sendCodeEmail(to: string, locale: Locale, code: string): Promise<
 
 export async function login(
   input: { email: string; password: string },
-  ctx: { ip: string; forwardedSessionToken?: string },
+  ctx: { ip: string; forwardedSessionToken?: string; forwardedDeviceToken?: string },
   now: Date = new Date(),
-): Promise<PendingSessionResponse> {
+): Promise<LoginResponse> {
   // Account bucket ignores a rotated x-client-ip. Address bucket is the existing per-IP cap.
   const emailKey = rateKey('login', input.email);
   const ipKey = rateKey('login', input.email, ctx.ip);
@@ -111,10 +113,37 @@ export async function login(
     ? await hashPassword(input.password).catch(() => null)
     : null;
 
-  // 3. success: one transaction creates the pending session and the code.
+  // 3. success: one transaction creates the session. A trusted device (this person's, still valid) skips the emailed
+  // code and gets the active session now; anything else creates the pending session and the code.
   const out = await withSystem(null, async (tx) => {
     await release(tx, emailKey, rules.login, now);
     await release(tx, ipKey, rules.login, now);
+
+    const trusted = await useDevice(tx, user.id, ctx.forwardedDeviceToken, now);
+    if (trusted) {
+      if (upgraded) await tx.update(users).set({ pwHash: upgraded }).where(eq(users.id, user.id));
+      if (ctx.forwardedSessionToken) await revokeByToken(tx, ctx.forwardedSessionToken);
+      const active = await createSession(tx, user.id, 'active', now);
+      await audit(tx, {
+        actor: actorOf({ userId: user.id, role: user.role }),
+        action: 'auth.login',
+        entity: 'user',
+        entityId: user.id,
+        meta: { stage: 'active', via: 'trusted_device' },
+      });
+      const members = await tx
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, user.id));
+      return {
+        trusted: {
+          active,
+          deviceExpiresAt: trusted.expiresAt,
+          projectIds: members.map((m) => m.projectId),
+        },
+      } as const;
+    }
+
     const sendLimit = await hit(tx, rateKey('code_send', user.id), rules.codeSend, now);
     if (!sendLimit.allowed) return { limited: sendLimit.retryAfterSec } as const;
 
@@ -132,6 +161,28 @@ export async function login(
     return { session, code } as const;
   });
   if ('limited' in out) throw new AppError('RATE_LIMITED', { retryAfterSec: out.limited });
+  if (out.trusted) {
+    const { active, deviceExpiresAt, projectIds } = out.trusted;
+    return {
+      stage: 'active',
+      sessionToken: active.token,
+      expiresAt: active.expiresAt.toISOString(),
+      me: toMe(
+        {
+          userId: user.id,
+          role: user.role,
+          projectIds,
+          locale: user.locale,
+          stage: 'active',
+          sessionId: active.id,
+          name: user.name,
+          email: user.email,
+        },
+        'active',
+      ),
+      deviceExpiresAt: deviceExpiresAt.toISOString(),
+    };
+  }
 
   // 4. after commit; a failed send is a 502 and the person signs in again.
   await sendCodeEmail(user.email, user.locale, out.code);
@@ -146,6 +197,7 @@ export async function login(
 export async function verifyCode(
   session: ResolvedSession,
   code: string,
+  trustDevice = false,
   now: Date = new Date(),
 ): Promise<ActiveSessionResponse> {
   if (session.stage !== 'pending_2fa') throw new AppError('UNAUTHENTICATED');
@@ -156,13 +208,15 @@ export async function verifyCode(
     // The pending token dies here; the browser gets a new one.
     await revokeSession(tx, session.sessionId);
     const active = await createSession(tx, session.userId, 'active', now);
+    const device = trustDevice ? await createDevice(tx, session.userId, now) : null;
     await audit(tx, {
       actor: actorOf(session),
       action: 'auth.code_verified',
       entity: 'user',
       entityId: session.userId,
+      meta: { trustedDevice: device !== null },
     });
-    return { ok: true, active } as const;
+    return { ok: true, active, device } as const;
   });
 
   if (!out.ok) {
@@ -183,6 +237,10 @@ export async function verifyCode(
     sessionToken: out.active.token,
     expiresAt: out.active.expiresAt.toISOString(),
     me: toMe(session, 'active'),
+    ...(out.device && {
+      deviceToken: out.device.token,
+      deviceExpiresAt: out.device.expiresAt.toISOString(),
+    }),
   };
 }
 
@@ -314,13 +372,14 @@ export async function confirmReset(
 
     await tx.update(users).set({ pwHash }).where(eq(users.id, user.id));
     await revokeAllSessions(tx, user.id);
+    const devicesRevoked = await revokeAllDevices(tx, user.id);
     await revokeLiveTokens(tx, user.id, now);
     await audit(tx, {
       actor: actorOf({ userId: user.id, role: user.role }),
       action: 'auth.password_changed',
       entity: 'user',
       entityId: user.id,
-      meta: { via: 'reset' },
+      meta: { via: 'reset', devicesRevoked },
     });
   });
 }

@@ -17,6 +17,7 @@ import { projectMembers } from '../../lib/tenant/schema.ts';
 import { audit } from '../audit/index.ts';
 import { projects } from '../projects/schema.ts';
 import { actorOf, maskEmail } from './actor.ts';
+import { revokeAllDevices } from './devices.ts';
 import { hashNewPassword } from './password.ts';
 import { users } from './schema.ts';
 import { allowPasswordSet } from './service.ts';
@@ -223,8 +224,10 @@ export async function setUserStatus(
       .where(eq(users.id, user.id))
       .returning();
     if (!updated) throw new AppError('NOT_FOUND');
+    let devicesRevoked = 0;
     if (next === 'disabled') {
       await revokeAllSessions(tx, user.id);
+      devicesRevoked = await revokeAllDevices(tx, user.id);
       await revokeLiveTokens(tx, user.id, now);
     }
     await audit(tx, {
@@ -233,7 +236,7 @@ export async function setUserStatus(
       projectId,
       entity: 'user',
       entityId: user.id,
-      meta: { from: user.status, to: next },
+      meta: { from: user.status, to: next, ...(devicesRevoked > 0 && { devicesRevoked }) },
     });
     return summary(updated, projectId);
   });

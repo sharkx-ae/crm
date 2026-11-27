@@ -80,3 +80,23 @@ export const authTokens = pgTable(
     ),
   ],
 );
+
+// A browser the person chose to trust at the code step: it skips the emailed code (never the password) while valid.
+// Only the sha256 of the 256-bit cookie token is stored. System-only by grants, like `sessions`.
+export const trustedDevices = pgTable(
+  'trusted_devices',
+  {
+    id: pk(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    lastUsedAt: tstz('last_used_at').notNull(),
+    expiresAt: tstz('expires_at').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('trusted_devices_user_idx').on(t.userId),
+    index('trusted_devices_expires_idx').on(t.expiresAt),
+  ],
+);

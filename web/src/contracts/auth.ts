@@ -15,13 +15,25 @@ export const pendingSessionResponse = z.object({
   expiresAt: iso,
   maskedEmail: z.string(),
 });
-export const verifyCodeRequest = z.object({ code: z.string().regex(/^\d{6}$/) });
+// `trustDevice`: the person ticked "Don't ask for a code on this device for 30 days" (spec F1c-remember-device).
+export const verifyCodeRequest = z.object({
+  code: z.string().regex(/^\d{6}$/),
+  trustDevice: z.boolean().default(false),
+});
 export const activeSessionResponse = z.object({
   stage: z.literal('active'),
   sessionToken: opaqueToken,
   expiresAt: iso,
   me: meResponse,
+  // Only when this response creates or renews a trusted device: web sets or refreshes the device cookie from them.
+  deviceToken: opaqueToken.optional(),
+  deviceExpiresAt: iso.optional(),
 });
+// A sign-in answers with the code step, or (a trusted device, password correct) straight with the active session.
+export const loginResponse = z.discriminatedUnion('stage', [
+  pendingSessionResponse,
+  activeSessionResponse,
+]);
 export const codeSentResponse = z.object({ maskedEmail: z.string(), expiresAt: iso });
 export const updateMeRequest = z.object({ locale });
 
@@ -64,6 +76,7 @@ export type UserKind = z.infer<typeof userKind>;
 export type Me = z.infer<typeof meResponse>;
 export type LoginRequest = z.infer<typeof loginRequest>;
 export type PendingSessionResponse = z.infer<typeof pendingSessionResponse>;
+export type LoginResponse = z.infer<typeof loginResponse>;
 export type ActiveSessionResponse = z.infer<typeof activeSessionResponse>;
 export type CodeSentResponse = z.infer<typeof codeSentResponse>;
 export type InviteInfoResponse = z.infer<typeof inviteInfoResponse>;

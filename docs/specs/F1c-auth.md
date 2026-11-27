@@ -81,4 +81,4 @@ Anyone can be invited, set a password, sign in with an emailed code, reset a for
 F1b (tables, `withTenant`/`withSystem`). Resend domain may not be verified yet: use Conalytic's sending domain on staging.
 
 ## Out of scope
-Authenticator-app TOTP, SSO, client-side roles, client users inviting colleagues, remembering devices, password history.
+Authenticator-app TOTP, SSO, client-side roles, client users inviting colleagues, remembering devices (built later as the Extra [F1c-remember-device](F1c-remember-device.md)), password history.
