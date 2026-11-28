@@ -122,7 +122,12 @@ export function ClientsTable({ items }: { items: ClientRowItem[] }) {
                   </span>
                 </Td>
                 <Td num>
-                  <Icon name="right" size="sm" flip className="text-sx-muted" />
+                  <Icon
+                    name="right"
+                    size="sm"
+                    flip
+                    className="text-sx-muted transition-[transform,color] duration-150 group-hover/row:translate-x-0.5 group-hover/row:text-sx-red rtl:group-hover/row:-translate-x-0.5"
+                  />
                 </Td>
               </ClickRow>
             );

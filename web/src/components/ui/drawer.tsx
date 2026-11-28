@@ -29,7 +29,7 @@ export function Drawer({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-90 bg-sx-black/30" />
+        <Dialog.Overlay className="fixed inset-0 z-90 animate-sx-fade bg-sx-black/30" />
         <Dialog.Content
           aria-describedby={undefined}
           onOpenAutoFocus={() => focusReturn.remember()}

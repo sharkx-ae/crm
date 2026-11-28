@@ -58,6 +58,11 @@
   --animate-sx-slide: sx-slide 0.18s ease-out;
   --animate-sx-slide-rtl: sx-slide-rtl 0.18s ease-out;
   --animate-sx-rise: sx-rise 0.18s ease-out;
+  /* A screen settles in (a short rise and fade), a layer pops (a small scale) and a backdrop fades: all under 250 ms. */
+  --animate-sx-page: sx-page 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-sx-pop: sx-pop 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-sx-fade: sx-fade 0.16s ease-out;
+  --animate-sx-reveal: sx-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   /* The toast enters from the inline end (bottom right in English, bottom left in Arabic). */
   --animate-sx-toast-in: sx-toast-in 0.18s ease-out;
   --animate-sx-toast-in-rtl: sx-toast-in-rtl 0.18s ease-out;
@@ -119,6 +124,42 @@
     to {
       translate: var(--radix-toast-swipe-end-x) 0;
       opacity: 0;
+    }
+  }
+  @keyframes sx-page {
+    from {
+      transform: translateY(6px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-pop {
+    from {
+      transform: scale(0.97);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes sx-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes sx-reveal {
+    from {
+      clip-path: inset(-8px 100% -8px 0);
+    }
+    to {
+      clip-path: inset(-8px -8px -8px 0);
     }
   }
   @keyframes sx-rise {

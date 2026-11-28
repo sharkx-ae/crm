@@ -29,7 +29,10 @@ export function StatusBar({
           key={s.key}
           title={`${s.label}: ${s.count}`}
           style={{ flex: s.count }}
-          className={cx('block min-w-1 rounded-sm', FILL[s.key])}
+          className={cx(
+            'block min-w-1 rounded-sm transition-[flex] duration-500 ease-out',
+            FILL[s.key],
+          )}
         />
       ))}
     </div>

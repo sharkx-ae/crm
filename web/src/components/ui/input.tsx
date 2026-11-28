@@ -10,7 +10,7 @@ export type FieldSize = 'md' | 'sm';
 // Placeholder uses sx-muted: the brand does not allow #a49f9f for text on white.
 // CONTROL_BASE has no width: the Select sets its own (full, or `fit` for a toolbar), since classes do not merge.
 export const CONTROL_BASE =
-  'focus-ring rounded-field border border-sx-line bg-sx-paper px-3 text-body text-sx-black placeholder:text-sx-muted focus-visible:border-sx-black disabled:cursor-not-allowed disabled:opacity-60';
+  'focus-ring rounded-field border border-sx-line bg-sx-paper px-3 text-body text-sx-black transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-sx-muted hover:border-sx-faint focus-visible:border-sx-black disabled:cursor-not-allowed disabled:opacity-60';
 export const CONTROL = `block w-full min-w-0 ${CONTROL_BASE}`;
 export const CONTROL_HEIGHT: Record<FieldSize, string> = {
   md: 'h-10',

@@ -13,11 +13,14 @@
     "perDay": {
       "title": "Leads per day",
       "label": "Leads per day, last 30 days, days in {zone}",
-      "peak": "Peak {n} on {day}",
+      "peak": "Best day: {day}, {n, plural, one {# lead} other {# leads}}",
       "last30": "Last 30 days",
       "bar": "{day}: {n, plural, one {# lead} other {# leads}}",
       "tableDay": "Day",
-      "tableLeads": "Leads"
+      "tableLeads": "Leads",
+      "best": "Best day: {n}",
+      "summary": "{total, plural, one {# lead} other {# leads}} in the last 30 days, about {perDay} a day.",
+      "hint": "Each bar is one day. Hover or tap a bar to see its leads."
     },
     "bySource": {
       "title": "Leads by source",

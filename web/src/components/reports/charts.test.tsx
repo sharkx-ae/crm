@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Source } from '../../contracts/common.ts';
 import { renderIntl } from '../../test/render.tsx';
-import { BAR_FILL, BarChart, barPct, PEAK_FILL, peakIndex } from './bar-chart.tsx';
+import { axisIndices, DayChart, niceMax, peakIndex } from './day-chart.tsx';
 import { foldSources, MAX_ROWS, RankedBars, type RankedRow } from './ranked-bars.tsx';
 
 const days = (counts: number[]) =>
@@ -15,26 +15,40 @@ const days = (counts: number[]) =>
 const thirty = (overrides: Record<number, number> = {}) =>
   days(Array.from({ length: 30 }, (_, i) => overrides[i] ?? 0));
 
-const chart = (bars: ReturnType<typeof days>) =>
+const chart = (points: ReturnType<typeof days>) =>
   renderIntl(
-    <BarChart
-      bars={bars}
+    <DayChart
+      points={points}
       label="Leads per day, last 30 days, days in GMT+4"
       heightPx={200}
       tableHeads={{ day: 'Day', value: 'Leads' }}
+      bestLabel="Best day: 4"
+      hint="Each bar is one day."
     />,
   ).container;
 
-describe('BarChart', () => {
-  it('draws one bar per non-zero day, the earliest peak in red and the rest grey', () => {
+describe('DayChart', () => {
+  it('draws one column per day that had leads, the best day in full red, the rest soft red', () => {
     const c = chart(thirty({ 2: 4, 5: 1, 9: 4, 29: 2 }));
-    const paths = [...c.querySelectorAll('svg[data-chart="bars"] path')];
-    expect(paths).toHaveLength(4);
-    const red = paths.filter((p) => p.getAttribute('fill') === PEAK_FILL);
-    expect(red).toHaveLength(1);
-    expect(red[0]?.textContent).toBe('day 2: 4');
-    expect(paths.filter((p) => p.getAttribute('fill') === BAR_FILL)).toHaveLength(3);
-    expect(c.textContent).toContain('4'); // the peak's direct label
+    const cols = [...c.querySelectorAll('svg[data-chart="days"] [data-part="column"]')];
+    expect(cols).toHaveLength(4);
+    const best = cols.filter((p) => p.hasAttribute('data-peak'));
+    expect(best).toHaveLength(1);
+    expect(best[0]?.getAttribute('class')).toBe('fill-sx-red');
+    expect(cols.filter((p) => p.getAttribute('class') === 'fill-sx-red-mid')).toHaveLength(3);
+  });
+
+  it('is one series with no line, no legend and no gradient: only the sentence that explains it', () => {
+    const c = chart(thirty({ 2: 4 }));
+    expect(c.querySelectorAll('svg path[fill="none"]')).toHaveLength(0);
+    expect(c.querySelector('[data-part="legend"]')).toBeNull();
+    expect(c.querySelector('linearGradient,radialGradient')).toBeNull();
+    expect(c.querySelector('[data-part="hint"]')?.textContent).toBe('Each bar is one day.');
+  });
+
+  it('names the best day in words, right on its bar, and only when there is one', () => {
+    expect(chart(thirty({ 2: 4, 9: 4 })).textContent).toContain('Best day: 4');
+    expect(chart(thirty()).textContent).not.toContain('Best day');
   });
 
   it('keeps the plot left to right and gives screen readers a name and a table of every day', () => {
@@ -46,25 +60,45 @@ describe('BarChart', () => {
     expect(c.querySelectorAll('.sr-only table tbody tr')).toHaveLength(30);
   });
 
-  it('labels the axis with the first, middle and last day', () => {
+  it('labels the dates weekly, counting back from the last day, thinning on narrow screens', () => {
     const c = chart(thirty());
-    const axis = [...c.querySelectorAll('figure > div[aria-hidden="true"] span')].map(
+    const spans = [...c.querySelectorAll('figure > div[aria-hidden="true"] > span')];
+    expect(spans.map((s) => s.textContent)).toEqual([
+      'day 1',
+      'day 8',
+      'day 15',
+      'day 22',
+      'day 29',
+    ]);
+    const hidden = spans.filter((s) => s.className.includes('max-sm:hidden'));
+    expect(hidden.map((s) => s.textContent)).toEqual(['day 8', 'day 22']);
+    expect(axisIndices(30)).toEqual([1, 8, 15, 22, 29]);
+    expect(axisIndices(0)).toEqual([]);
+  });
+
+  it('the scale is whole leads: a round top, grid lines at 0, half and the top', () => {
+    expect([0, 1, 2, 3, 4, 5, 9, 10, 12, 35, 101].map(niceMax)).toEqual([
+      1, 1, 2, 4, 4, 6, 10, 10, 20, 40, 200,
+    ]);
+    const c = chart(thirty({ 2: 3 }));
+    const scale = [...c.querySelectorAll('div[aria-hidden="true"].w-7 span')].map(
       (s) => s.textContent,
     );
-    expect(axis).toEqual(['day 0', 'day 14', 'day 29']);
+    expect(scale).toEqual(['0', '2', '4']);
   });
 
-  it('an empty month: no bars, no peak', () => {
+  it('every day has a hover label with its day and leads, the empty days too', () => {
+    const c = chart(thirty({ 2: 3 }));
+    const labels = [...c.querySelectorAll('span[dir="auto"]')].map((s) => s.textContent);
+    expect(labels).toHaveLength(30);
+    expect(labels[2]).toBe('day 2: 3');
+    expect(labels[0]).toBe('day 0: 0');
+  });
+
+  it('an empty month: no columns and no best day', () => {
     const c = chart(thirty());
-    expect(c.querySelectorAll('svg path')).toHaveLength(0);
+    expect(c.querySelectorAll('[data-part="column"]')).toHaveLength(0);
     expect(peakIndex(thirty())).toBe(-1);
-  });
-
-  it('bar heights: none for 0, at least 3%, full for the peak', () => {
-    expect(barPct(0, 10)).toBe(0);
-    expect(barPct(1, 100)).toBe(3);
-    expect(barPct(5, 10)).toBe(50);
-    expect(barPct(10, 10)).toBe(100);
   });
 });
 

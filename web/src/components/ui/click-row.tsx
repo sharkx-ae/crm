@@ -35,7 +35,7 @@ export function ClickRow({
         router.push(href);
       }}
       className={cx(
-        'cursor-pointer transition-colors duration-150 hover:bg-sx-page',
+        'group/row cursor-pointer transition-colors duration-150 hover:bg-sx-page',
         fresh && FRESH_ROW,
         className,
       )}

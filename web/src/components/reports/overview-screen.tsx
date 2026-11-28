@@ -5,7 +5,7 @@ import type { Formatter } from '../../lib/i18n/format.ts';
 import { Card } from '../ui/card.tsx';
 import { EmptyState } from '../ui/empty-state.tsx';
 import { Kpi, KpiStrip } from '../ui/kpi.tsx';
-import { BarChart, peakIndex } from './bar-chart.tsx';
+import { DayChart, peakIndex } from './day-chart.tsx';
 import { foldSources, RankedBars } from './ranked-bars.tsx';
 import { WaitingCard } from './waiting-card.tsx';
 
@@ -47,26 +47,32 @@ export async function OverviewScreen({
         : format.duration(kpis.medianFirstReplyMin, tDuration);
   const rate = (r: number | null) => (r === null ? none : format.percent(r));
 
-  const bars = data.perDay.map((d) => {
+  const points = data.perDay.map((d) => {
     const day = format.plainDay(d.date);
     return { key: d.date, label: day, count: d.count, title: t('perDay.bar', { day, n: d.count }) };
   });
-  const peak = peakIndex(bars);
+  const total = points.reduce((sum, p) => sum + p.count, 0);
+  const perDayAvg = points.length > 0 ? Math.round((total / points.length) * 10) / 10 : 0;
+  const peak = peakIndex(points);
   const perDay = (
     <>
       <PanelHead
         title={t('perDay.title')}
         caption={
           peak >= 0
-            ? t('perDay.peak', { n: bars[peak]?.count ?? 0, day: bars[peak]?.label ?? '' })
+            ? t('perDay.peak', { n: points[peak]?.count ?? 0, day: points[peak]?.label ?? '' })
             : t('perDay.last30')
         }
+        sub={t('perDay.summary', { total, perDay: format.number(perDayAvg) })}
       />
-      <BarChart
-        bars={bars}
+      <DayChart
+        points={points}
         heightPx={client ? CHART_H.client : CHART_H.staff}
+        fill={!client}
         label={t('perDay.label', { zone })}
         tableHeads={{ day: t('perDay.tableDay'), value: t('perDay.tableLeads') }}
+        bestLabel={t('perDay.best', { n: points[peak]?.count ?? 0 })}
+        hint={t('perDay.hint')}
       />
     </>
   );
@@ -115,8 +121,8 @@ export async function OverviewScreen({
           </div>
         </>
       ) : (
-        <div className="grid flex-none grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <Card className="min-w-0">{perDay}</Card>
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 wide:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <Card className="flex min-w-0 flex-col">{perDay}</Card>
           <section className="min-w-0 wide:pt-[25px]">{bySource}</section>
         </div>
       )}
@@ -124,11 +130,23 @@ export async function OverviewScreen({
   );
 }
 
-function PanelHead({ title, caption }: { title: string; caption: ReactNode }) {
+function PanelHead({
+  title,
+  caption,
+  sub,
+}: {
+  title: string;
+  caption: ReactNode;
+  /** One plain sentence under the title that says what the panel adds up to. */
+  sub?: string;
+}) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="m-0 font-heading text-section">{title}</h2>
-      <span className="text-end text-label text-sx-muted">{caption}</span>
+    <div className="mb-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+        <h2 className="m-0 whitespace-nowrap font-heading text-section">{title}</h2>
+        <span className="text-label text-sx-muted">{caption}</span>
+      </div>
+      {sub ? <p className="m-0 mt-0.5 text-sx-muted">{sub}</p> : null}
     </div>
   );
 }

@@ -21,7 +21,7 @@ export function Card({
     <div
       {...rest}
       className={cx(
-        'min-w-0 rounded-card border border-sx-border bg-sx-paper shadow-sx',
+        'min-w-0 rounded-card border border-sx-border bg-sx-paper shadow-sx transition-shadow duration-200',
         flush ? cx('overflow-hidden', FLUSH_CELLS) : 'p-4 rail:p-6',
         fill && 'flex min-h-[24rem] flex-1 flex-col',
         className,

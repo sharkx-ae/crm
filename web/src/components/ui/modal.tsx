@@ -36,7 +36,7 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-90 bg-sx-black/30" />
+        <Dialog.Overlay className="fixed inset-0 z-90 animate-sx-fade bg-sx-black/30" />
         <div className="pointer-events-none fixed inset-0 z-96 grid place-items-center p-4">
           <Dialog.Content
             // Radix links a <Description> by itself; with none it wants the link switched off explicitly.
@@ -51,7 +51,7 @@ export function Modal({
             }}
             onCloseAutoFocus={focusReturn.restore}
             className={cx(
-              'pointer-events-auto flex max-h-[calc(100dvh-32px)] w-full flex-col rounded-card bg-sx-paper shadow-sx-md',
+              'pointer-events-auto flex max-h-[calc(100dvh-32px)] w-full animate-sx-pop flex-col rounded-card bg-sx-paper shadow-sx-md',
               wide ? 'max-w-[720px]' : 'max-w-[520px]',
             )}
           >

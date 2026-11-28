@@ -88,7 +88,10 @@ export function AppShell({
         >
           {/* relative: absolutely positioned content (the chart's sr-only table) is clipped here, never extends the document. */}
           <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {children}
+            {/* Keyed by the page: each screen settles in when you move to it (not on a filter or a refresh). */}
+            <div key={pathname} className="flex flex-1 flex-col animate-sx-page">
+              {children}
+            </div>
           </div>
           <footer className="mt-4 flex flex-none flex-wrap justify-between gap-2 border-t border-sx-border pt-2.5 text-label text-sx-muted">
             {/* The date is isolated so an Arabic month does not reorder the Latin text around it. */}

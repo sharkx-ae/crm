@@ -9,9 +9,9 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'md' | 'sm';
 
 const BASE =
-  'focus-ring inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap border font-label no-underline transition-colors duration-150 disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45';
+  'focus-ring inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap border font-label no-underline transition-[color,background-color,border-color,box-shadow,transform,filter] duration-150 ease-out active:translate-y-px disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45';
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'border-sx-red bg-sx-red text-white hover:brightness-90',
+  primary: 'border-sx-red bg-sx-red text-white hover:brightness-90 hover:shadow-sx-md',
   secondary: 'border-sx-black bg-sx-paper text-sx-black hover:bg-sx-shell',
   ghost: 'border-transparent bg-transparent text-sx-black hover:bg-sx-shell',
 };
